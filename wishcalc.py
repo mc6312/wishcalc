@@ -35,9 +35,10 @@ from wcdata import *
 TITLE = 'WishCalc'
 SUB_TITLE = 'Калькулятор загребущего нищеброда'
 
-VERSION = '1.6.2'
+VERSION = '1.6.3'
 TITLE_VERSION = '%s v%s' % (TITLE, VERSION)
 COPYRIGHT = '(c) 2017, 2018 MC-6312'
+URL = 'https://github.com/mc6312/wishcalc'
 
 
 iconError = load_system_icon('dialog-error', Gtk.IconSize.MENU)
@@ -310,6 +311,8 @@ class MainWnd():
         self.dlgAbout.set_comments(SUB_TITLE)
         self.dlgAbout.set_version('v%s' % VERSION)
         self.dlgAbout.set_copyright(COPYRIGHT)
+        self.dlgAbout.set_website(URL)
+        self.dlgAbout.set_website_label(URL)
 
         #
         # !!!
