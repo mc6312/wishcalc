@@ -35,9 +35,9 @@ from wcdata import *
 TITLE = 'WishCalc'
 SUB_TITLE = 'Калькулятор загребущего нищеброда'
 
-VERSION = '1.6.3'
+VERSION = '1.7.0'
 TITLE_VERSION = '%s v%s' % (TITLE, VERSION)
-COPYRIGHT = '(c) 2017, 2018 MC-6312'
+COPYRIGHT = '(c) 2017-2019 MC-6312'
 URL = 'https://github.com/mc6312/wishcalc'
 
 
@@ -221,7 +221,6 @@ class MainWnd():
 
         self.headerbar.set_title('%s: %s' % (TITLE_VERSION,
             os.path.splitext(os.path.split(self.wishCalc.filename)[1])[0]))
-        self.refresh_window_subtitle()
 
         icon = resldr.load_pixbuf_icon_size('wishcalc.svg', Gtk.IconSize.DIALOG, 'calc')
         self.window.set_icon(icon)
@@ -261,11 +260,7 @@ class MainWnd():
         #
         # первоначальное заполнение списка
         #
-        self.refresh_wishlistview()
-
-        self.refresh_totalcash_view()
-        self.refillentry.set_text(str(self.wishCalc.refillCash))
-        self.refresh_remains_view()
+        self.wishlist_is_loaded()
 
         #
         # редактор товара
@@ -315,6 +310,11 @@ class MainWnd():
         self.dlgAbout.set_website_label(URL)
 
         #
+        # диалог открытия файла
+        #
+        self.dlgFileOpen = uibldr.get_object('dlgFileOpen')
+
+        #
         # !!!
         #
         self.window.show_all()
@@ -329,6 +329,31 @@ class MainWnd():
 
     def refresh_window_subtitle(self):
         self.headerbar.set_subtitle(SUB_TITLE if not self.wishCalc.comment else self.wishCalc.comment)
+
+    def wishlist_is_loaded(self):
+        self.refresh_wishlistview()
+
+        self.refresh_totalcash_view()
+        self.refillentry.set_text(str(self.wishCalc.refillCash))
+        self.refresh_remains_view()
+
+        self.refresh_window_subtitle()
+
+    def file_open(self, mnu):
+        self.dlgFileOpen.select_filename(self.wishCalc.filename)
+        r = self.dlgFileOpen.run()
+        self.dlgFileOpen.hide()
+
+        if r == Gtk.ResponseType.OK:
+            fname = self.dlgFileOpen.get_filename()
+            if os.path.samefile(fname, self.wishCalc.filename):
+                return
+
+            wishlist = load_wishlist(self.window, fname)
+            if wishlist is not None:
+                self.save_wishlist()
+                self.wishCalc = wishlist
+                self.wishlist_is_loaded()
 
     def file_edit_comment(self, mnu):
         self.filecommententry.set_text(self.wishCalc.comment)
@@ -625,30 +650,45 @@ class MainWnd():
         self.remainsentry.set_text(str(self.wishCalc.totalRemain) if self.wishCalc.totalRemain > 0 else 'нет')
 
     def save_wishlist(self):
-        """Сохранение списка"""
+        """Сохранение списка.
+        Возвращает булевское значение (True в случае успеха)."""
 
         try:
             self.wishCalc.save()
+            return True
         except Exception as ex:
             msg_dialog(self.window, TITLE, 'Ошибка сохранения файла "%s":\n%s' % (self.wishCalc.filename, str(ex)))
+            return False
 
     def main(self):
         Gtk.main()
 
 
+def load_wishlist(parentw, filename):
+    """Пытается загрузить файл хотелок по имени filename.
+    В случае успеха возвращает экземпляр класса WishCalc,
+    в случае ошибки показывает окно с сообщением об ошибке,
+    модальное окну parentw, и возвращает None."""
+
+    try:
+        wishcalc = WishCalc(filename)
+        wishcalc.load()
+
+        return wishcalc
+
+    except Exception as ex:
+        msg_dialog(parentw, TITLE, 'Ошибка загрузки файла "%s":\n%s' % (filename, str(ex)))
+        return None
+
+
 def main(args):
     if len(args) > 1:
-        wlfname = args[1]
+        wlfname = os.path.abspath(args[1])
     else:
         wlfname = os.path.join(os.path.split(sys.argv[0])[0], 'wishlist.json')
 
-    wishcalc = WishCalc(wlfname)
-    try:
-        wishcalc.load()
-
-    except Exception as ex:
-        #raise ex
-        msg_dialog(None, TITLE, 'Ошибка загрузки файла "%s":\n%s' % (wishcalc.filename, str(ex)))
+    wishcalc = load_wishlist(None, wlfname)
+    if wishcalc is None:
         return 1
 
     MainWnd(wishcalc).main()
