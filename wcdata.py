@@ -88,27 +88,33 @@ class WishCalc():
         COST = 'cost'
         INFO = 'info'
         URL = 'url'
+        ITEMS = 'items'
 
         @staticmethod
         def new_from_dict(d):
-            return WishCalc.Item(get_dict_item(d, WishCalc.Item.NAME, str, lambda s: s != ''),
+            d = WishCalc.Item(get_dict_item(d, WishCalc.Item.NAME, str, lambda s: s != ''),
                 get_dict_item(d, WishCalc.Item.COST, int, lambda c: c >= -1),
                 get_dict_item(d, WishCalc.Item.INFO, str, fallback=''),
                 get_dict_item(d, WishCalc.Item.URL, str, fallback=''))
+            # с items возня отдельным способом
+            raise NotImplementedError('доделай меня, зараза')
 
         @staticmethod
         def new_copy(other):
             """other - экземпляр WishCalc.Item"""
 
-            return WishCalc.Item(other.name, other.cost, other.info, other.url)
+            return WishCalc.Item(other.name, other.cost, other.info, other.url, other.items)
 
-        def __init__(self, name='', cost=0, info='', url=''):
+        def __init__(self, name='', cost=0, info='', url='', items=[]):
             # поля исходных данных
 
             self.name = name
             self.cost = cost
             self.info = info
             self.url = url
+
+            # вложенные элементы (список); м.б. пустым
+            self.items = items
 
             # поля, которые вычисляются при вызове WishCalc.recalculate()
             # их значения могут зависеть от предыдущих по списку товаров!
@@ -144,8 +150,10 @@ class WishCalc():
 
         def __str__(self):
             # для отладки
-            return '(name="%s", cost=%d, info="%s", url="%s", needCash=%s, needTotal=%s, availCash=%s, needMonths=%s)' %\
-                (self.name, self.cost, self.info, self.url, self.needCash, self.needTotal, self.availCash, self.needMonths)
+            return '(name="%s", cost=%d, info="%s", url="%s", needCash=%s, needTotal=%s, availCash=%s, needMonths=%s, items=%s)' %\
+                (self.name, self.cost, self.info, self.url, self.needCash,
+                 self.needTotal, self.availCash, self.needMonths,
+                 '<%d item(s)>' % len(self.items))
 
         def get_fields_dict(self):
             """Возвращает словарь с именами и значениями полей"""
