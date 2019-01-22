@@ -12,8 +12,10 @@
     <property name="can_focus">False</property>
     <property name="stock">gtk-add</property>
   </object>
-  <object class="GtkListStore" id="wishlist">
+  <object class="GtkTreeStore" id="wishlist">
     <columns>
+      <!-- column-name itemobj -->
+      <column type="PyObject"/>
       <!-- column-name name -->
       <column type="gchararray"/>
       <!-- column-name cost -->
@@ -116,6 +118,16 @@
                   <object class="GtkMenu">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
+                    <child>
+                      <object class="GtkMenuItem" id="mnuItemAddGroup">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">Новая группа товаров</property>
+                        <property name="use_underline">True</property>
+                        <signal name="activate" handler="item_add_group" swapped="no"/>
+                        <accelerator key="n" signal="activate" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>
+                      </object>
+                    </child>
                     <child>
                       <object class="GtkMenuItem" id="mnuItemAdd">
                         <property name="visible">True</property>
@@ -270,8 +282,8 @@
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="model">wishlist</property>
-                    <property name="show_expanders">False</property>
                     <property name="enable_grid_lines">both</property>
+                    <property name="enable_tree_lines">True</property>
                     <signal name="row-activated" handler="wl_row_activated" swapped="no"/>
                     <child internal-child="selection">
                       <object class="GtkTreeSelection" id="wishlistviewsel">
@@ -286,7 +298,7 @@
                         <child>
                           <object class="GtkCellRendererText" id="crName"/>
                           <attributes>
-                            <attribute name="text">0</attribute>
+                            <attribute name="text">1</attribute>
                           </attributes>
                         </child>
                       </object>
@@ -298,7 +310,7 @@
                         <child>
                           <object class="GtkCellRendererPixbuf" id="crCostError"/>
                           <attributes>
-                            <attribute name="pixbuf">2</attribute>
+                            <attribute name="pixbuf">3</attribute>
                           </attributes>
                         </child>
                         <child>
@@ -309,7 +321,7 @@
                             <signal name="edited" handler="cost_changed" swapped="no"/>
                           </object>
                           <attributes>
-                            <attribute name="text">1</attribute>
+                            <attribute name="text">2</attribute>
                           </attributes>
                         </child>
                       </object>
@@ -322,7 +334,7 @@
                         <child>
                           <object class="GtkCellRendererPixbuf" id="crNeededIcon"/>
                           <attributes>
-                            <attribute name="pixbuf">4</attribute>
+                            <attribute name="pixbuf">5</attribute>
                           </attributes>
                         </child>
                         <child>
@@ -330,7 +342,7 @@
                             <property name="xalign">0</property>
                           </object>
                           <attributes>
-                            <attribute name="text">3</attribute>
+                            <attribute name="text">4</attribute>
                           </attributes>
                         </child>
                       </object>
@@ -348,7 +360,7 @@
                             <property name="single_paragraph_mode">True</property>
                           </object>
                           <attributes>
-                            <attribute name="text">5</attribute>
+                            <attribute name="text">6</attribute>
                           </attributes>
                         </child>
                       </object>
@@ -369,6 +381,20 @@
                 <property name="orientation">vertical</property>
                 <property name="toolbar_style">icons</property>
                 <property name="icon_size">1</property>
+                <child>
+                  <object class="GtkToolButton" id="btnItemAddGroup">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="tooltip_text" translatable="yes">Добавить группу товаров</property>
+                    <property name="use_underline">True</property>
+                    <property name="stock_id">gtk-directory</property>
+                    <signal name="clicked" handler="item_add_group" swapped="no"/>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="homogeneous">True</property>
+                  </packing>
+                </child>
                 <child>
                   <object class="GtkToolButton" id="btnItemAdd">
                     <property name="visible">True</property>

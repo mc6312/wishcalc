@@ -23,6 +23,9 @@ import json
 import os.path
 
 
+MAX_ITEM_LEVEL = 2 # максимальный уровень вложенности WishCalc.Item
+
+
 def cost_str_to_int(s):
     """Преобразует строчное значение цены в целое число и возвращает его.
     В случае неправильного значения возвращает None."""
@@ -91,30 +94,24 @@ class WishCalc():
         ITEMS = 'items'
 
         @staticmethod
-        def new_from_dict(d):
-            d = WishCalc.Item(get_dict_item(d, WishCalc.Item.NAME, str, lambda s: s != ''),
-                get_dict_item(d, WishCalc.Item.COST, int, lambda c: c >= -1),
-                get_dict_item(d, WishCalc.Item.INFO, str, fallback=''),
-                get_dict_item(d, WishCalc.Item.URL, str, fallback=''))
-            # с items возня отдельным способом
-            raise NotImplementedError('доделай меня, зараза')
-
-        @staticmethod
         def new_copy(other):
             """other - экземпляр WishCalc.Item"""
 
-            return WishCalc.Item(other.name, other.cost, other.info, other.url, other.items)
+            # вот тут вынимательно насчет копирования содержимого items
+            ni = WishCalc.Item()
+            ni.get_data_from(other)
+            return ni
 
-        def __init__(self, name='', cost=0, info='', url='', items=[]):
+        def __init__(self):
             # поля исходных данных
 
-            self.name = name
-            self.cost = cost
-            self.info = info
-            self.url = url
+            self.name = ''
+            self.cost = 0
+            self.info = ''
+            self.url = ''
 
-            # вложенные элементы (список); м.б. пустым
-            self.items = items
+            # вложенные элементы (список); м.б. пустым в случае обычного товара
+            self.items = []
 
             # поля, которые вычисляются при вызове WishCalc.recalculate()
             # их значения могут зависеть от предыдущих по списку товаров!
@@ -141,19 +138,22 @@ class WishCalc():
             self.cost = 0
             self.info = ''
             self.url = ''
+            self.items.clear()
 
         def get_data_from(self, other):
             self.name = other.name
             self.cost = other.cost
             self.info = other.info
             self.url = other.url
+            self.items = other.items
 
-        def __str__(self):
+        def __repr__(self):
             # для отладки
-            return '(name="%s", cost=%d, info="%s", url="%s", needCash=%s, needTotal=%s, availCash=%s, needMonths=%s, items=%s)' %\
-                (self.name, self.cost, self.info, self.url, self.needCash,
+            return '%s(name="%s", cost=%d, info="%s", url="%s", needCash=%s, needTotal=%s, availCash=%s, needMonths=%s, items=%d:%s)' %\
+                (self.__class__.__name__,
+                 self.name, self.cost, self.info, self.url, self.needCash,
                  self.needTotal, self.availCash, self.needMonths,
-                 '<%d item(s)>' % len(self.items))
+                 len(self.items), self.items)
 
         def get_fields_dict(self):
             """Возвращает словарь с именами и значениями полей"""
@@ -166,9 +166,42 @@ class WishCalc():
             if self.url:
                 d[self.URL] = self.url
 
+            if self.items:
+                items = []
+                print(self.items)
+                for item in self.items:
+                    items.append(item.get_fields_dict())
+
+                d[self.ITEMS] = items
+
             # поля need* для сохранения не предназначены и в словарь не кладутся!
 
             return d
+
+        def set_fields_dict(self, srcdict, __level=0):
+            """Установка значений полей из словаря srcdict.
+            __level - костыль для ограничения глубины дерева (и рекурсии)."""
+
+            if __level >= MAX_ITEM_LEVEL:
+                raise OverflowError('слишком много уровней вложенных элементов')
+
+            self.clear()
+
+            self.name = get_dict_item(srcdict, self.NAME, str, lambda s: s != '')
+
+            # это у нас обычный товар, или вложенный список?
+            if self.ITEMS in srcdict:
+                # список. значить, все поля кроме items игнорируем
+                for subdict in get_dict_item(srcdict, self.ITEMS, list):
+                    #subitem = self.__class__()
+                    subitem = WishCalc.Item()
+                    subitem.set_fields_dict(subdict, __level + 1)
+                    self.items.append(subitem)
+
+            else:
+                self.cost = get_dict_item(srcdict, self.COST, int, lambda c: c >= -1)
+                self.info = get_dict_item(srcdict, self.INFO, str, fallback='')
+                self.url = get_dict_item(srcdict, self.URL, str, fallback='')
 
     def __init__(self, filename):
         self.filename = filename
@@ -226,14 +259,16 @@ class WishCalc():
 
             self.totalRemain = self.totalCash # потом должно быть пересчитано!
 
-            for ixitem, item in enumerate(wishList, 1):
+            for ixitem, itemdict in enumerate(wishList, 1):
                 __val_error = lambda s: '%s элемента %d списка "%s"' % (s, ixitem, self.VAR_WISHLIST)
 
-                if not isinstance(item, dict):
+                if not isinstance(itemdict, dict):
                     raise ValueError(__val_error('неправильный тип'))
 
                 try:
-                    self.items.append(self.Item.new_from_dict(item))
+                    item = self.Item()
+                    item.set_fields_dict(itemdict)
+                    self.items.append(item)
                 except Exception as ex:
                     raise ValueError(__val_error(str(ex)))
 
@@ -253,6 +288,61 @@ class WishCalc():
                 os.remove(self.filename)
             os.rename(tmpfn, self.filename)
 
+    def __recalculate_items(self, itemlist, totalCash, refillCash, totalRemain):
+        """Перерасчет.
+        Производится проход по списку itemlist, для каждого элемента
+        расчитываются значения полей item.needCash и item.needMonths
+        на основе параметров totalCash, refillCash, totalRemain
+        и значений полей элементов (при необходимости рекурсивно).
+        Возвращает обновлённое значение totalRemain."""
+
+        totalNeedCash = 0
+
+        for item in itemlist:
+            if item.items:
+                # не товар, а группа товаров
+                totalRemain += self.__recalculate_items(item.items,
+                    totalCash, refillCash, totalRemain)
+            else:
+                # просто товар
+                if item.cost <= 0:
+                    item.needCash = None
+                    item.availCash = None
+                    item.needMonths = None
+                else:
+                    if totalRemain >= item.cost:
+                        item.needCash = 0
+                        item.availCash = item.cost
+                        totalRemain -= item.cost
+                    elif totalRemain > 0:
+                        item.needCash = item.cost - totalRemain
+                        item.availCash = totalRemain
+                        totalRemain = 0
+                    else:
+                        item.needCash = item.cost
+                        item.availCash = 0
+
+                    if item.needCash:
+                        totalNeedCash += item.needCash
+                        item.needTotal = totalNeedCash
+
+                        if refillCash > 0:
+                            item.needMonths = totalNeedCash // refillCash
+                            if totalNeedCash % float(refillCash) > 0.0:
+                                item.needMonths += 1
+                        else:
+                            item.needMonths = None
+                    else:
+                        item.needCash = 0
+                        item.needTotal = 0
+                        item.needMonths = 0
+
+        # на всякий пожарный случай
+        if totalRemain < 0:
+            totalRemain = 0
+
+        return totalRemain
+
     def recalculate(self):
         """Перерасчет.
         Производится проход по списку items, для каждого элемента
@@ -261,46 +351,8 @@ class WishCalc():
         полей элементов).
         По завершению обновляется значение self.totalRemain."""
 
-        self.totalRemain = self.totalCash
-
-        totalNeedCash = 0
-
-        for item in self.items:
-            if item.cost <= 0:
-                item.needCash = None
-                item.availCash = None
-                item.needMonths = None
-            else:
-                if self.totalRemain >= item.cost:
-                    item.needCash = 0
-                    item.availCash = item.cost
-                    self.totalRemain -= item.cost
-                elif self.totalRemain > 0:
-                    item.needCash = item.cost - self.totalRemain
-                    item.availCash = self.totalRemain
-                    self.totalRemain = 0
-                else:
-                    item.needCash = item.cost
-                    item.availCash = 0
-
-                if item.needCash:
-                    totalNeedCash += item.needCash
-                    item.needTotal = totalNeedCash
-
-                    if self.refillCash > 0:
-                        item.needMonths = totalNeedCash // self.refillCash
-                        if totalNeedCash % float(self.refillCash) > 0.0:
-                            item.needMonths += 1
-                    else:
-                        item.needMonths = None
-                else:
-                    item.needCash = 0
-                    item.needTotal = 0
-                    item.needMonths = 0
-
-        # на всякий пожарный случай
-        if self.totalRemain < 0:
-            self.totalRemain = 0
+        self.totalRemain = self.__recalculate_items(self.items,
+            self.totalCash, self.refillCash, self.totalCash)
 
     def item_delete(self, ix, ispurchased):
         """Удаление товара из списка.
@@ -379,7 +431,6 @@ class WishCalc():
             self.items.insert(ixnew, t)
 
         return ixnew
-
 
 
 if __name__ == '__main__':

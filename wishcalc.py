@@ -29,6 +29,8 @@ import webbrowser
 import os.path
 import sys
 
+from warnings import warn
+
 from wcdata import *
 
 
@@ -196,13 +198,14 @@ class ItemEditorDlg():
 
 
 class MainWnd():
-    WCOL_NAME, WCOL_COST, WCOL_COSTERROR, WCOL_NEEDED, WCOL_NEEDICON, WCOL_NEEDMONTHS, WCOL_INFO = range(7)
+    WCOL_ITEMOBJ, WCOL_NAME, WCOL_COST, WCOL_COSTERROR, WCOL_NEEDED, WCOL_NEEDICON, WCOL_NEEDMONTHS, WCOL_INFO = range(8)
 
     PERCENT_RANGE = 4
 
     def destroy(self, widget, data=None):
-        self.save_wishlist()
+        #self.save_wishlist()
         Gtk.main_quit()
+        warn('Внимание! Автосохранение данных отключено!')
 
     def __init__(self, wishcalc):
         self.wishCalc = wishcalc
@@ -242,7 +245,8 @@ class MainWnd():
 
         self.iconPercent = list(map(lambda i: resldr.load_pixbuf('nmicon_p%d.svg' % i, nmiconsize, nmiconsize), range(self.PERCENT_RANGE)))
 
-        # ListStore будем использовать непосредственно как хранилище данных во время работы!
+        # TreeStore используется как хранилище данных во время работы
+        # нужно переделать, и далее работать не с индексами, а со ссылками на объекты
         self.wishlist = uibldr.get_object('wishlist')
 
         self.wishlistview = uibldr.get_object('wishlistview')
@@ -410,57 +414,65 @@ class MainWnd():
 
         self.wishCalc.recalculate()
 
-        for item in self.wishCalc.items:
-            if item.needCash == 0:
-                needs = 'хватает'
-                needsicon = self.iconNMok
-            elif item.needCash is None:
-                needs = '?'
-                needsicon = self.iconNMunk
-            else:
-                if item.availCash > 0:
-                    needs = str(item.needCash)
-                    needsicon = self.iconPercent[int((item.availCash / float(item.cost)) * self.PERCENT_RANGE)]
+        def __append_items_to_model(parent, itemlist):
+            for item in itemlist:
+                if item.needCash == 0:
+                    needs = 'хватает'
+                    needsicon = self.iconNMok
+                elif item.needCash is None:
+                    needs = '?'
+                    needsicon = self.iconNMunk
                 else:
-                    needs = str(item.needTotal) if item.needTotal else ''
-                    needsicon = self.iconNMempty
+                    if item.availCash > 0:
+                        needs = str(item.needCash)
+                        needsicon = self.iconPercent[int((item.availCash / float(item.cost)) * self.PERCENT_RANGE)]
+                    else:
+                        needs = str(item.needTotal) if item.needTotal else ''
+                        needsicon = self.iconNMempty
 
-            infobuf = ['<b>%s</b>' % markup_escape_text(item.name)]
-            infomonths = ''
+                infobuf = ['<b>%s</b>' % markup_escape_text(item.name)]
+                infomonths = ''
 
-            if item.needMonths == 0:
-                needmonths = '-'
-            elif item.needMonths is None:
-                needmonths = '-'
-            else:
-                needmonths = str(item.needMonths)
+                if item.needMonths == 0:
+                    needmonths = '-'
+                elif item.needMonths is None:
+                    needmonths = '-'
+                else:
+                    needmonths = str(item.needMonths)
 
-                if item.needMonths > 18:
-                    infomonths = 'полутора лет.\nУ тебя с головой всё в порядке?'
-                    needsicon = self.iconNM18m
-                elif item.needMonths > 12:
-                    infomonths = 'года.\nМожет, лучше забить?'
-                    needsicon = self.iconNM12m
-                elif item.needMonths > 6:
-                    infomonths = 'полугода.\nТебе точно это надо?'
-                    needsicon = self.iconNM6m
+                    if item.needMonths > 18:
+                        infomonths = 'полутора лет.\nУ тебя с головой всё в порядке?'
+                        needsicon = self.iconNM18m
+                    elif item.needMonths > 12:
+                        infomonths = 'года.\nМожет, лучше забить?'
+                        needsicon = self.iconNM12m
+                    elif item.needMonths > 6:
+                        infomonths = 'полугода.\nТебе точно это надо?'
+                        needsicon = self.iconNM6m
 
-            if item.info:
-                infobuf += ['', markup_escape_text(item.info)]
+                if item.info:
+                    infobuf += ['', markup_escape_text(item.info)]
 
-            if infomonths:
-                infobuf += ['', '<b>На накопление %sнужно более %s</b>' %\
-                            ('' if not item.needTotal else '%d бабла ' % item.needTotal,
-                            infomonths)]
+                if infomonths:
+                    infobuf += ['', '<b>На накопление %sнужно более %s</b>' %\
+                                ('' if not item.needTotal else '%d бабла ' % item.needTotal,
+                                infomonths)]
 
-            #WCOL_NAME, WCOL_COST, WCOL_COSTERROR, WCOL_NEEDED, WCOL_NEEDICON, WCOL_NEEDMONTHS, WCOL_INFO
-            self.wishlist.append((item.name,
-                str(item.cost) if item.cost else '?',
-                None,
-                needs,
-                needsicon,
-                needmonths,
-                '\n'.join(infobuf),))
+                #WCOL_ITEMOBJ, WCOL_NAME, WCOL_COST, WCOL_COSTERROR, WCOL_NEEDED, WCOL_NEEDICON, WCOL_NEEDMONTHS, WCOL_INFO
+                appended = self.wishlist.append(parent,
+                    (item,
+                    item.name,
+                    str(item.cost) if item.cost else '?',
+                    None,
+                    needs,
+                    needsicon,
+                    needmonths,
+                    '\n'.join(infobuf),))
+
+                if item.items:
+                    __append_items_to_model(appended, item.items)
+
+        __append_items_to_model(None, self.wishCalc.items)
 
         self.wishlistview.set_model(self.wishlist)
 
@@ -505,13 +517,13 @@ class MainWnd():
     def iter_to_list_index(self, itr):
         """Возвращает соответствующую itr (Gtk.TreeIter) позицию в списке
         (целое число), если itr != None."""
+        warn('при работе с wishlist работать со ссылкой на объект из столбца WCOL_ITEMOBJ')
 
         return None if itr is None else self.wishlist.get_path(itr).get_indices()[0]
 
     def get_selected_item_iter(self):
         """Возвращает Gtk.TreeIter если в TreeView выбрана строка,
         иначе None."""
-
         return self.wishlistviewsel.get_selected()[1]
 
     def item_edit(self, btn):
@@ -519,6 +531,9 @@ class MainWnd():
 
     def item_add(self, btn):
         self.__do_edit_cur_item(None)
+
+    def item_add_group(self, btn):
+        warn('item_add_group() пока что не работает')
 
     def item_open_url(self, btn):
         itr = self.get_selected_item_iter()
