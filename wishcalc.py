@@ -147,7 +147,11 @@ class ItemEditorDlg():
         self.dlgItemEditor.set_title(dtitle)
 
         self.itemnameentry.set_text(self.tempItem.name)
+
         self.itemcostentry.set_text(str(self.tempItem.cost))
+        # для групп товаров цена считается при вызове recalculate()!
+        self.itemcostentry.set_sensitive(len(self.tempItem.items) == 0)
+
         self.iteminfoentrybuf.set_text(self.tempItem.info)
         self.itemurlentry.set_text(self.tempItem.url)
 
@@ -198,7 +202,8 @@ class ItemEditorDlg():
 
 
 class MainWnd():
-    WCOL_ITEMOBJ, WCOL_NAME, WCOL_COST, WCOL_COSTERROR, WCOL_NEEDED, WCOL_NEEDICON, WCOL_NEEDMONTHS, WCOL_INFO = range(8)
+    WCOL_ITEMINDEX, WCOL_NAME, WCOL_COST, WCOL_COSTERROR, WCOL_NEEDED, \
+    WCOL_NEEDICON, WCOL_NEEDMONTHS, WCOL_INFO = range(8)
 
     PERCENT_RANGE = 4
 
@@ -379,7 +384,7 @@ class MainWnd():
             bcanmovedown = False
             bcanopenurl = False
         else:
-            ix = self.iter_to_list_index(itr)
+            ix = self.iter_to_item_index(itr)
             lastix = len(self.wishCalc.items) - 1
 
             bsens = True
@@ -406,7 +411,7 @@ class MainWnd():
         строку с номером selindex, иначе - сохраняем старое выделение."""
 
         # при необходимости запоминаем выбор в TreeView, ибо обновление model его сбросит
-        ixsel = selindex if selindex is not None else self.iter_to_list_index(self.get_selected_item_iter())
+        ixsel = selindex if selindex is not None else self.iter_to_item_index(self.get_selected_item_iter())
 
         self.wishlistview.set_model(None)
 
@@ -415,7 +420,7 @@ class MainWnd():
         self.wishCalc.recalculate()
 
         def __append_items_to_model(parent, itemlist):
-            for item in itemlist:
+            for ixitem, item in enumerate(itemlist):
                 if item.needCash == 0:
                     needs = 'хватает'
                     needsicon = self.iconNMok
@@ -458,9 +463,9 @@ class MainWnd():
                                 ('' if not item.needTotal else '%d бабла ' % item.needTotal,
                                 infomonths)]
 
-                #WCOL_ITEMOBJ, WCOL_NAME, WCOL_COST, WCOL_COSTERROR, WCOL_NEEDED, WCOL_NEEDICON, WCOL_NEEDMONTHS, WCOL_INFO
+                #WCOL_ITEMINDEX, WCOL_NAME, WCOL_COST, WCOL_COSTERROR, WCOL_NEEDED, WCOL_NEEDICON, WCOL_NEEDMONTHS, WCOL_INFO
                 appended = self.wishlist.append(parent,
-                    (item,
+                    (ixitem,
                     item.name,
                     str(item.cost) if item.cost else '?',
                     None,
@@ -495,7 +500,7 @@ class MainWnd():
             itemix = None
             item = None
         else:
-            itemix = self.iter_to_list_index(itr)
+            itemix = self.iter_to_item_index(itr)
             item = self.wishCalc.items[itemix]
 
         item = self.itemEditor.edit(item)
@@ -514,10 +519,11 @@ class MainWnd():
     def wl_row_activated(self, treeview, path, col):
         self.__do_edit_cur_item(self.wishlist.get_iter(path))
 
-    def iter_to_list_index(self, itr):
+    def iter_to_item_index(self, itr):
         """Возвращает соответствующую itr (Gtk.TreeIter) позицию в списке
         (целое число), если itr != None."""
-        warn('при работе с wishlist работать со ссылкой на объект из столбца WCOL_ITEMOBJ')
+
+        warn('при работе с wishlist работать со ссылкой на объект из столбца WCOL_ITEMINDEX')
 
         return None if itr is None else self.wishlist.get_path(itr).get_indices()[0]
 
@@ -538,7 +544,7 @@ class MainWnd():
     def item_open_url(self, btn):
         itr = self.get_selected_item_iter()
         if itr:
-            item = self.wishCalc.items[self.iter_to_list_index(itr)]
+            item = self.wishCalc.items[self.iter_to_item_index(itr)]
             if item.url:
                 webbrowser.open_new_tab(item.url)
 
@@ -551,7 +557,7 @@ class MainWnd():
         if not itr:
             return
 
-        ix = self.iter_to_list_index(itr)
+        ix = self.iter_to_item_index(itr)
 
         ts = ' купленный' if ispurchased else ''
 
@@ -581,7 +587,7 @@ class MainWnd():
 
         itr = self.get_selected_item_iter()
         if itr is not None:
-            ix = self.iter_to_list_index(itr)
+            ix = self.iter_to_item_index(itr)
 
             newix = (self.wishCalc.move_item_updown if onepos else self.wishCalc.move_item_topbottom)(ix, down)
 
@@ -610,7 +616,7 @@ class MainWnd():
             self.wishlist.set_value(itr, self.WCOL_COST, '')
             self.wishlist.set_value(itr, self.WCOL_COSTERROR, self.iconError)
         else:
-            ix = self.iter_to_list_index(itr)
+            ix = self.iter_to_item_index(itr)
 
             if self.wishCalc.items[ix].cost != cost:
                 self.wishCalc.items[ix].cost = cost

@@ -23,7 +23,7 @@ import json
 import os.path
 
 
-MAX_ITEM_LEVEL = 2 # максимальный уровень вложенности WishCalc.Item
+MAX_ITEM_LEVEL = 3 # максимальный уровень вложенности WishCalc.Item
 
 
 def cost_str_to_int(s):
