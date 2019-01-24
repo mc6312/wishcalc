@@ -14,8 +14,8 @@
   </object>
   <object class="GtkTreeStore" id="wishlist">
     <columns>
-      <!-- column-name itemindex -->
-      <column type="guint"/>
+      <!-- column-name itemobj -->
+      <column type="PyObject"/>
       <!-- column-name name -->
       <column type="gchararray"/>
       <!-- column-name cost -->

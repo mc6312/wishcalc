@@ -86,20 +86,41 @@ def get_dict_item(fromdict, vname, vtype, rangecheck=None, fallback=None):
 
 
 class WishCalc():
+    """Обёртка для Gtk.TreeStore, хранящего ссылки на экземпляры Item
+    и данные для отображения в Gtk.TreeView.
+
+    Константы индексов столбцов Gtk.TreeStore указаны прямо здесь,
+    т.к. этот класс работает напрямую с TreeStore, ибо в данном случае
+    полное отделение UI от данных приведёт к дублированию кучи функций
+    вроде изменения порядка элементов дерева (и для самого TreeView,
+    и для данных).
+
+    Внимание! При изменениях в wishcalc.ui нижеследующие константы
+    должны быть приведены в соответствие!"""
+
+    COL_ITEM_OBJ, COL_NAME, COL_COST, COL_COST_ERROR, COL_NEEDED,\
+    COL_NEED_ICON, COL_NEED_MONTHS, COL_INFO = range(8)
+
     class Item():
+        """Данные для описания товара.
+        Перечисленные ниже имена полей используются для загрузки/сохранения
+        JSON.
+        Внимание! Имя "items" предназначено для обработчика JSON,
+        списки вложенных элементов хранятся в Gtk.TreeStore,
+        а не в экземпляре Item!"""
+
+        # имена полей (для JSON)
         NAME = 'name'
         COST = 'cost'
         INFO = 'info'
         URL = 'url'
         ITEMS = 'items'
 
-        @staticmethod
-        def new_copy(other):
+        def new_copy(self, other):
             """other - экземпляр WishCalc.Item"""
 
-            # вот тут вынимательно насчет копирования содержимого items
-            ni = WishCalc.Item()
-            ni.get_data_from(other)
+            ni = self.__class__()
+            ni.get_data_from(self)
             return ni
 
         def __init__(self):
@@ -109,9 +130,6 @@ class WishCalc():
             self.cost = 0
             self.info = ''
             self.url = ''
-
-            # вложенные элементы (список); м.б. пустым в случае обычного товара
-            self.items = []
 
             # поля, которые вычисляются при вызове WishCalc.recalculate()
             # их значения могут зависеть от предыдущих по списку товаров!
@@ -138,22 +156,19 @@ class WishCalc():
             self.cost = 0
             self.info = ''
             self.url = ''
-            self.items.clear()
 
         def get_data_from(self, other):
             self.name = other.name
             self.cost = other.cost
             self.info = other.info
             self.url = other.url
-            self.items = other.items
 
         def __repr__(self):
             # для отладки
-            return '%s(name="%s", cost=%d, info="%s", url="%s", needCash=%s, needTotal=%s, availCash=%s, needMonths=%s, items=%d:%s)' %\
+            return '%s(name="%s", cost=%d, info="%s", url="%s", needCash=%s, needTotal=%s, availCash=%s, needMonths=%s)' %\
                 (self.__class__.__name__,
                  self.name, self.cost, self.info, self.url, self.needCash,
-                 self.needTotal, self.availCash, self.needMonths,
-                 len(self.items), self.items)
+                 self.needTotal, self.availCash, self.needMonths)
 
         def get_fields_dict(self):
             """Возвращает словарь с именами и значениями полей"""
@@ -165,14 +180,6 @@ class WishCalc():
 
             if self.url:
                 d[self.URL] = self.url
-
-            if self.items:
-                items = []
-                print(self.items)
-                for item in self.items:
-                    items.append(item.get_fields_dict())
-
-                d[self.ITEMS] = items
 
             # поля need* для сохранения не предназначены и в словарь не кладутся!
 
@@ -188,46 +195,39 @@ class WishCalc():
             self.clear()
 
             self.name = get_dict_item(srcdict, self.NAME, str, lambda s: s != '')
+            self.cost = get_dict_item(srcdict, self.COST, int, lambda c: c >= -1)
+            self.info = get_dict_item(srcdict, self.INFO, str, fallback='')
+            self.url = get_dict_item(srcdict, self.URL, str, fallback='')
 
-            # это у нас обычный товар, или вложенный список?
-            if self.ITEMS in srcdict:
-                # список. значить, все поля кроме items игнорируем
-                for subdict in get_dict_item(srcdict, self.ITEMS, list):
-                    #subitem = self.__class__()
-                    subitem = WishCalc.Item()
-                    subitem.set_fields_dict(subdict, __level + 1)
-                    self.items.append(subitem)
+    def __init__(self, filename, store):
+        """Параметры:
+        filename    - имя файла в формате JSON для загрузки/сохранения;
+        store       - экземпляр Gtk.TreeStore, который будет хранить
+                      дерево со ссылками на экземпляры Item и данные
+                      для отображения в Gtk.TreeView.
 
-            else:
-                self.cost = get_dict_item(srcdict, self.COST, int, lambda c: c >= -1)
-                self.info = get_dict_item(srcdict, self.INFO, str, fallback='')
-                self.url = get_dict_item(srcdict, self.URL, str, fallback='')
+        Поля:
+        filename, store - см. параметры;
+        totalCash   - все имеющиеся в наличии средства;
+        refillCash  - планируемая сумма ежемесячных пополнений;
+        totalRemain - расчётный остаток (в файле не хранится);
+        comment     - краткое описание файла для отображения в UI
+                      (в заголовке окна)."""
 
-    def __init__(self, filename):
         self.filename = filename
+        self.store = store
 
-        # все имеющиеся в наличии средства
         self.totalCash = 0
-
-        # планируемая сумма ежемесячных пополнений
         self.refillCash = 0
-
-        # расчётный остаток
         self.totalRemain = 0
-
-        # краткое описание копилки для отображения в заголовке окна, например
         self.comment = ''
-
-        # список экземпляров WishCalc.Item
-        self.items = []
 
     def __str__(self):
         # для отладки
-        return '%s: filename="%s", comment="%s", totalCash=%d, refillCash=%d, totalRemain=%d, items=[%s]' %\
+        return '%s: filename="%s", comment="%s", totalCash=%d, refillCash=%d, totalRemain=%d' %\
             (self.__class__.__name__,
             self.filename, self.comment,
-            self.totalCash, self.refillCash, self.totalRemain,
-            ', '.join(map(str, self.items)))
+            self.totalCash, self.refillCash, self.totalRemain)
 
     VAR_AVAIL = 'available'
     VAR_REFILL = 'refill'
@@ -236,9 +236,11 @@ class WishCalc():
     JSON_ENCODING = 'utf-8'
 
     def load(self):
-        """Загрузка списка"""
+        """Загрузка списка.
+        Если файл filename не существует, метод просто очищает поля.
+        В случае ошибок при загрузке файла генерируются исключения."""
 
-        self.items.clear()
+        self.store.clear()
 
         self.totalCash = 0
         self.refillCash = 0
@@ -246,21 +248,35 @@ class WishCalc():
 
         self.comment = ''
 
-        if os.path.exists(self.filename):
-            with open(self.filename, 'r', encoding=self.JSON_ENCODING) as f:
-                d = json.load(f)
+        if not os.path.exists(self.filename):
+            return
 
-            self.comment = normalize_str(get_dict_item(d, self.VAR_COMMENT, str, None, ''))
+        with open(self.filename, 'r', encoding=self.JSON_ENCODING) as f:
+            srcdict = json.load(f)
 
-            self.totalCash = get_dict_item(d, self.VAR_AVAIL, int, lambda i: i >= 0, 0)
-            self.refillCash = get_dict_item(d, self.VAR_REFILL, int, lambda i: i >= 0, 0)
+        self.comment = normalize_str(get_dict_item(srcdict, self.VAR_COMMENT, str, None, ''))
 
-            wishList = get_dict_item(d, self.VAR_WISHLIST, list, fallback=[])
+        self.totalCash = get_dict_item(srcdict, self.VAR_AVAIL, int, lambda i: i >= 0, 0)
+        self.refillCash = get_dict_item(srcdict, self.VAR_REFILL, int, lambda i: i >= 0, 0)
 
-            self.totalRemain = self.totalCash # потом должно быть пересчитано!
+        self.totalRemain = self.totalCash # потом должно быть пересчитано!
 
-            for ixitem, itemdict in enumerate(wishList, 1):
-                __val_error = lambda s: '%s элемента %d списка "%s"' % (s, ixitem, self.VAR_WISHLIST)
+        def __load_items(parentitr, fromlist, level):
+            """Загрузка данных в self.store.
+
+            parentitr   - экземпляр Gtk.TreeIter (None для верхнего
+                          уровня дерева);
+            fromlist    - список словарей с полями элементов;
+            level       - список целых (уровней вложенности) для отображения
+                          сообщений об ошибках.
+
+            Если parent == None - элементы добавляются в верхний уровень
+            дерева, иначе - как дочерние относительно parent."""
+
+            for ixitem, itemdict in enumerate(fromlist, 1):
+                nextlevel = level + [ixitem]
+                __val_error = lambda s: '%s элемента %s списка "%s"' %\
+                    (s, ':'.join(map(str, nextlevel)), self.VAR_WISHLIST)
 
                 if not isinstance(itemdict, dict):
                     raise ValueError(__val_error('неправильный тип'))
@@ -268,17 +284,56 @@ class WishCalc():
                 try:
                     item = self.Item()
                     item.set_fields_dict(itemdict)
-                    self.items.append(item)
+                    # внимание! в store сейчас кладём только ссылку на объект
+                    # прочие поля будут заполняться из UI и методом recalculate()
+                    itr = self.store.append(parentitr,
+                        (item, '', '', None, '', None, '', ''))
+
+                    # есть вложенные элементы?
+                    subitems = get_dict_item(itemdict, item.ITEMS, list, fallback=[])
+                    if subitems:
+                        __load_items(itr, subitems, nextlevel)
                 except Exception as ex:
                     raise ValueError(__val_error(str(ex)))
+
+        wishList = get_dict_item(srcdict, self.VAR_WISHLIST, list, fallback=[])
+
+        __load_items(None, wishList, [])
 
     def save(self):
         if self.filename:
             tmpd = {self.VAR_AVAIL:self.totalCash,
                 self.VAR_REFILL:self.refillCash,
-                self.VAR_COMMENT:self.comment,
-                self.VAR_WISHLIST:[ia for ia in map(lambda itm: itm.get_fields_dict(), self.items)]}
+                self.VAR_COMMENT:self.comment}
 
+            # с элементами дерева - отдельная возня
+            def __items_to_list(parent):
+                """Проходит по TreeStore и возвращает список словарей
+                с содержимым полей соответствующих экземпляров WishCalc.Item.
+
+                parent  - экземпляр Gtk.TreeIter - указатель на элемент,
+                          с которого начинать проход по списку;
+                          None для первого элемента верхнего уровня дерева."""
+
+                items = []
+
+                itr = self.store.iter_children(parent)
+                while itr is not None:
+                    item = self.store.get(itr, self.COL_ITEM_OBJ)[0]
+                    itemdict = item.get_fields_dict()
+
+                    # "дети" есть? а если найду?
+                    if self.store.iter_n_children(itr) > 0:
+                        itemdict[self.Item.ITEMS] = __items_to_list(itr)
+
+                    items.append(itemdict)
+                    itr = self.store.iter_next(itr)
+
+                return items
+
+            tmpd[self.VAR_WISHLIST] = __items_to_list(None)
+
+            # пытаемся сохранить "безопасно"
             tmpfn = self.filename + '.tmp'
 
             with open(tmpfn, 'w+', encoding=self.JSON_ENCODING) as f:
@@ -288,60 +343,75 @@ class WishCalc():
                 os.remove(self.filename)
             os.rename(tmpfn, self.filename)
 
-    def __recalculate_items(self, itemlist, totalCash, refillCash, totalRemain):
+    def __recalculate_items(self, parentitr, totalCash, refillCash, totalRemain):
         """Перерасчет.
-        Производится проход по списку itemlist, для каждого элемента
+        Производится проход по TreeStore для элементов, дочерних
+        относительно parentitr (экземпляр Gtk.TreeIter, м.б. None для
+        верхнего уровня дерева), для каждого элемента
         расчитываются значения полей item.needCash и item.needMonths
         на основе параметров totalCash, refillCash, totalRemain
         и значений полей элементов (при необходимости рекурсивно).
-        Возвращает обновлённое значение totalRemain."""
+
+        Возвращает кортеж из двух элементов:
+        1й: суммарная цена элементов,
+        2й: обновлённое значение totalRemain."""
 
         totalNeedCash = 0
+        totalCost = 0
 
-        for item in itemlist:
-            if item.items:
+        itr = self.store.iter_children(parentitr)
+        while itr is not None:
+            item = self.store.get(itr, self.COL_ITEM_OBJ)[0]
+
+            # "дети" есть?
+            if self.store.iter_n_children(itr) > 0:
                 # не товар, а группа товаров
-                totalRemain += self.__recalculate_items(item.items,
+                item.cost, subRemain = self.__recalculate_items(itr,
                     totalCash, refillCash, totalRemain)
+
+            #?    totalRemain += subRemain
+
+            totalCost += item.cost
+
+            if item.cost <= 0:
+                item.needCash = None
+                item.availCash = None
+                item.needMonths = None
             else:
-                # просто товар
-                if item.cost <= 0:
-                    item.needCash = None
-                    item.availCash = None
-                    item.needMonths = None
+                if totalRemain >= item.cost:
+                    item.needCash = 0
+                    item.availCash = item.cost
+                    totalRemain -= item.cost
+                elif totalRemain > 0:
+                    item.needCash = item.cost - totalRemain
+                    item.availCash = totalRemain
+                    totalRemain = 0
                 else:
-                    if totalRemain >= item.cost:
-                        item.needCash = 0
-                        item.availCash = item.cost
-                        totalRemain -= item.cost
-                    elif totalRemain > 0:
-                        item.needCash = item.cost - totalRemain
-                        item.availCash = totalRemain
-                        totalRemain = 0
-                    else:
-                        item.needCash = item.cost
-                        item.availCash = 0
+                    item.needCash = item.cost
+                    item.availCash = 0
 
-                    if item.needCash:
-                        totalNeedCash += item.needCash
-                        item.needTotal = totalNeedCash
+                if item.needCash:
+                    totalNeedCash += item.needCash
+                    item.needTotal = totalNeedCash
 
-                        if refillCash > 0:
-                            item.needMonths = totalNeedCash // refillCash
-                            if totalNeedCash % float(refillCash) > 0.0:
-                                item.needMonths += 1
-                        else:
-                            item.needMonths = None
+                    if refillCash > 0:
+                        item.needMonths = totalNeedCash // refillCash
+                        if totalNeedCash % float(refillCash) > 0.0:
+                            item.needMonths += 1
                     else:
-                        item.needCash = 0
-                        item.needTotal = 0
-                        item.needMonths = 0
+                        item.needMonths = None
+                else:
+                    item.needCash = 0
+                    item.needTotal = 0
+                    item.needMonths = 0
+
+            itr = self.store.iter_next(itr)
 
         # на всякий пожарный случай
         if totalRemain < 0:
             totalRemain = 0
 
-        return totalRemain
+        return (totalCost, totalRemain)
 
     def recalculate(self):
         """Перерасчет.
@@ -351,7 +421,7 @@ class WishCalc():
         полей элементов).
         По завершению обновляется значение self.totalRemain."""
 
-        self.totalRemain = self.__recalculate_items(self.items,
+        __totalCost, self.totalRemain = self.__recalculate_items(None,
             self.totalCash, self.refillCash, self.totalCash)
 
     def item_delete(self, ix, ispurchased):
@@ -436,14 +506,19 @@ class WishCalc():
 if __name__ == '__main__':
     print('[debugging %s]' % __file__)
 
-    wishcalc = WishCalc('wishlist.json')
+    from gi.repository import Gtk, GObject
+    # кол-во и типы столбцов должны совпадать с заданным в wishcalc.ui
+    # но т.к. в этом модуле собственно гуЯ-то и нет, вместо GdkPixbuf
+    # будут просто целые для затычки
+    tree = Gtk.TreeStore(GObject.TYPE_PYOBJECT, GObject.TYPE_STRING,
+        GObject.TYPE_STRING, GObject.TYPE_INT, GObject.TYPE_STRING,
+        GObject.TYPE_INT, GObject.TYPE_STRING, GObject.TYPE_STRING)
+
+    wishcalc = WishCalc('wishlist.json', tree)
     wishcalc.load()
 
     wishcalc.recalculate()
 
-    for item in wishcalc.items:
-        print(item)
-
     print('total: %d, remain: %d, refill: %d' % (wishcalc.totalCash, wishcalc.totalRemain, wishcalc.refillCash))
 
-    #wishcalc.save()
+    wishcalc.save()
