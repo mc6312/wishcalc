@@ -22,8 +22,13 @@
 import json
 import os.path
 
+from gi.repository import Gtk, GObject
+from gi.repository.GdkPixbuf import Pixbuf
+
 
 MAX_ITEM_LEVEL = 3 # максимальный уровень вложенности WishCalc.Item
+# в текущей версии не используется
+# см. комментарий в WishCalc.Item.set_fields_dict()
 
 
 def cost_str_to_int(s):
@@ -116,8 +121,9 @@ class WishCalc():
         URL = 'url'
         ITEMS = 'items'
 
-        def new_copy(self, other):
-            """other - экземпляр WishCalc.Item"""
+        def new_copy(self):
+            """Создаёт и возвращает новый экземпляр Item с копией
+            содержимого."""
 
             ni = self.__class__()
             ni.get_data_from(self)
@@ -189,8 +195,11 @@ class WishCalc():
             """Установка значений полей из словаря srcdict.
             __level - костыль для ограничения глубины дерева (и рекурсии)."""
 
-            if __level >= MAX_ITEM_LEVEL:
-                raise OverflowError('слишком много уровней вложенных элементов')
+            #if __level >= MAX_ITEM_LEVEL:
+            #    raise OverflowError('слишком много уровней вложенных элементов')
+            # отключено, т.к. я пока не знаю, как ограничить глубину
+            # вложенности при drag'n'drop в UI, а без этого можно
+            # в UI создать больше уровней, чем задано MAX_ITEM_LEVEL
 
             self.clear()
 
@@ -199,12 +208,9 @@ class WishCalc():
             self.info = get_dict_item(srcdict, self.INFO, str, fallback='')
             self.url = get_dict_item(srcdict, self.URL, str, fallback='')
 
-    def __init__(self, filename, store):
+    def __init__(self, filename):
         """Параметры:
-        filename    - имя файла в формате JSON для загрузки/сохранения;
-        store       - экземпляр Gtk.TreeStore, который будет хранить
-                      дерево со ссылками на экземпляры Item и данные
-                      для отображения в Gtk.TreeView.
+        filename    - имя файла в формате JSON для загрузки/сохранения.
 
         Поля:
         filename, store - см. параметры;
@@ -215,7 +221,11 @@ class WishCalc():
                       (в заголовке окна)."""
 
         self.filename = filename
-        self.store = store
+
+        # при изменениях в wishcalc.ui - приводить в соответствие!
+        self.store = Gtk.TreeStore(GObject.TYPE_PYOBJECT, GObject.TYPE_STRING,
+            GObject.TYPE_STRING, Pixbuf, GObject.TYPE_STRING,
+            Pixbuf, GObject.TYPE_STRING, GObject.TYPE_STRING)
 
         self.totalCash = 0
         self.refillCash = 0
@@ -284,10 +294,7 @@ class WishCalc():
                 try:
                     item = self.Item()
                     item.set_fields_dict(itemdict)
-                    # внимание! в store сейчас кладём только ссылку на объект
-                    # прочие поля будут заполняться из UI и методом recalculate()
-                    itr = self.store.append(parentitr,
-                        (item, '', '', None, '', None, '', ''))
+                    itr = self.append_item(parentitr, item)
 
                     # есть вложенные элементы?
                     subitems = get_dict_item(itemdict, item.ITEMS, list, fallback=[])
@@ -299,6 +306,39 @@ class WishCalc():
         wishList = get_dict_item(srcdict, self.VAR_WISHLIST, list, fallback=[])
 
         __load_items(None, wishList, [])
+
+    def get_item(self, itr):
+        """Возвращает экземпляр WishCalc.Item (содержимое столбца
+        WishCalc.COL_ITEM_OBJ из self.wishlist), соответствующий
+        itr (экземпляру Gtk.TreeIter)."""
+
+        return self.store.get_value(itr, WishCalc.COL_ITEM_OBJ)
+
+    def replace_item(self, itr, item):
+        """Замена элемента в TreeStore.
+
+        itr         - экземпляр Gtk.TreeIter, позиция в TreeStore;
+        item        - экземпляр WishCalc.Item.
+
+        Внимание! В store сейчас кладём только ссылку на объект,
+        прочие поля будут заполняться из UI и методом recalculate()."""
+
+        self.store.set_value(itr, self.COL_ITEM_OBJ, item)
+
+    def append_item(self, parentitr, item):
+        """Добавление нового элемента в TreeStore.
+        Возвращает экземпляр Gtk.TreeIter, соответствующий новому
+        элементу TreeStore.
+
+        parentitr   - None или экземпляр Gtk.TreeIter; новый элемент
+                      будет добавлен как дочерний относительно parentitr;
+        item        - экземпляр WishCalc.Item.
+
+        Внимание! В store сейчас кладём только ссылку на объект,
+        прочие поля будут заполняться из UI и методом recalculate()."""
+
+        return self.store.append(parentitr,
+            (item, '', '', None, '', None, '', ''))
 
     def save(self):
         if self.filename:
@@ -424,17 +464,17 @@ class WishCalc():
         __totalCost, self.totalRemain = self.__recalculate_items(None,
             self.totalCash, self.refillCash, self.totalCash)
 
-    def item_delete(self, ix, ispurchased):
+    def item_delete(self, itr, ispurchased):
         """Удаление товара из списка.
 
-        ix          - позиция в списке (целое),
+        itr         - позиция в Gtk.TreeStore (экземпляр Gtk.TreeIter),
         ispurchased - булевское значение: если True, товар считается
                       купленным, и его цена вычитается из суммы доступных
                       наличных.
 
         После вызова этого метода может понадобиться вызвать recalculate()."""
 
-        item = self.items[ix]
+        item = self.get_item(itr)
 
         if ispurchased:
             if item.cost:
@@ -442,83 +482,19 @@ class WishCalc():
                 if self.totalCash < 0:
                     self.totalCash = 0
 
-        del self.items[ix]
-
-    def move_item_updown(self, ix, down):
-        """Перемещение товара на одну позицию по списку.
-
-        ix      - целое, позиция в списке
-        down    - булевское, кудой двигать - вверх или вниз.
-
-        Если список изменится, возвращает целое число - новую позицию
-        в списке, иначе возвращает None.
-
-        В случае успешного изменения может понадобиться потом вызвать
-        метод recalculate()."""
-
-        count = len(self.items)
-        if count < 2:
-            return None
-
-        ixnew = ix + 1 if down else ix - 1
-
-        if ixnew >= 0 and ixnew <= count - 1:
-            t = self.items[ix]
-            self.items[ix] = self.items[ixnew]
-            self.items[ixnew] = t
-
-            return ixnew
-        else:
-            return None
-
-    def move_item_topbottom(self, ix, tobottom):
-        """Перемещение товара в начало или конец списка.
-
-        ix          - целое, позиция в списке
-        tobottom    - булевское, кудой двигать - в начало или в конец.
-
-        Если список изменится, возвращает целое число - новую позицию
-        в списке, иначе возвращает None.
-
-        В случае успешного изменения может понадобиться потом вызвать
-        метод recalculate()."""
-
-        count = len(self.items)
-        if count < 2:
-            return None
-
-        ixnew = count - 1 if tobottom else 0
-
-        if ixnew == ix:
-            return None
-
-        t = self.items[ix]
-        del self.items[ix]
-
-        if tobottom:
-            self.items.append(t)
-        else:
-            self.items.insert(ixnew, t)
-
-        return ixnew
+        self.store.remove(itr)
 
 
 if __name__ == '__main__':
     print('[debugging %s]' % __file__)
 
-    from gi.repository import Gtk, GObject
-    # кол-во и типы столбцов должны совпадать с заданным в wishcalc.ui
-    # но т.к. в этом модуле собственно гуЯ-то и нет, вместо GdkPixbuf
-    # будут просто целые для затычки
-    tree = Gtk.TreeStore(GObject.TYPE_PYOBJECT, GObject.TYPE_STRING,
-        GObject.TYPE_STRING, GObject.TYPE_INT, GObject.TYPE_STRING,
-        GObject.TYPE_INT, GObject.TYPE_STRING, GObject.TYPE_STRING)
-
-    wishcalc = WishCalc('wishlist.json', tree)
+    wishcalc = WishCalc('wishlist.json')
     wishcalc.load()
 
     wishcalc.recalculate()
 
+    print(wishcalc.get_item(wishcalc.store.get_iter_first()))
+
     print('total: %d, remain: %d, refill: %d' % (wishcalc.totalCash, wishcalc.totalRemain, wishcalc.refillCash))
 
-    wishcalc.save()
+    #wishcalc.save()

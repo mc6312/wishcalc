@@ -127,22 +127,24 @@ class ItemEditorDlg():
     def on_btnEdItemOpenURL_clicked(self, btn):
         webbrowser.open_new_tab(self.tempItem.url)
 
-    def edit(self, item):
+    def edit(self, item, hasChildren):
         """Редактирование товара.
 
-        item    - экземпляр WishCalc.Item или None.
-                  В последнем случае создаётся новый экземпляр описания
-                  товара.
+        item        - экземпляр WishCalc.Item или None.
+                      В последнем случае создаётся новый экземпляр
+                      описания товара;
+        hasChildren - булевское значение, True, если есть дочерние элементы.
 
         Возвращает None, если редактирование отменено (нажата кнопка
-        "Отмена"), или экземпляр WishCalc.Item с новыми или изменёнными данными."""
+        "Отмена"), или экземпляр WishCalc.Item с новыми или изменёнными
+        данными."""
 
         if item is None:
             dtitle = 'Новый товар'
             self.tempItem = WishCalc.Item()
         else:
             dtitle = 'Изменение товара'
-            self.tempItem = WishCalc.Item.new_copy(item)
+            self.tempItem = item.new_copy()
 
         self.dlgItemEditor.set_title(dtitle)
 
@@ -150,7 +152,7 @@ class ItemEditorDlg():
 
         self.itemcostentry.set_text(str(self.tempItem.cost))
         # для групп товаров цена считается при вызове recalculate()!
-        self.itemcostentry.set_sensitive(len(self.tempItem.items) == 0)
+        self.itemcostentry.set_sensitive(not hasChildren)
 
         self.iteminfoentrybuf.set_text(self.tempItem.info)
         self.itemurlentry.set_text(self.tempItem.url)
@@ -202,19 +204,16 @@ class ItemEditorDlg():
 
 
 class MainWnd():
-    WCOL_ITEMINDEX, WCOL_NAME, WCOL_COST, WCOL_COSTERROR, WCOL_NEEDED, \
-    WCOL_NEEDICON, WCOL_NEEDMONTHS, WCOL_INFO = range(8)
+    WishCalc.COL_ITEMINDEX, WishCalc.COL_NAME, WishCalc.COL_COST, WishCalc.COL_COST_ERROR, WishCalc.COL_NEEDED, \
+    WishCalc.COL_NEEDICON, WishCalc.COL_NEEDMONTHS, WishCalc.COL_INFO = range(8)
 
     PERCENT_RANGE = 4
 
     def destroy(self, widget, data=None):
-        #self.save_wishlist()
+        self.save_wishlist()
         Gtk.main_quit()
-        warn('Внимание! Автосохранение данных отключено!')
 
-    def __init__(self, wishcalc):
-        self.wishCalc = wishcalc
-
+    def __init__(self, wlfname):
         #
         resldr = get_resource_loader()
         uibldr = get_gtk_builder(resldr, 'wishcalc.ui')
@@ -226,9 +225,6 @@ class MainWnd():
         self.window.connect('destroy', self.destroy)
 
         self.headerbar = uibldr.get_object('headerbar')
-
-        self.headerbar.set_title('%s: %s' % (TITLE_VERSION,
-            os.path.splitext(os.path.split(self.wishCalc.filename)[1])[0]))
 
         icon = resldr.load_pixbuf_icon_size('wishcalc.svg', Gtk.IconSize.DIALOG, 'calc')
         self.window.set_icon(icon)
@@ -251,11 +247,13 @@ class MainWnd():
         self.iconPercent = list(map(lambda i: resldr.load_pixbuf('nmicon_p%d.svg' % i, nmiconsize, nmiconsize), range(self.PERCENT_RANGE)))
 
         # TreeStore используется как хранилище данных во время работы
-        # нужно переделать, и далее работать не с индексами, а со ссылками на объекты
-        self.wishlist = uibldr.get_object('wishlist')
+        # в первом столбце (WishCalc.COL_ITEM_OBJ) хранится ссылка
+        # на экземпляр WishCalc.Item (см. wcdata.py)
+        #self.wishlist = uibldr.get_object('wishlist')
+        # внимание! это поле будет присвоено в конце конструктора при загрузке файла!
 
         self.wishlistview = uibldr.get_object('wishlistview')
-        self.wishlistview.set_tooltip_column(self.WCOL_INFO)
+        self.wishlistview.set_tooltip_column(WishCalc.COL_INFO)
 
         self.wishlistviewsel = uibldr.get_object('wishlistviewsel')
 
@@ -265,11 +263,6 @@ class MainWnd():
         self.cashentry = uibldr.get_object('cashentry')
         self.refillentry = uibldr.get_object('refillentry')
         self.remainsentry = uibldr.get_object('remainsentry')
-
-        #
-        # первоначальное заполнение списка
-        #
-        self.wishlist_is_loaded()
 
         #
         # редактор товара
@@ -283,7 +276,8 @@ class MainWnd():
         # придётся переделывать через actions
         self.widgetsItemEditing = get_ui_widgets(uibldr,
             ('mnuItemEdit', 'btnItemEdit', 'mnuItemPurchased', 'btnItemPurchased',
-            'mnuItemOpenURL', 'btnItemOpenURL', 'mnuItemRemove', 'btnItemRemove'))
+             'mnuItemAddSubItem', 'btnItemAddSubItem',
+             'mnuItemOpenURL', 'btnItemOpenURL', 'mnuItemRemove', 'btnItemRemove'))
         self.widgetsItemMoveUp = get_ui_widgets(uibldr,
             ('mnuItemMoveUp', 'btnItemMoveUp',
              'mnuItemMoveToTop', 'btnItemMoveToTop'))
@@ -329,6 +323,14 @@ class MainWnd():
         self.window.show_all()
         uibldr.connect_signals(self)
 
+        #
+        # первоначальное заполнение списка
+        #
+        self.load_wishlist(wlfname)
+
+        self.wishlist_is_loaded()
+
+
         self.setup_widgets_sensitive()
 
     def about_program(self, widget):
@@ -336,17 +338,35 @@ class MainWnd():
         self.dlgAbout.run()
         self.dlgAbout.hide()
 
-    def refresh_window_subtitle(self):
+    def refresh_window_title(self):
+        self.headerbar.set_title('%s: %s' % (TITLE_VERSION,
+            os.path.splitext(os.path.split(self.wishCalc.filename)[1])[0]))
+
         self.headerbar.set_subtitle(SUB_TITLE if not self.wishCalc.comment else self.wishCalc.comment)
 
+    def on_wishlistview_drag_end(self, wgt, ctx):
+        self.refresh_wishlistview()
+
     def wishlist_is_loaded(self):
+        """Этот метод должен вызываться после успешной загрузки
+        файла (т.е. если load_wishlist() не рухнул с исключением)."""
+
+        self.wishlist = self.wishCalc.store
+
+        # обязательно заменяем TreeStore загруженной!
+        self.wishlistview.set_model(self.wishlist)
+        #...и надеемся, что предыдущий экземпляр будет укоцан потрохами PyGObject и питоньей сборкой мусора...
+
         self.refresh_wishlistview()
 
         self.refresh_totalcash_view()
         self.refillentry.set_text(str(self.wishCalc.refillCash))
         self.refresh_remains_view()
 
-        self.refresh_window_subtitle()
+        self.refresh_window_title()
+
+    def file_save(self, mnu):
+        self.save_wishlist()
 
     def file_open(self, mnu):
         self.dlgFileOpen.select_filename(self.wishCalc.filename)
@@ -358,10 +378,10 @@ class MainWnd():
             if os.path.samefile(fname, self.wishCalc.filename):
                 return
 
-            wishlist = load_wishlist(self.window, fname)
-            if wishlist is not None:
+            if self.wishlist.iter_n_children(None) > 0:
                 self.save_wishlist()
-                self.wishCalc = wishlist
+
+            if load_wishlist(self.window, fname):
                 self.wishlist_is_loaded()
 
     def file_edit_comment(self, mnu):
@@ -372,7 +392,7 @@ class MainWnd():
         self.wishCalc.comment = normalize_text(entry.get_text())
 
     def filecommententry_editing_done(self, btn):
-        self.refresh_window_subtitle()
+        self.refresh_window_title()
         self.popoverFileCommentEditor.hide()
 
     def setup_widgets_sensitive(self):
@@ -384,15 +404,15 @@ class MainWnd():
             bcanmovedown = False
             bcanopenurl = False
         else:
-            ix = self.iter_to_item_index(itr)
-            lastix = len(self.wishCalc.items) - 1
+            ix = self.wishlist.get_path(itr).get_indices()[-1]
+            lastix = self.wishlist.iter_n_children(self.wishlist.iter_parent(itr)) - 1
 
             bsens = True
 
             bcanmoveup = ix > 0
             bcanmovedown = ix < lastix
 
-            bcanopenurl = self.wishCalc.items[ix].url != ''
+            bcanopenurl = self.wishCalc.get_item(itr).url != ''
 
         set_widgets_sensitive(self.widgetsItemEditing, bsens)
         set_widgets_sensitive(self.widgetsItemMoveUp, bsens & bcanmoveup)
@@ -405,22 +425,29 @@ class MainWnd():
     def refresh_totalcash_view(self):
         self.cashentry.set_text(str(self.wishCalc.totalCash))
 
-    def refresh_wishlistview(self, selindex=None):
+    def refresh_wishlistview(self, selitem=None):
         """Перерасчёт списка товаров, обновление содержимого TreeView.
-        Если selindex is not None - после обновления выделяем в TreeView
-        строку с номером selindex, иначе - сохраняем старое выделение."""
 
-        # при необходимости запоминаем выбор в TreeView, ибо обновление model его сбросит
-        ixsel = selindex if selindex is not None else self.iter_to_item_index(self.get_selected_item_iter())
-
-        self.wishlistview.set_model(None)
-
-        self.wishlist.clear()
+        selitem - None или экземпляр WishCalc.Item, в последнем случае
+                  после обновления TreeView в нём должен быть подсвечен
+                  элемент дерева, содержащий соотв. Item."""
 
         self.wishCalc.recalculate()
 
-        def __append_items_to_model(parent, itemlist):
-            for ixitem, item in enumerate(itemlist):
+        # получается, что проходим по TreeStore второй раз (после recalculate)
+        # ну да и хрен с ним пока...
+
+        def __refresh_node(parentitr):
+            itr = self.wishlist.iter_children(parentitr)
+
+            __itersel = None
+
+            while itr is not None:
+                item = self.wishlist.get_value(itr, WishCalc.COL_ITEM_OBJ)
+
+                if item is selitem:
+                    __itersel = itr
+
                 if item.needCash == 0:
                     needs = 'хватает'
                     needsicon = self.iconNMok
@@ -463,27 +490,32 @@ class MainWnd():
                                 ('' if not item.needTotal else '%d бабла ' % item.needTotal,
                                 infomonths)]
 
-                #WCOL_ITEMINDEX, WCOL_NAME, WCOL_COST, WCOL_COSTERROR, WCOL_NEEDED, WCOL_NEEDICON, WCOL_NEEDMONTHS, WCOL_INFO
-                appended = self.wishlist.append(parent,
-                    (ixitem,
-                    item.name,
-                    str(item.cost) if item.cost else '?',
-                    None,
-                    needs,
-                    needsicon,
-                    needmonths,
-                    '\n'.join(infobuf),))
+                self.wishlist.set(itr,
+                    (WishCalc.COL_NAME,
+                        WishCalc.COL_COST, WishCalc.COL_COST_ERROR,
+                        WishCalc.COL_NEEDED, WishCalc.COL_NEED_ICON,
+                        WishCalc.COL_NEED_MONTHS, WishCalc.COL_INFO),
+                    (item.name,
+                        str(item.cost) if item.cost else '?',
+                        None,
+                        needs,
+                        needsicon,
+                        needmonths,
+                        '\n'.join(infobuf)))
 
-                if item.items:
-                    __append_items_to_model(appended, item.items)
+                __subsel = __refresh_node(itr)
+                if __subsel is not None:
+                    __itersel = __subsel
 
-        __append_items_to_model(None, self.wishCalc.items)
+                itr = self.wishlist.iter_next(itr)
 
-        self.wishlistview.set_model(self.wishlist)
+            return __itersel
+
+        itersel = __refresh_node(None)
 
         # вертаем выбор взад
-        if ixsel is not None:
-            path = Gtk.TreePath.new_from_indices((ixsel,))
+        if itersel is not None:
+            path = self.wishlist.get_path(itersel)
             self.wishlistviewsel.select_path(path)
             self.wishlistview.set_cursor(path, None, False)
 
@@ -497,35 +529,26 @@ class MainWnd():
                   или None - в последнем случае создаём новый товар."""
 
         if itr is None:
-            itemix = None
             item = None
         else:
-            itemix = self.iter_to_item_index(itr)
-            item = self.wishCalc.items[itemix]
+            item = self.wishCalc.get_item(itr)
 
-        item = self.itemEditor.edit(item)
+        item = self.itemEditor.edit(item,
+            False if itr is None else self.wishlist.iter_n_children(itr) > 0)
 
         if item is not None:
-            if itemix is not None:
+            if itr is not None:
                 # заменяем существующий экземпляр изменённым
-                self.wishCalc.items[itemix] = item
+                self.wishCalc.replace_item(itr, item)
             else:
                 # добавляем новый
-                itemix = len(self.wishCalc.items)
-                self.wishCalc.items.append(item)
+                warn('__do_edit_cur_item(): добавить возможность добавлять дочерние элементы дерева')
+                self.wishCalc.append_item(None, item)
 
-            self.refresh_wishlistview(itemix)
+            self.refresh_wishlistview(item)
 
     def wl_row_activated(self, treeview, path, col):
         self.__do_edit_cur_item(self.wishlist.get_iter(path))
-
-    def iter_to_item_index(self, itr):
-        """Возвращает соответствующую itr (Gtk.TreeIter) позицию в списке
-        (целое число), если itr != None."""
-
-        warn('при работе с wishlist работать со ссылкой на объект из столбца WCOL_ITEMINDEX')
-
-        return None if itr is None else self.wishlist.get_path(itr).get_indices()[0]
 
     def get_selected_item_iter(self):
         """Возвращает Gtk.TreeIter если в TreeView выбрана строка,
@@ -538,13 +561,13 @@ class MainWnd():
     def item_add(self, btn):
         self.__do_edit_cur_item(None)
 
-    def item_add_group(self, btn):
-        warn('item_add_group() пока что не работает')
+    def item_add_subitem(self, btn):
+        warn('item_add_subitem() пока что не работает')
 
     def item_open_url(self, btn):
         itr = self.get_selected_item_iter()
         if itr:
-            item = self.wishCalc.items[self.iter_to_item_index(itr)]
+            item = self.wishCalc.get_item(itr)
             if item.url:
                 webbrowser.open_new_tab(item.url)
 
@@ -557,18 +580,15 @@ class MainWnd():
         if not itr:
             return
 
-        ix = self.iter_to_item_index(itr)
-
         ts = ' купленный' if ispurchased else ''
 
-        item = self.wishCalc.items[ix]
+        item = self.wishCalc.get_item(itr)
 
         if msg_dialog(self.window, 'Удаление',
             'Удалить%s товар "%s"?' % (ts, item.name),
             buttons=Gtk.ButtonsType.YES_NO) == Gtk.ResponseType.YES:
 
-            self.wishCalc.item_delete(ix, ispurchased)
-
+            self.wishCalc.item_delete(itr, ispurchased)
             self.refresh_wishlistview()
 
     def item_purchased(self, btn):
@@ -585,15 +605,21 @@ class MainWnd():
                       в направлении, указанном параметром down,
                       иначе, соответственно, в конец или в начало."""
 
+        warn('__move_selected_item(): исправить работу при onepos=True')
+
         itr = self.get_selected_item_iter()
         if itr is not None:
-            ix = self.iter_to_item_index(itr)
+            movefunc = self.wishlist.move_before if down else self.wishlist.move_after
 
-            newix = (self.wishCalc.move_item_updown if onepos else self.wishCalc.move_item_topbottom)(ix, down)
+            if onepos:
+                moveref = self.wishlist.iter_next(itr) if down else self.wishlist.iter_previous(itr)
+                print(itr, moveref)
+            else:
+                moveref = None
 
-            if newix is not None:
-                # данные изменились - освежаем содержимое TreeView
-                self.refresh_wishlistview(newix)
+            movefunc(itr, moveref)
+
+            self.refresh_wishlistview()
 
     def item_up(self, btn):
         self.__move_selected_item(False, True)
@@ -613,19 +639,19 @@ class MainWnd():
         cost = cost_str_to_int(text)
 
         if cost is None:
-            self.wishlist.set_value(itr, self.WCOL_COST, '')
-            self.wishlist.set_value(itr, self.WCOL_COSTERROR, self.iconError)
+            self.wishlist.set_value(itr, WishCalc.COL_COST, '')
+            self.wishlist.set_value(itr, WishCalc.COL_COST_ERROR, self.iconError)
         else:
-            ix = self.iter_to_item_index(itr)
+            item = self.wishCalc.get_item(itr)
 
-            if self.wishCalc.items[ix].cost != cost:
-                self.wishCalc.items[ix].cost = cost
+            if item.cost != cost:
+                item.cost = cost
 
                 text = '?' if cost <= 0 else str(cost)
                 # патамушта на входе могло быть вещественное, а мы признаём только целые
 
-                self.wishlist.set_value(itr, self.WCOL_COST, text)
-                self.wishlist.set_value(itr, self.WCOL_COSTERROR, None)
+                self.wishlist.set_value(itr, WishCalc.COL_COST, text)
+                self.wishlist.set_value(itr, WishCalc.COL_COST_ERROR, None)
                 self.refresh_wishlistview()
 
     def get_cash_entry_changes(self, entry, errormsg):
@@ -681,25 +707,25 @@ class MainWnd():
             msg_dialog(self.window, TITLE, 'Ошибка сохранения файла "%s":\n%s' % (self.wishCalc.filename, str(ex)))
             return False
 
+    def load_wishlist(self, filename):
+        """Загрузка списка.
+        Возвращает булевское значение (успех/отказ)."""
+
+        try:
+            wishcalc = WishCalc(filename)
+            wishcalc.load()
+
+            # если раньше не рухнуло с исключением - можно:
+            self.wishCalc = wishcalc
+
+            return True
+
+        except Exception as ex:
+            msg_dialog(self.window, TITLE, 'Ошибка загрузки файла "%s":\n%s' % (filename, str(ex)))
+            return False
+
     def main(self):
         Gtk.main()
-
-
-def load_wishlist(parentw, filename):
-    """Пытается загрузить файл хотелок по имени filename.
-    В случае успеха возвращает экземпляр класса WishCalc,
-    в случае ошибки показывает окно с сообщением об ошибке,
-    модальное окну parentw, и возвращает None."""
-
-    try:
-        wishcalc = WishCalc(filename)
-        wishcalc.load()
-
-        return wishcalc
-
-    except Exception as ex:
-        msg_dialog(parentw, TITLE, 'Ошибка загрузки файла "%s":\n%s' % (filename, str(ex)))
-        return None
 
 
 def main(args):
@@ -708,11 +734,7 @@ def main(args):
     else:
         wlfname = os.path.join(os.path.split(sys.argv[0])[0], 'wishlist.json')
 
-    wishcalc = load_wishlist(None, wlfname)
-    if wishcalc is None:
-        return 1
-
-    MainWnd(wishcalc).main()
+    MainWnd(wlfname).main()
 
     return 0
 

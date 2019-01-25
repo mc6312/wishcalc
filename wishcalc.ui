@@ -71,6 +71,22 @@
                       </object>
                     </child>
                     <child>
+                      <object class="GtkMenuItem" id="mnuFileSave">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">Сохранить</property>
+                        <property name="use_underline">True</property>
+                        <signal name="activate" handler="file_save" swapped="no"/>
+                        <accelerator key="s" signal="activate" modifiers="GDK_CONTROL_MASK"/>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkSeparatorMenuItem">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                      </object>
+                    </child>
+                    <child>
                       <object class="GtkMenuItem" id="mnuFileEditComment">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
@@ -119,16 +135,6 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <child>
-                      <object class="GtkMenuItem" id="mnuItemAddGroup">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Новая группа товаров</property>
-                        <property name="use_underline">True</property>
-                        <signal name="activate" handler="item_add_group" swapped="no"/>
-                        <accelerator key="n" signal="activate" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>
-                      </object>
-                    </child>
-                    <child>
                       <object class="GtkMenuItem" id="mnuItemAdd">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
@@ -136,6 +142,16 @@
                         <property name="use_underline">True</property>
                         <signal name="activate" handler="item_add" swapped="no"/>
                         <accelerator key="n" signal="activate" modifiers="GDK_CONTROL_MASK"/>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkMenuItem" id="mnuItemAddSubItem">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">Добавить новый товар к выбранному</property>
+                        <property name="use_underline">True</property>
+                        <signal name="activate" handler="item_add_subitem" swapped="no"/>
+                        <accelerator key="n" signal="activate" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>
                       </object>
                     </child>
                     <child>
@@ -282,8 +298,10 @@
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="model">wishlist</property>
+                    <property name="reorderable">True</property>
                     <property name="enable_grid_lines">both</property>
                     <property name="enable_tree_lines">True</property>
+                    <signal name="drag-end" handler="on_wishlistview_drag_end" swapped="no"/>
                     <signal name="row-activated" handler="wl_row_activated" swapped="no"/>
                     <child internal-child="selection">
                       <object class="GtkTreeSelection" id="wishlistviewsel">
@@ -382,13 +400,13 @@
                 <property name="toolbar_style">icons</property>
                 <property name="icon_size">1</property>
                 <child>
-                  <object class="GtkToolButton" id="btnItemAddGroup">
+                  <object class="GtkToolButton" id="btnItemAdd">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="tooltip_text" translatable="yes">Добавить группу товаров</property>
+                    <property name="tooltip_text" translatable="yes">Новый товар</property>
                     <property name="use_underline">True</property>
-                    <property name="stock_id">gtk-directory</property>
-                    <signal name="clicked" handler="item_add_group" swapped="no"/>
+                    <property name="stock_id">gtk-new</property>
+                    <signal name="clicked" handler="item_add" swapped="no"/>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -396,13 +414,13 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkToolButton" id="btnItemAdd">
+                  <object class="GtkToolButton" id="btnItemAddSubItem">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="tooltip_text" translatable="yes">Добавить товар</property>
+                    <property name="tooltip_text" translatable="yes">Добавить новый товар к выбранному</property>
                     <property name="use_underline">True</property>
-                    <property name="stock_id">gtk-new</property>
-                    <signal name="clicked" handler="item_add" swapped="no"/>
+                    <property name="stock_id">gtk-add</property>
+                    <signal name="clicked" handler="item_add_subitem" swapped="no"/>
                   </object>
                   <packing>
                     <property name="expand">False</property>
