@@ -318,6 +318,11 @@ class MainWnd():
         self.dlgFileOpen = uibldr.get_object('dlgFileOpen')
 
         #
+        # диалог сохранения файла
+        #
+        self.dlgFileSaveAs = uibldr.get_object('dlgFileSaveAs')
+
+        #
         # !!!
         #
         self.window.show_all()
@@ -367,6 +372,16 @@ class MainWnd():
 
     def file_save(self, mnu):
         self.save_wishlist()
+
+    def file_save_as(self, mnu):
+        self.dlgFileSaveAs.select_filename(self.wishCalc.filename)
+        r = self.dlgFileSaveAs.run()
+        self.dlgFileSaveAs.hide()
+
+        if r == Gtk.ResponseType.OK:
+            self.wishCalc.filename = self.dlgFileSaveAs.get_filename()
+            if self.save_wishlist():
+                self.refresh_window_title()
 
     def file_open(self, mnu):
         self.dlgFileOpen.select_filename(self.wishCalc.filename)
@@ -519,36 +534,61 @@ class MainWnd():
             self.wishlistviewsel.select_path(path)
             self.wishlistview.set_cursor(path, None, False)
 
+        self.setup_widgets_sensitive()
+
         self.refresh_totalcash_view()
         self.refresh_remains_view()
 
-    def __do_edit_cur_item(self, itr):
+    def __do_edit_item(self, newitem, newaschild=False):
         """Вызов редактора описания товара.
 
-        itr     - экземпляр Gtk.TreeIter, если в списке что-то выбрано,
-                  или None - в последнем случае создаём новый товар."""
+        newitem     - булевское значение:
+                      False, если нужно отредактировать выбранный
+                      товар,
+                      True, если нужно создать новый товар;
+        newaschild   - используется только если newitem==True;
+                      булевское значение:
+                      False - новый товар добавляется на том же уровне
+                      дерева, что и выбранный товар (или на верхнем уровне,
+                      если ничего не выбрано);
+                      True - новый товар добавляется как дочерний
+                      к выбранному."""
 
-        if itr is None:
+        itrsel = self.get_selected_item_iter()
+
+        if newitem:
             item = None
         else:
-            item = self.wishCalc.get_item(itr)
+            if itrsel is None:
+                return
+
+            item = self.wishCalc.get_item(itrsel)
 
         item = self.itemEditor.edit(item,
-            False if itr is None else self.wishlist.iter_n_children(itr) > 0)
+            False if itrsel is None else self.wishlist.iter_n_children(itrsel) > 0)
 
         if item is not None:
-            if itr is not None:
+            if not newitem:
                 # заменяем существующий экземпляр изменённым
-                self.wishCalc.replace_item(itr, item)
+                self.wishCalc.replace_item(itrsel, item)
             else:
                 # добавляем новый
-                warn('__do_edit_cur_item(): добавить возможность добавлять дочерние элементы дерева')
-                self.wishCalc.append_item(None, item)
+                if newaschild:
+                    parent = itrsel
+                else:
+                    parent = self.wishlist.iter_parent(itrsel) if itrsel is not None else None
+
+                itrsel = self.wishCalc.append_item(parent, item)
+
+                if parent is not None:
+                    # принудительно разворачиваем ветвь, иначе TreeView не изменит selection
+                    path = self.wishlist.get_path(itrsel)
+                    self.wishlistview.expand_row(path, False)
 
             self.refresh_wishlistview(item)
 
     def wl_row_activated(self, treeview, path, col):
-        self.__do_edit_cur_item(self.wishlist.get_iter(path))
+        self.__do_edit_item(False)
 
     def get_selected_item_iter(self):
         """Возвращает Gtk.TreeIter если в TreeView выбрана строка,
@@ -556,13 +596,13 @@ class MainWnd():
         return self.wishlistviewsel.get_selected()[1]
 
     def item_edit(self, btn):
-        self.__do_edit_cur_item(self.get_selected_item_iter())
+        self.__do_edit_item(False)
 
     def item_add(self, btn):
-        self.__do_edit_cur_item(None)
+        self.__do_edit_item(True)
 
     def item_add_subitem(self, btn):
-        warn('item_add_subitem() пока что не работает')
+        self.__do_edit_item(True, True)
 
     def item_open_url(self, btn):
         itr = self.get_selected_item_iter()
@@ -580,12 +620,20 @@ class MainWnd():
         if not itr:
             return
 
-        ts = ' купленный' if ispurchased else ''
+        nchildren = self.wishlist.iter_n_children(itr)
+
+        sitem = ('группу товаров (из %d)' % nchildren) if nchildren else 'товар'
+
+        spchsd = '' if not ispurchased\
+            else ' купленный' if nchildren == 0\
+                else ' купленную'
 
         item = self.wishCalc.get_item(itr)
 
+        msgwhat = 'Удалить%s %s "%s"?' % (spchsd, sitem, item.name)
+
         if msg_dialog(self.window, 'Удаление',
-            'Удалить%s товар "%s"?' % (ts, item.name),
+            msgwhat,
             buttons=Gtk.ButtonsType.YES_NO) == Gtk.ResponseType.YES:
 
             self.wishCalc.item_delete(itr, ispurchased)
@@ -605,11 +653,9 @@ class MainWnd():
                       в направлении, указанном параметром down,
                       иначе, соответственно, в конец или в начало."""
 
-        warn('__move_selected_item(): исправить работу при onepos=True')
-
         itr = self.get_selected_item_iter()
         if itr is not None:
-            movefunc = self.wishlist.move_before if down else self.wishlist.move_after
+            movefunc = self.wishlist.move_before if (down ^ onepos) else self.wishlist.move_after
 
             if onepos:
                 moveref = self.wishlist.iter_next(itr) if down else self.wishlist.iter_previous(itr)
