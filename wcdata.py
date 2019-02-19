@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """ wcdata.py
@@ -24,6 +24,8 @@ import os.path
 
 from gi.repository import Gtk, GObject
 from gi.repository.GdkPixbuf import Pixbuf
+
+from wcconfig import JSON_ENCODING
 
 
 MAX_ITEM_LEVEL = 3 # максимальный уровень вложенности WishCalc.Item
@@ -243,7 +245,6 @@ class WishCalc():
     VAR_REFILL = 'refill'
     VAR_WISHLIST = 'wishlist'
     VAR_COMMENT = 'comment'
-    JSON_ENCODING = 'utf-8'
 
     def load(self):
         """Загрузка списка.
@@ -261,7 +262,7 @@ class WishCalc():
         if not os.path.exists(self.filename):
             return
 
-        with open(self.filename, 'r', encoding=self.JSON_ENCODING) as f:
+        with open(self.filename, 'r', encoding=JSON_ENCODING) as f:
             srcdict = json.load(f)
 
         self.comment = normalize_str(get_dict_item(srcdict, self.VAR_COMMENT, str, None, ''))
@@ -376,7 +377,7 @@ class WishCalc():
             # пытаемся сохранить "безопасно"
             tmpfn = self.filename + '.tmp'
 
-            with open(tmpfn, 'w+', encoding=self.JSON_ENCODING) as f:
+            with open(tmpfn, 'w+', encoding=JSON_ENCODING) as f:
                 json.dump(tmpd, f, ensure_ascii=False, indent='  ')
 
             if os.path.exists(self.filename):

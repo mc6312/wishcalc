@@ -32,12 +32,13 @@ import sys
 from warnings import warn
 
 from wcdata import *
+from wcconfig import *
 
 
 TITLE = 'WishCalc'
 SUB_TITLE = 'Калькулятор загребущего нищеброда'
 
-VERSION = '2.0.0'
+VERSION = '2.1.0'
 TITLE_VERSION = '%s v%s' % (TITLE, VERSION)
 COPYRIGHT = '(c) 2017-2019 MC-6312'
 URL = 'https://github.com/mc6312/wishcalc'
@@ -211,12 +212,31 @@ class MainWnd():
 
     def destroy(self, widget, data=None):
         self.save_wishlist()
+        self.cfg.save()
         Gtk.main_quit()
+
+    def wnd_configure_event(self, wnd, event):
+        """Сменились размер/положение окна"""
+
+        self.cfg.mainWindow.wnd_configure_event(wnd, event)
+
+    def wnd_state_event(self, widget, event):
+        """Сменилось состояние окна"""
+
+        self.cfg.mainWindow.wnd_state_event(widget, event)
+
+    def load_window_state(self):
+        """Загрузка и установка размера и положения окна"""
+
+        self.cfg.mainWindow.set_window_state(self.window)
 
     def __init__(self, wlfname):
         #
         resldr = get_resource_loader()
         uibldr = get_gtk_builder(resldr, 'wishcalc.ui')
+
+        self.windowStateLoaded = False
+        self.cfg = Config()
 
         #
         # основное окно
@@ -328,13 +348,15 @@ class MainWnd():
         self.window.show_all()
         uibldr.connect_signals(self)
 
+        self.cfg.load()
+        self.load_window_state()
+
         #
         # первоначальное заполнение списка
         #
         self.load_wishlist(wlfname)
 
         self.wishlist_is_loaded()
-
 
         self.setup_widgets_sensitive()
 
