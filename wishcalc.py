@@ -38,7 +38,7 @@ from wcconfig import *
 TITLE = 'WishCalc'
 SUB_TITLE = 'Калькулятор загребущего нищеброда'
 
-VERSION = '2.1.0'
+VERSION = '2.1.1'
 TITLE_VERSION = '%s v%s' % (TITLE, VERSION)
 COPYRIGHT = '(c) 2017-2019 MC-6312'
 URL = 'https://github.com/mc6312/wishcalc'
@@ -346,10 +346,11 @@ class MainWnd():
         # !!!
         #
         self.window.show_all()
-        uibldr.connect_signals(self)
 
         self.cfg.load()
         self.load_window_state()
+
+        uibldr.connect_signals(self)
 
         #
         # первоначальное заполнение списка
@@ -600,11 +601,11 @@ class MainWnd():
                 else:
                     parent = self.wishlist.iter_parent(itrsel) if itrsel is not None else None
 
-                itrsel = self.wishCalc.append_item(parent, item)
+                self.wishCalc.append_item(parent, item)
 
                 if parent is not None:
                     # принудительно разворачиваем ветвь, иначе TreeView не изменит selection
-                    path = self.wishlist.get_path(itrsel)
+                    path = self.wishlist.get_path(parent)
                     self.wishlistview.expand_row(path, False)
 
             self.refresh_wishlistview(item)

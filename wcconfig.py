@@ -32,83 +32,118 @@ JSON_ENCODING = 'utf-8'
 
 
 class WindowState():
-    X = 'x'
-    Y = 'y'
-    WIDTH = 'width'
-    HEIGHT = 'height'
     MAXIMIZED = 'maximized'
 
+    class WinPos():
+        """Класс для хранения положения и размеров окна."""
+
+        __slots__ = 'x', 'y', 'width', 'height'
+
+        def __init__(self, x=0, y=0, width=0, height=0):
+            self.x = x
+            self.y = y
+            self.width = width
+            self.height = height
+
+        def todict(self):
+            d = dict()
+
+            for vname in self.__slots__:
+                v = getattr(self, vname)
+                if v:
+                    d[vname] = v
+
+            return d
+
+        def fromdict(self, d):
+            for vname in self.__slots__:
+                setattr(self, vname, d[vname] if vname in d else 0)
+
+        def __repr__(self):
+            # для отладки
+
+            return '%s(x=%s, y=%s, width=%s, height=%s)' % (self.__class__.__name__,
+                self.x, self.y, self.width, self.height)
+
     def __init__(self):
-        self.x = 0
-        self.y = 0
-        self.width = 0
-        self.height = 0
+        self.sizepos = self.WinPos()
+        self.oldsizepos = self.WinPos()
         self.maximized = False
+
+        self.__lockcnt = 0
 
     def wnd_configure_event(self, wnd, event):
         """Сменились размер/положение окна"""
 
-        if not self.maximized:
-            self.x = event.x
-            self.y = event.y
+        if self.__lockcnt:
+            return
 
-            self.width = event.width
-            self.height = event.height
+        #print('wnd_configure_event (x=%d, y=%d, w=%d, h=%d)' % (event.x, event.y, event.width, event.height))
+
+        # сохраняем старое положение для борьбы с поведением GTK,
+        # который вызывает configure-event с "максимизированным"
+        # размером перед вызовом window-state-event
+        self.oldsizepos = self.sizepos
+        self.sizepos = self.WinPos(event.x, event.y, event.width, event.height)
 
     def wnd_state_event(self, widget, event):
         """Сменилось состояние окна"""
 
+        if self.__lockcnt:
+            return
+
         self.maximized = bool(event.new_window_state & Gdk.WindowState.MAXIMIZED)
+
+        if self.maximized:
+            self.sizepos = self.oldsizepos
+
+        #print('wnd_state_event (maximized=%s)' % self.maximized)
+
+    def __lock(self):
+        self.__lockcnt += 1
+
+    def __unlock(self):
+        if self.__lockcnt > 0:
+            self.__lockcnt -= 1
 
     def set_window_state(self, window):
         """Установка положения/размера окна"""
 
-        if self.x is not None:
-            window.move(self.x, self.y)
+        self.__lock()
+
+        if self.sizepos.x is not None:
+            window.move(self.sizepos.x, self.sizepos.y)
 
             # все равно GTK не даст меньше допустимого съёжить
-            window.resize(self.width, self.height)
+            window.resize(self.sizepos.width, self.sizepos.height)
 
         if self.maximized:
             window.maximize()
 
         flush_gtk_events() # грязный хакЪ, дабы окно смогло поменять размер
 
-    def fromdict(self, d):
-        def __fromdict(d, vname, fallback=0):
-            return d[vname] if vname in d else fallback
+        self.__unlock()
 
-        self.x = __fromdict(d, self.X)
-        self.y = __fromdict(d, self.Y)
-        self.width = __fromdict(d, self.WIDTH)
-        self.height = __fromdict(d, self.HEIGHT)
-        self.maximized = __fromdict(d, self.MAXIMIZED)
+    def fromdict(self, d):
+        self.sizepos.fromdict(d)
+
+        self.maximized = d[self.MAXIMIZED] if self.MAXIMIZED in d else False
 
     def todict(self):
         d = dict()
 
-        if self.x:
-            d[self.X] = self.x
-
-        if self.Y:
-            d[self.Y] = self.y
-
-        if self.width:
-            d[self.WIDTH] = self.width
-
-        if self.height:
-            d[self.HEIGHT] = self.height
-
         if self.maximized:
             d[self.MAXIMIZED] = self.maximized
+
+        d.update(self.sizepos.todict())
 
         return d
 
     def __repr__(self):
         # для отладки
 
-        return '%s(x=%s, y=%s, width=%s, height=%s, maximized=%s)' % (self.__class__.__name__,
-            self.x, self.y, self.width, self.height, self.maximized)
+        return '%s(sizepos=%s, oldsizepos=%s, maximized=%s)' % (self.__class__.__name__,
+            self.sizepos, self.oldsizepos, self.maximized)
 
 
 class Config():
