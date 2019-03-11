@@ -94,8 +94,8 @@ class WindowState():
 
         self.maximized = bool(event.new_window_state & Gdk.WindowState.MAXIMIZED)
 
-        if self.maximized:
-            self.sizepos = self.oldsizepos
+        #if self.maximized:
+        #    self.sizepos = self.oldsizepos
 
         #print('wnd_state_event (maximized=%s)' % self.maximized)
 
@@ -110,6 +110,8 @@ class WindowState():
         """Установка положения/размера окна"""
 
         self.__lock()
+
+        #print('set_window_state: %s' % self.sizepos)
 
         if self.sizepos.x is not None:
             window.move(self.sizepos.x, self.sizepos.y)
@@ -187,6 +189,6 @@ if __name__ == '__main__':
 
     cfg = Config()
     cfg.load()
-    cfg.save()
+    #cfg.save()
 
     print(cfg)

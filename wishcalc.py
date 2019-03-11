@@ -348,7 +348,9 @@ class MainWnd():
         self.window.show_all()
 
         self.cfg.load()
+        #print('loaded:', self.cfg.mainWindow)
         self.load_window_state()
+        #print('load_window_state called:', self.cfg.mainWindow)
 
         uibldr.connect_signals(self)
 
@@ -682,7 +684,7 @@ class MainWnd():
 
             if onepos:
                 moveref = self.wishlist.iter_next(itr) if down else self.wishlist.iter_previous(itr)
-                print(itr, moveref)
+                #print(itr, moveref)
             else:
                 moveref = None
 

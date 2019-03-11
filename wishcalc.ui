@@ -769,9 +769,6 @@
     <property name="transient_for">wndMain</property>
     <property name="create_folders">False</property>
     <property name="filter">filefilterJSON</property>
-    <child>
-      <placeholder/>
-    </child>
     <child internal-child="vbox">
       <object class="GtkBox">
         <property name="can_focus">False</property>
@@ -834,9 +831,6 @@
     <property name="action">save</property>
     <property name="do_overwrite_confirmation">True</property>
     <property name="filter">filefilterJSON</property>
-    <child>
-      <placeholder/>
-    </child>
     <child internal-child="vbox">
       <object class="GtkBox">
         <property name="can_focus">False</property>
