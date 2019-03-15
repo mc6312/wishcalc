@@ -78,13 +78,17 @@ class WindowState():
         if self.__lockcnt:
             return
 
-        #print('wnd_configure_event (x=%d, y=%d, w=%d, h=%d)' % (event.x, event.y, event.width, event.height))
+        # реальные размеры и положение - в event неправильные!
+        ww, wh = wnd.get_size()
+        wx, wy = wnd.get_position()
 
         # сохраняем старое положение для борьбы с поведением GTK,
         # который вызывает configure-event с "максимизированным"
         # размером перед вызовом window-state-event
+        # авось, поможет...
         self.oldsizepos = self.sizepos
-        self.sizepos = self.WinPos(event.x, event.y, event.width, event.height)
+        #self.sizepos = self.WinPos(event.x, event.y, event.width, event.height)
+        self.sizepos = self.WinPos(wx, wy, ww, wh)
 
     def wnd_state_event(self, widget, event):
         """Сменилось состояние окна"""

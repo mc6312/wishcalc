@@ -38,7 +38,7 @@ from wcconfig import *
 TITLE = 'WishCalc'
 SUB_TITLE = 'Калькулятор загребущего нищеброда'
 
-VERSION = '2.1.1'
+VERSION = '2.1.2'
 TITLE_VERSION = '%s v%s' % (TITLE, VERSION)
 COPYRIGHT = '(c) 2017-2019 MC-6312'
 URL = 'https://github.com/mc6312/wishcalc'
@@ -162,6 +162,8 @@ class ItemEditorDlg():
         # пинаем обработчики, чтоб при пустых полях иконки высветились и т.п.
         for entry in (self.itemnameentry, self.itemcostentry, self.itemurlentry):
             entry.emit('changed')
+
+        self.itemnameentry.grab_focus()
 
         self.dlgItemEditor.show()
         try:
