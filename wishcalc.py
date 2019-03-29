@@ -239,6 +239,7 @@ class MainWnd():
 
         self.windowStateLoaded = False
         self.cfg = Config()
+        self.wishCalc = None
 
         #
         # основное окно
@@ -308,6 +309,8 @@ class MainWnd():
              'mnuItemMoveToBottom', 'btnItemMoveToBottom'))
         self.widgetsItemOpenURL = get_ui_widgets(uibldr,
             ('mnuItemOpenURL', 'btnItemOpenURL'))
+        self.widgetsItemCopyPaste = get_ui_widgets(uibldr,
+            ('mnuItemCopy', 'btnItemCopy', 'mnuItemPaste', 'btnItemPaste'))
 
         # а вот оно будет рулиться НЕ из setup_widgets_sensitive()!
         self.widgetsRefillCash = get_ui_widgets(uibldr,
@@ -456,6 +459,7 @@ class MainWnd():
 
             bcanopenurl = self.wishCalc.get_item(itr).url != ''
 
+        set_widgets_sensitive(self.widgetsItemCopyPaste, bsens)
         set_widgets_sensitive(self.widgetsItemEditing, bsens)
         set_widgets_sensitive(self.widgetsItemMoveUp, bsens & bcanmoveup)
         set_widgets_sensitive(self.widgetsItemMoveDown, bsens & bcanmovedown)
@@ -630,6 +634,20 @@ class MainWnd():
 
     def item_add_subitem(self, btn):
         self.__do_edit_item(True, True)
+
+    def item_copy(self, btn):
+        warn('%s.item_copy() not yet implemented' % self.__class__.__name__)
+
+        itrsel = self.get_selected_item_iter()
+
+        if itrsel is None:
+            return
+
+        #item = self.wishCalc.get_item(itrsel)
+
+
+    def item_paste(self, btn):
+        warn('%s.item_paste() not yet implemented' % self.__class__.__name__)
 
     def item_open_url(self, btn):
         itr = self.get_selected_item_iter()

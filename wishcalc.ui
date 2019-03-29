@@ -187,6 +187,26 @@
                       </object>
                     </child>
                     <child>
+                      <object class="GtkMenuItem" id="mnuItemCopy">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">Копировать</property>
+                        <property name="use_underline">True</property>
+                        <signal name="activate" handler="item_copy" swapped="no"/>
+                        <accelerator key="c" signal="activate" modifiers="GDK_CONTROL_MASK"/>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkMenuItem" id="mnuItemPaste">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">Вставить</property>
+                        <property name="use_underline">True</property>
+                        <signal name="activate" handler="item_paste" swapped="no"/>
+                        <accelerator key="v" signal="activate" modifiers="GDK_CONTROL_MASK"/>
+                      </object>
+                    </child>
+                    <child>
                       <object class="GtkMenuItem" id="mnuItemOpenURL">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
@@ -462,6 +482,34 @@
                     <property name="use_underline">True</property>
                     <property name="stock_id">gtk-remove</property>
                     <signal name="clicked" handler="item_purchased" swapped="no"/>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="homogeneous">True</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkToolButton" id="btnItemCopy">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="tooltip_text" translatable="yes">Копировать товар в буфер обмена</property>
+                    <property name="use_underline">True</property>
+                    <property name="stock_id">gtk-copy</property>
+                    <signal name="clicked" handler="item_copy" swapped="no"/>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="homogeneous">True</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkToolButton" id="btnItemPaste">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="tooltip_text" translatable="yes">Вставить товар из буфера обмена</property>
+                    <property name="use_underline">True</property>
+                    <property name="stock_id">gtk-paste</property>
+                    <signal name="clicked" handler="item_paste" swapped="no"/>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -769,6 +817,9 @@
     <property name="transient_for">wndMain</property>
     <property name="create_folders">False</property>
     <property name="filter">filefilterJSON</property>
+    <child>
+      <placeholder/>
+    </child>
     <child internal-child="vbox">
       <object class="GtkBox">
         <property name="can_focus">False</property>
@@ -831,6 +882,9 @@
     <property name="action">save</property>
     <property name="do_overwrite_confirmation">True</property>
     <property name="filter">filefilterJSON</property>
+    <child>
+      <placeholder/>
+    </child>
     <child internal-child="vbox">
       <object class="GtkBox">
         <property name="can_focus">False</property>
