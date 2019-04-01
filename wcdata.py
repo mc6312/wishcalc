@@ -63,23 +63,27 @@ def normalize_str(s):
     return ' '.join(s.split(None))
 
 
-def get_dict_item(fromdict, vname, vtype, rangecheck=None, fallback=None):
+def get_dict_item(fromdict, vname, vtype, rangecheck=None, fallback=None, failifnokey=True):
     """Берёт из словаря fromdict значение поля vname, проверяет тип
     и правильность значения.
     В случае успеха возвращает полученное значение, иначе генерирует исключение.
 
     rangecheck  - None или функция проверки диапазона значений;
-                  должна возвращать булевское значение,
-    fallback    - значение по умолчанию или None;
-                  если не указано - то при отсутствии поля в словаре
-                  генерируется исключение, иначе функция возвращает
-                  значение fallback."""
+                  должна возвращать булевское значение;
+    fallback    - значение, которое следует возвращать при отсутствии
+                  ключа vname в словаре;
+                  если не указано (т.е. None), то поведение функции
+                  зависит также от параметра failifnokey;
+    failifnokey - что делать, если поля vname нет в словаре и fallback=None:
+                  если True - генерируется исключение,
+                  если False - функция в любом случае возвращает значение
+                  fallback."""
 
     if vname not in fromdict:
-        if fallback is not None:
+        if fallback is not None or failifnokey == False:
             return fallback
 
-        raise ValueError('отсутствует поле "%s"' % vname)
+        raise KeyError('отсутствует поле "%s"' % vname)
 
     v = fromdict[vname]
     if not isinstance(v, vtype):
@@ -224,6 +228,9 @@ class WishCalc():
 
         self.filename = filename
 
+        """Дабы не дублировать данные и не гонять их туда-сюда лишний раз,
+        дерево объектов храним непосредственно в Gtk.TreeStore."""
+
         # при изменениях в wishcalc.ui - приводить в соответствие!
         self.store = Gtk.TreeStore(GObject.TYPE_PYOBJECT, GObject.TYPE_STRING,
             GObject.TYPE_STRING, Pixbuf, GObject.TYPE_STRING,
@@ -246,10 +253,8 @@ class WishCalc():
     VAR_WISHLIST = 'wishlist'
     VAR_COMMENT = 'comment'
 
-    def load(self):
-        """Загрузка списка.
-        Если файл filename не существует, метод просто очищает поля.
-        В случае ошибок при загрузке файла генерируются исключения."""
+    def clear(self):
+        """Очистка списка."""
 
         self.store.clear()
 
@@ -259,11 +264,53 @@ class WishCalc():
 
         self.comment = ''
 
-        if not os.path.exists(self.filename):
-            return
+    def load_subitems(self, parentitr, fromlist, level):
+        """Загрузка данных в self.store.
 
-        with open(self.filename, 'r', encoding=JSON_ENCODING) as f:
-            srcdict = json.load(f)
+        parentitr   - экземпляр Gtk.TreeIter (None для верхнего
+                      уровня дерева);
+        fromlist    - список словарей с полями элементов;
+        level       - список целых (уровней вложенности) для отображения
+                      сообщений об ошибках.
+
+        Если parent == None - элементы добавляются в верхний уровень
+        дерева, иначе - как дочерние относительно parent."""
+
+        for ixitem, itemdict in enumerate(fromlist, 1):
+            nextlevel = level + [ixitem]
+            __val_error = lambda s: '%s элемента %s списка "%s"' %\
+                (s, ':'.join(map(str, nextlevel)), self.VAR_WISHLIST)
+
+            if not isinstance(itemdict, dict):
+                raise ValueError(__val_error('неправильный тип'))
+
+            try:
+                item = self.Item()
+                item.set_fields_dict(itemdict)
+                itr = self.append_item(parentitr, item)
+
+                # есть вложенные элементы?
+                subitems = get_dict_item(itemdict, item.ITEMS, list, fallback=[])
+                if subitems:
+                    self.load_subitems(itr, subitems, nextlevel)
+            except Exception as ex:
+                raise ValueError(__val_error(str(ex)))
+
+    def load_str(self, s):
+        """Загрузка списка из строки.
+        s - строка, которая должна содержать правильный JSON.
+        В случае ошибок генерируются исключения."""
+
+        self.clear()
+
+        s = s.strip()
+        if not s:
+            raise ValueError('получена пустая строка')
+
+        srcdict = json.loads(s)
+
+        if not isinstance(srcdict, dict):
+            raise TypeError('корневой элемент JSON не является словарём')
 
         self.comment = normalize_str(get_dict_item(srcdict, self.VAR_COMMENT, str, None, ''))
 
@@ -272,41 +319,26 @@ class WishCalc():
 
         self.totalRemain = self.totalCash # потом должно быть пересчитано!
 
-        def __load_items(parentitr, fromlist, level):
-            """Загрузка данных в self.store.
+        wishList = get_dict_item(srcdict, self.VAR_WISHLIST, list,
+            fallback=None, failifnokey=False)
 
-            parentitr   - экземпляр Gtk.TreeIter (None для верхнего
-                          уровня дерева);
-            fromlist    - список словарей с полями элементов;
-            level       - список целых (уровней вложенности) для отображения
-                          сообщений об ошибках.
+        if wishList is None:
+            raise ValueError('словарь JSON не содержит ключа "%s"' % self.VAR_WISHLIST)
 
-            Если parent == None - элементы добавляются в верхний уровень
-            дерева, иначе - как дочерние относительно parent."""
+        self.load_subitems(None, wishList, [])
 
-            for ixitem, itemdict in enumerate(fromlist, 1):
-                nextlevel = level + [ixitem]
-                __val_error = lambda s: '%s элемента %s списка "%s"' %\
-                    (s, ':'.join(map(str, nextlevel)), self.VAR_WISHLIST)
+    def load(self):
+        """Загрузка списка.
+        Если файл filename не существует, метод просто очищает поля.
+        В случае ошибок при загрузке файла генерируются исключения."""
 
-                if not isinstance(itemdict, dict):
-                    raise ValueError(__val_error('неправильный тип'))
+        self.clear()
 
-                try:
-                    item = self.Item()
-                    item.set_fields_dict(itemdict)
-                    itr = self.append_item(parentitr, item)
+        if not os.path.exists(self.filename):
+            return
 
-                    # есть вложенные элементы?
-                    subitems = get_dict_item(itemdict, item.ITEMS, list, fallback=[])
-                    if subitems:
-                        __load_items(itr, subitems, nextlevel)
-                except Exception as ex:
-                    raise ValueError(__val_error(str(ex)))
-
-        wishList = get_dict_item(srcdict, self.VAR_WISHLIST, list, fallback=[])
-
-        __load_items(None, wishList, [])
+        with open(self.filename, 'r', encoding=JSON_ENCODING) as f:
+            return self.load_str(f.read())
 
     def get_item(self, itr):
         """Возвращает экземпляр WishCalc.Item (содержимое столбца
@@ -341,44 +373,58 @@ class WishCalc():
         return self.store.append(parentitr,
             (item, '', '', None, '', None, '', ''))
 
+    def items_to_list(self, parentitr):
+        """Проходит по TreeStore и возвращает список словарей
+        с содержимым полей соответствующих экземпляров WishCalc.Item.
+
+        parentitr   - экземпляр Gtk.TreeIter - указатель на элемент,
+                      с которого начинать проход по списку;
+                      None для первого элемента верхнего уровня дерева."""
+
+        items = []
+
+        itr = self.store.iter_children(parentitr)
+        while itr is not None:
+            item = self.store.get(itr, self.COL_ITEM_OBJ)[0]
+            itemdict = item.get_fields_dict()
+
+            # "дети" есть? а если найду?
+            if self.store.iter_n_children(itr) > 0:
+                itemdict[self.Item.ITEMS] = self.items_to_list(itr)
+
+            items.append(itemdict)
+            itr = self.store.iter_next(itr)
+
+        return items
+
+    def save_str(self):
+        """Возвращает строку, содержащую JSON с содержимым списка элементов
+        TreeStore и прочих полей.
+        В случае ошибок генерируются исключения."""
+
+        tmpd = {self.VAR_AVAIL:self.totalCash,
+            self.VAR_REFILL:self.refillCash,
+            self.VAR_COMMENT:self.comment}
+
+        # с элементами дерева - отдельная возня
+        tmpd[self.VAR_WISHLIST] = self.items_to_list(None)
+
+        return json.dumps(tmpd, ensure_ascii=False, indent='  ')
+
     def save(self):
-        if self.filename:
-            tmpd = {self.VAR_AVAIL:self.totalCash,
-                self.VAR_REFILL:self.refillCash,
-                self.VAR_COMMENT:self.comment}
+        """Сохраняет содержимое списка элементов TreeStore и прочих полей
+        в файле в формате JSON.
+        В случае ошибок генерируются исключения."""
 
-            # с элементами дерева - отдельная возня
-            def __items_to_list(parent):
-                """Проходит по TreeStore и возвращает список словарей
-                с содержимым полей соответствующих экземпляров WishCalc.Item.
-
-                parent  - экземпляр Gtk.TreeIter - указатель на элемент,
-                          с которого начинать проход по списку;
-                          None для первого элемента верхнего уровня дерева."""
-
-                items = []
-
-                itr = self.store.iter_children(parent)
-                while itr is not None:
-                    item = self.store.get(itr, self.COL_ITEM_OBJ)[0]
-                    itemdict = item.get_fields_dict()
-
-                    # "дети" есть? а если найду?
-                    if self.store.iter_n_children(itr) > 0:
-                        itemdict[self.Item.ITEMS] = __items_to_list(itr)
-
-                    items.append(itemdict)
-                    itr = self.store.iter_next(itr)
-
-                return items
-
-            tmpd[self.VAR_WISHLIST] = __items_to_list(None)
+        if not self.filename:
+            raise ValueError('%s.save(): поле filename не содержит значения' % self.__class__.__name__)
+        else:
+            tmps = self.save_str()
 
             # пытаемся сохранить "безопасно"
             tmpfn = self.filename + '.tmp'
-
             with open(tmpfn, 'w+', encoding=JSON_ENCODING) as f:
-                json.dump(tmpd, f, ensure_ascii=False, indent='  ')
+                f.write(tmps)
 
             if os.path.exists(self.filename):
                 os.remove(self.filename)
@@ -491,6 +537,11 @@ if __name__ == '__main__':
 
     wishcalc = WishCalc('wishlist.json')
     wishcalc.load()
+
+    #wishcalc.load_str('{}')
+
+    print(wishcalc.save_str())
+    exit(0)
 
     wishcalc.recalculate()
 

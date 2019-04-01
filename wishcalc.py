@@ -207,10 +207,9 @@ class ItemEditorDlg():
 
 
 class MainWnd():
-    WishCalc.COL_ITEMINDEX, WishCalc.COL_NAME, WishCalc.COL_COST, WishCalc.COL_COST_ERROR, WishCalc.COL_NEEDED, \
-    WishCalc.COL_NEEDICON, WishCalc.COL_NEEDMONTHS, WishCalc.COL_INFO = range(8)
-
     PERCENT_RANGE = 4
+
+    CLIPBOARD_DATA = 'wishcalc2_clipboard_data'
 
     def destroy(self, widget, data=None):
         self.save_wishlist()
@@ -310,7 +309,9 @@ class MainWnd():
         self.widgetsItemOpenURL = get_ui_widgets(uibldr,
             ('mnuItemOpenURL', 'btnItemOpenURL'))
         self.widgetsItemCopyPaste = get_ui_widgets(uibldr,
-            ('mnuItemCopy', 'btnItemCopy', 'mnuItemPaste', 'btnItemPaste'))
+            ('mnuItemCopy', 'btnItemCopy'))
+            # эти - всегда будут доступны, т.к. возможна вставка при невыбранном элементе
+            #, 'mnuItemPaste', 'btnItemPaste'))
 
         # а вот оно будет рулиться НЕ из setup_widgets_sensitive()!
         self.widgetsRefillCash = get_ui_widgets(uibldr,
@@ -356,6 +357,8 @@ class MainWnd():
         #print('loaded:', self.cfg.mainWindow)
         self.load_window_state()
         #print('load_window_state called:', self.cfg.mainWindow)
+
+        self.clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
 
         uibldr.connect_signals(self)
 
@@ -636,18 +639,77 @@ class MainWnd():
         self.__do_edit_item(True, True)
 
     def item_copy(self, btn):
-        warn('%s.item_copy() not yet implemented' % self.__class__.__name__)
-
         itrsel = self.get_selected_item_iter()
 
         if itrsel is None:
             return
 
-        #item = self.wishCalc.get_item(itrsel)
+        # кладём выбранный элемент с подэлементами в clipboard в виде JSON
+        # пока вот так, ручками и костыльно
 
+        itemdict = self.wishCalc.get_item(itrsel).get_fields_dict()
+
+        subitems = self.wishCalc.items_to_list(itrsel)
+        if subitems:
+            itemdict[WishCalc.Item.ITEMS] = subitems
+
+        self.clipboard.set_text(json.dumps({self.CLIPBOARD_DATA:itemdict},
+            ensure_ascii=False, indent='  '),
+            -1)
 
     def item_paste(self, btn):
-        warn('%s.item_paste() not yet implemented' % self.__class__.__name__)
+        def __paste_item():
+            tmps = self.clipboard.wait_for_text()
+            if tmps is None:
+                # нету там нифига - молча ничего не делаем
+                return
+
+            try:
+                tmpd = json.loads(tmps)
+            except json.JSONDecodeError:
+                # поломатый JSON - опять молча ничего не делаем
+                return
+                #return 'неподдерживаемый формат содержимого буфера обмена'
+
+            if self.CLIPBOARD_DATA not in tmpd:
+                # не наши данные - тоже молча ничего не делаем
+                return
+                #return 'буфер обмена не содержит данных, поддерживаемых %s' % TITLE
+
+            itemdict = tmpd[self.CLIPBOARD_DATA]
+
+            # таки пытаемся уже чего-то вставить
+            item = WishCalc.Item()
+            try:
+                item.set_fields_dict(itemdict)
+
+                itrsel = self.get_selected_item_iter()
+                if itrsel is None:
+                    # ничего не выбрано - вставляем элемент в конец списка
+                    inserteditr = self.wishCalc.append_item()
+                else:
+                    # иначе - после выбранного элемента на его уровне
+                    parent = self.wishlist.iter_parent(itrsel)
+
+                    inserteditr = self.wishCalc.store.insert_after(parent, itrsel,
+                        (item, '', '', None, '', None, '', ''))
+
+                # рекурсивно добавляем подэлементы, если они есть
+                if WishCalc.Item.ITEMS in itemdict:
+                    self.wishCalc.load_subitems(inserteditr,
+                        itemdict[WishCalc.Item.ITEMS], [])
+
+            except Exception as ex:
+                # пока - так
+                return str(ex)
+
+            self.refresh_wishlistview(item)
+
+        es = __paste_item()
+
+        if es:
+            msg_dialog(self.window, 'Вставка из буфера обмена',
+                'Ошибка: %s' % es)
 
     def item_open_url(self, btn):
         itr = self.get_selected_item_iter()
