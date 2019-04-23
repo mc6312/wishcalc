@@ -38,7 +38,7 @@ from wcconfig import *
 TITLE = 'WishCalc'
 SUB_TITLE = 'Калькулятор загребущего нищеброда'
 
-VERSION = '2.2.0'
+VERSION = '2.2.1'
 TITLE_VERSION = '%s v%s' % (TITLE, VERSION)
 COPYRIGHT = '(c) 2017-2019 MC-6312'
 URL = 'https://github.com/mc6312/wishcalc'
@@ -212,7 +212,9 @@ class MainWnd():
     CLIPBOARD_DATA = 'wishcalc2_clipboard_data'
 
     def destroy(self, widget, data=None):
-        self.save_wishlist()
+        if self.wishCalc is not None:
+            self.save_wishlist()
+
         self.cfg.save()
         Gtk.main_quit()
 
@@ -265,6 +267,7 @@ class MainWnd():
         self.iconNM6m = resldr.load_pixbuf('nmicon6m.svg', nmiconsize, nmiconsize)
         self.iconNM12m = resldr.load_pixbuf('nmicon12m.svg', nmiconsize, nmiconsize)
         self.iconNM18m = resldr.load_pixbuf('nmicon18m.svg', nmiconsize, nmiconsize)
+        self.iconNM36m = resldr.load_pixbuf('nmicon36m.svg', nmiconsize, nmiconsize)
 
         self.iconPercent = list(map(lambda i: resldr.load_pixbuf('nmicon_p%d.svg' % i, nmiconsize, nmiconsize), range(self.PERCENT_RANGE)))
 
@@ -365,7 +368,8 @@ class MainWnd():
         #
         # первоначальное заполнение списка
         #
-        self.load_wishlist(wlfname)
+        if not self.load_wishlist(wlfname):
+            exit(1)
 
         self.wishlist_is_loaded()
 
@@ -429,7 +433,7 @@ class MainWnd():
             if self.wishlist.iter_n_children(None) > 0:
                 self.save_wishlist()
 
-            if load_wishlist(self.window, fname):
+            if self.load_wishlist(fname):
                 self.wishlist_is_loaded()
 
     def file_edit_comment(self, mnu):
@@ -511,7 +515,13 @@ class MainWnd():
                         needs = str(item.needTotal) if item.needTotal else ''
                         needsicon = self.iconNMempty
 
-                infobuf = ['<b>%s</b>' % markup_escape_text(item.name)]
+                itemname = markup_escape_text(item.name)
+
+                nchildren = self.wishlist.iter_n_children(itr)
+                if nchildren > 1:
+                    itemname = '%s (%d шт.)' % (itemname, nchildren)
+
+                infobuf = ['<b>%s</b>' % itemname]
                 infomonths = ''
 
                 if item.needMonths == 0:
@@ -521,7 +531,10 @@ class MainWnd():
                 else:
                     needmonths = str(item.needMonths)
 
-                    if item.needMonths > 18:
+                    if item.needMonths > 36:
+                        infomonths = 'трёх лет.\nС твоими мозгами что-то не так, сильно не так!'
+                        needsicon = self.iconNM36m
+                    elif item.needMonths > 18:
                         infomonths = 'полутора лет.\nУ тебя с головой всё в порядке?'
                         needsicon = self.iconNM18m
                     elif item.needMonths > 12:

@@ -303,14 +303,29 @@ class WishCalc():
 
         self.clear()
 
+        #
+        # проверка на правильный формат
+        #
+        e_format = lambda s: 'несовместимый формат документа: %s' % s
+
         s = s.strip()
         if not s:
-            raise ValueError('получена пустая строка')
+            raise ValueError(e_format('получена пустая строка'))
 
         srcdict = json.loads(s)
 
         if not isinstance(srcdict, dict):
-            raise TypeError('корневой элемент JSON не является словарём')
+            raise TypeError(e_format('корневой элемент JSON не является словарём'))
+
+        wishList = get_dict_item(srcdict, self.VAR_WISHLIST, list,
+            fallback=None, failifnokey=False)
+
+        if wishList is None:
+            raise ValueError(e_format('словарь JSON не содержит ключа "%s"' % self.VAR_WISHLIST))
+
+        #
+        # далее считаем, что нам подсунули таки б/м правильный WishCalc'овский JSON
+        #
 
         self.comment = normalize_str(get_dict_item(srcdict, self.VAR_COMMENT, str, None, ''))
 
@@ -318,12 +333,6 @@ class WishCalc():
         self.refillCash = get_dict_item(srcdict, self.VAR_REFILL, int, lambda i: i >= 0, 0)
 
         self.totalRemain = self.totalCash # потом должно быть пересчитано!
-
-        wishList = get_dict_item(srcdict, self.VAR_WISHLIST, list,
-            fallback=None, failifnokey=False)
-
-        if wishList is None:
-            raise ValueError('словарь JSON не содержит ключа "%s"' % self.VAR_WISHLIST)
 
         self.load_subitems(None, wishList, [])
 
@@ -335,7 +344,8 @@ class WishCalc():
         self.clear()
 
         if not os.path.exists(self.filename):
-            return
+            raise ValueError('файл "%s" не существует или недоступен' % self.filename)
+            #return
 
         with open(self.filename, 'r', encoding=JSON_ENCODING) as f:
             return self.load_str(f.read())
