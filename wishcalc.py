@@ -38,7 +38,7 @@ from wcconfig import *
 TITLE = 'WishCalc'
 SUB_TITLE = 'Калькулятор загребущего нищеброда'
 
-VERSION = '2.2.1'
+VERSION = '2.3.0'
 TITLE_VERSION = '%s v%s' % (TITLE, VERSION)
 COPYRIGHT = '(c) 2017-2019 MC-6312'
 URL = 'https://github.com/mc6312/wishcalc'
@@ -77,7 +77,11 @@ class ItemEditorDlg():
         self.dlgItemEditor.set_transient_for(parentwnd)
 
         self.itemnameentry = uibldr.get_object('itemnameentry')
+
         self.itemcostentry = uibldr.get_object('itemcostentry')
+        self.itemquantityentry = uibldr.get_object('itemquantityentry')
+        self.costbox = uibldr.get_object('costbox')
+
         self.iteminfoentry = uibldr.get_object('iteminfoentry')
         self.iteminfoentrybuf = self.iteminfoentry.get_buffer()
         self.itemurlentry = uibldr.get_object('itemurlentry')
@@ -118,6 +122,13 @@ class ItemEditorDlg():
         self.ied_show_entry_error(self.itemcostentry,
             None if self.tempItem.cost is not None else self.E_BADVAL)
 
+    def itemquantityentry_changed(self, entry):
+        self.tempItem.quantity = int(self.itemquantityentry.get_value())
+        #self.tempItem.quantity = cost_str_to_int(self.itemquantityentry.get_text(), 0)
+
+        #self.ied_show_entry_error(self.itemquantityentry,
+        #    None if self.tempItem.quantity is not None else self.E_BADVAL)
+
     def itemurlentry_changed(self, entry):
         self.tempItem.url = normalize_str(self.itemurlentry.get_text())
 
@@ -151,9 +162,16 @@ class ItemEditorDlg():
 
         self.itemnameentry.set_text(self.tempItem.name)
 
-        self.itemcostentry.set_text(str(self.tempItem.cost))
-        # для групп товаров цена считается при вызове recalculate()!
+        self.itemcostentry.set_text(str(self.tempItem.cost) if not hasChildren else '')
+
+        self.itemquantityentry.set_value(self.tempItem.quantity)
+
+        # для групп товаров цена считается при вызове recalculate(),
+        # но количество можно указывать
+
         self.itemcostentry.set_sensitive(not hasChildren)
+
+        #self.costbox.set_sensitive(not hasChildren)
 
         self.iteminfoentrybuf.set_text(self.tempItem.info)
         self.itemurlentry.set_text(self.tempItem.url)
@@ -191,6 +209,10 @@ class ItemEditorDlg():
                 if self.tempItem.cost is None:
                     continue
 
+                # поле изменяется из обработчика itemquantityentry_changed()
+                if self.tempItem.quantity is None:
+                    continue
+
                 # в этом поле может быть произвольный текст, его проверять не нужно -
                 # забираем прямо так
                 self.tempItem.info = normalize_text(self.iteminfoentrybuf.get_text(self.iteminfoentrybuf.get_start_iter(),
@@ -200,6 +222,7 @@ class ItemEditorDlg():
                 # чтоб кнопку перехода на сайт (раз)блокировать,
                 # соответственно, поле item.url тут не проверяем и не трогаем
 
+                self.tempItem.calculate_sum()
                 return WishCalc.Item.new_copy(self.tempItem)
 
         finally:
@@ -510,7 +533,7 @@ class MainWnd():
                 else:
                     if item.availCash > 0:
                         needs = str(item.needCash)
-                        needsicon = self.iconPercent[int((item.availCash / float(item.cost)) * self.PERCENT_RANGE)]
+                        needsicon = self.iconPercent[int((item.availCash / float(item.sum)) * self.PERCENT_RANGE)]
                     else:
                         needs = str(item.needTotal) if item.needTotal else ''
                         needsicon = self.iconNMempty
@@ -554,16 +577,19 @@ class MainWnd():
 
                 self.wishlist.set(itr,
                     (WishCalc.COL_NAME,
-                        WishCalc.COL_COST, WishCalc.COL_COST_ERROR,
+                        WishCalc.COL_COST,
                         WishCalc.COL_NEEDED, WishCalc.COL_NEED_ICON,
-                        WishCalc.COL_NEED_MONTHS, WishCalc.COL_INFO),
+                        WishCalc.COL_NEED_MONTHS, WishCalc.COL_INFO,
+                        WishCalc.COL_QUANTITY, WishCalc.COL_SUM),
                     (item.name,
                         str(item.cost) if item.cost else '?',
-                        None,
                         needs,
                         needsicon,
                         needmonths,
-                        '\n'.join(infobuf)))
+                        '\n'.join(infobuf),
+                        str(item.quantity),
+                        str(item.sum) if item.cost else '?'
+                        ))
 
                 __subsel = __refresh_node(itr)
                 if __subsel is not None:
@@ -798,27 +824,6 @@ class MainWnd():
 
     def item_to_bottom(self, btn):
         self.__move_selected_item(True, False)
-
-    def cost_changed(self, crt, path, text):
-        itr = self.wishlist.get_iter(path)
-
-        cost = cost_str_to_int(text)
-
-        if cost is None:
-            self.wishlist.set_value(itr, WishCalc.COL_COST, '')
-            self.wishlist.set_value(itr, WishCalc.COL_COST_ERROR, self.iconError)
-        else:
-            item = self.wishCalc.get_item(itr)
-
-            if item.cost != cost:
-                item.cost = cost
-
-                text = '?' if cost <= 0 else str(cost)
-                # патамушта на входе могло быть вещественное, а мы признаём только целые
-
-                self.wishlist.set_value(itr, WishCalc.COL_COST, text)
-                self.wishlist.set_value(itr, WishCalc.COL_COST_ERROR, None)
-                self.refresh_wishlistview()
 
     def get_cash_entry_changes(self, entry, errormsg):
         try:

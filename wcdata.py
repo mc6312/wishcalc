@@ -33,18 +33,22 @@ MAX_ITEM_LEVEL = 3 # максимальный уровень вложеннос�
 # см. комментарий в WishCalc.Item.set_fields_dict()
 
 
-def cost_str_to_int(s):
-    """Преобразует строчное значение цены в целое число и возвращает его.
+def cost_str_to_int(s, minvalue=-1):
+    """Преобразует строчное значение цены s в целое число и возвращает его.
+    Значение принудительно впихивается в указанный диапазон (на данный момент
+    - только минимальное значение).
     В случае неправильного значения возвращает None."""
 
     try:
         s = normalize_str(s)
         if not s:
+            # 0 соответствует "значение не указано"
             return 0
 
         cost = int(round(float(s)))
-        if cost < -1:
-            cost = -1
+        if cost < minvalue:
+            cost = minvalue
+
         return cost
 
     except ValueError:
@@ -109,8 +113,8 @@ class WishCalc():
     Внимание! При изменениях в wishcalc.ui нижеследующие константы
     должны быть приведены в соответствие!"""
 
-    COL_ITEM_OBJ, COL_NAME, COL_COST, COL_COST_ERROR, COL_NEEDED,\
-    COL_NEED_ICON, COL_NEED_MONTHS, COL_INFO = range(8)
+    COL_ITEM_OBJ, COL_NAME, COL_COST, COL_NEEDED,\
+    COL_NEED_ICON, COL_NEED_MONTHS, COL_INFO, COL_QUANTITY, COL_SUM = range(9)
 
     class Item():
         """Данные для описания товара.
@@ -123,6 +127,8 @@ class WishCalc():
         # имена полей (для JSON)
         NAME = 'name'
         COST = 'cost'
+        QUANTITY = 'quantity'
+        SUM = 'sum'
         INFO = 'info'
         URL = 'url'
         ITEMS = 'items'
@@ -140,6 +146,7 @@ class WishCalc():
 
             self.name = ''
             self.cost = 0
+            self.quantity = 1
             self.info = ''
             self.url = ''
 
@@ -148,6 +155,9 @@ class WishCalc():
             # вычисленные значения - целые положительные числа;
             # значение поля, равное 0, означает, что уже усё, денег достаточно
             # значение None означает "вычислить не удалось" и ошибкой не является
+
+            # сумма (cost * quantity)
+            self.sum = 0
 
             # недостающая сумма
             self.needCash = None
@@ -166,26 +176,39 @@ class WishCalc():
 
             self.name = ''
             self.cost = 0
+            self.quantity = 1 # внимание! значение 0 - тоже верное!
+            self.sum = 0
             self.info = ''
             self.url = ''
+
+        def calculate_sum(self):
+            if self.cost > 0:
+                self.sum = self.cost * self.quantity
+            else:
+                # т.к. cost м.б. -1
+                self.sum = 0
 
         def get_data_from(self, other):
             self.name = other.name
             self.cost = other.cost
+            self.quantity = other.quantity
+            self.sum = other.sum
+
             self.info = other.info
             self.url = other.url
 
         def __repr__(self):
             # для отладки
-            return '%s(name="%s", cost=%d, info="%s", url="%s", needCash=%s, needTotal=%s, availCash=%s, needMonths=%s)' %\
+            return '%s(name="%s", cost=%d, quantity=%d, sum=%d, info="%s", url="%s", needCash=%s, needTotal=%s, availCash=%s, needMonths=%s)' %\
                 (self.__class__.__name__,
-                 self.name, self.cost, self.info, self.url, self.needCash,
+                 self.name, self.cost, self.quantity, self.sum,
+                 self.info, self.url, self.needCash,
                  self.needTotal, self.availCash, self.needMonths)
 
         def get_fields_dict(self):
             """Возвращает словарь с именами и значениями полей"""
 
-            d = {self.NAME:self.name, self.COST:self.cost}
+            d = {self.NAME:self.name, self.COST:self.cost, self.QUANTITY:self.quantity}
 
             if self.info:
                 d[self.INFO] = self.info
@@ -193,7 +216,7 @@ class WishCalc():
             if self.url:
                 d[self.URL] = self.url
 
-            # поля need* для сохранения не предназначены и в словарь не кладутся!
+            # поля sum и need* для сохранения не предназначены и в словарь не кладутся!
 
             return d
 
@@ -211,6 +234,9 @@ class WishCalc():
 
             self.name = get_dict_item(srcdict, self.NAME, str, lambda s: s != '')
             self.cost = get_dict_item(srcdict, self.COST, int, lambda c: c >= -1)
+            self.quantity = get_dict_item(srcdict, self.QUANTITY, int, lambda c: c >= 0, 1, False)
+            self.calculate_sum()
+
             self.info = get_dict_item(srcdict, self.INFO, str, fallback='')
             self.url = get_dict_item(srcdict, self.URL, str, fallback='')
 
@@ -233,8 +259,10 @@ class WishCalc():
 
         # при изменениях в wishcalc.ui - приводить в соответствие!
         self.store = Gtk.TreeStore(GObject.TYPE_PYOBJECT, GObject.TYPE_STRING,
-            GObject.TYPE_STRING, Pixbuf, GObject.TYPE_STRING,
-            Pixbuf, GObject.TYPE_STRING, GObject.TYPE_STRING)
+            GObject.TYPE_STRING, GObject.TYPE_STRING,
+            Pixbuf, GObject.TYPE_STRING, GObject.TYPE_STRING,
+            GObject.TYPE_STRING, GObject.TYPE_STRING
+            )
 
         self.totalCash = 0
         self.refillCash = 0
@@ -381,7 +409,7 @@ class WishCalc():
         прочие поля будут заполняться из UI и методом recalculate()."""
 
         return self.store.append(parentitr,
-            (item, '', '', None, '', None, '', ''))
+            (item, '', '', '', None, '', '', '', ''))
 
     def items_to_list(self, parentitr):
         """Проходит по TreeStore и возвращает список словарей
@@ -450,7 +478,7 @@ class WishCalc():
         и значений полей элементов (при необходимости рекурсивно).
 
         Возвращает кортеж из двух элементов:
-        1й: суммарная цена элементов,
+        1й: суммарная цена элементов (с учётом количества),
         2й: обновлённое значение totalRemain."""
 
         totalNeedCash = 0
@@ -460,31 +488,37 @@ class WishCalc():
         while itr is not None:
             item = self.store.get(itr, self.COL_ITEM_OBJ)[0]
 
+            # внимание! всё считаем на основе item.sum, а не item.cost!
+
             # "дети" есть?
-            if self.store.iter_n_children(itr) > 0:
-                # не товар, а группа товаров
+            nchildren = self.store.iter_n_children(itr)
+
+            if nchildren > 0:
+                # не товар, а группа товаров! для них цена -
+                # общая стоимость вложенных!
                 item.cost, subRemain = self.__recalculate_items(itr,
                     totalCash, refillCash, totalRemain)
+                item.calculate_sum()
 
             #?    totalRemain += subRemain
 
-            totalCost += item.cost
+            totalCost += item.sum #!!!
 
-            if item.cost <= 0:
+            if item.sum <= 0:
                 item.needCash = None
                 item.availCash = None
                 item.needMonths = None
             else:
-                if totalRemain >= item.cost:
+                if totalRemain >= item.sum:
                     item.needCash = 0
-                    item.availCash = item.cost
-                    totalRemain -= item.cost
+                    item.availCash = item.sum
+                    totalRemain -= item.sum
                 elif totalRemain > 0:
-                    item.needCash = item.cost - totalRemain
+                    item.needCash = item.sum - totalRemain
                     item.availCash = totalRemain
                     totalRemain = 0
                 else:
-                    item.needCash = item.cost
+                    item.needCash = item.sum
                     item.availCash = 0
 
                 if item.needCash:
@@ -534,8 +568,8 @@ class WishCalc():
         item = self.get_item(itr)
 
         if ispurchased:
-            if item.cost:
-                self.totalCash -= item.cost
+            if item.sum:
+                self.totalCash -= item.sum
                 if self.totalCash < 0:
                     self.totalCash = 0
 
@@ -550,12 +584,32 @@ if __name__ == '__main__':
 
     #wishcalc.load_str('{}')
 
-    print(wishcalc.save_str())
-    exit(0)
+    #print(wishcalc.save_str())
+    #exit(0)
 
     wishcalc.recalculate()
 
-    print(wishcalc.get_item(wishcalc.store.get_iter_first()))
+    def __print_items(store, parentitr, indent):
+        itr = store.iter_children(parentitr)
+
+        sindent = ' ' * indent * 2
+
+        while itr is not None:
+            item = store.get(itr, WishCalc.COL_ITEM_OBJ)[0]
+            nchildren = store.iter_n_children(itr)
+
+            print('%s%s %s (%d, %d, %d)' % (sindent,
+                '*' if nchildren == 0 else '>',
+                item.name, item.cost, item.quantity, item.sum))
+
+            if nchildren > 0:
+                __print_items(store, itr, indent + 1)
+
+            itr = store.iter_next(itr)
+
+    __print_items(wishcalc.store, None, 0)
+
+    #print(wishcalc.get_item(wishcalc.store.get_iter_first()))
 
     print('total: %d, remain: %d, refill: %d' % (wishcalc.totalCash, wishcalc.totalRemain, wishcalc.refillCash))
 
