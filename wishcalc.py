@@ -38,7 +38,7 @@ from wcconfig import *
 TITLE = 'WishCalc'
 SUB_TITLE = 'Калькулятор загребущего нищеброда'
 
-VERSION = '2.3.2'
+VERSION = '2.3.3'
 TITLE_VERSION = '%s v%s' % (TITLE, VERSION)
 COPYRIGHT = '(c) 2017-2019 MC-6312'
 URL = 'https://github.com/mc6312/wishcalc'
@@ -449,10 +449,8 @@ class MainWnd():
             # сначала принудительно выбираем элемент дерева, на котором торчит указатель мыша
 
             ep = self.wishlistview.get_path_at_pos(event.x, event.y)
-            if ep is None:
-                return False
-
-            self.wishlistviewsel.select_path(ep[0])
+            if ep is not None:
+                self.wishlistviewsel.select_path(ep[0])
 
             # и таки открываем менюху
             self.wishlist_pop_up_menu(event)
@@ -623,9 +621,16 @@ class MainWnd():
                     infobuf += ['', markup_escape_text(item.info)]
 
                 if infomonths:
-                    infobuf += ['', '<b>На накопление %sнужно более %s</b>' %\
-                                ('' if not item.needTotal else '%d бабла ' % item.needTotal,
-                                infomonths)]
+                    infomonthtxt = '<b>На накопление %sнужно более %s</b>' %\
+                        ('' if not item.needTotal else '%d бабла ' % item.needTotal,
+                        infomonths)
+                elif item.sum <= 0:
+                    infomonthtxt = '<b>Ценник не указан. Время накопления - неизвестно...</b>'
+                else:
+                    infomonthtxt = ''
+
+                if infomonthtxt:
+                    infobuf += ['', infomonthtxt]
 
                 self.wishlist.set(itr,
                     (WishCalc.COL_NAME,
@@ -703,7 +708,7 @@ class MainWnd():
                 else:
                     parent = self.wishlist.iter_parent(itrsel) if itrsel is not None else None
 
-                self.wishCalc.append_item(parent, item, itrsel)
+                self.wishCalc.append_item(parent, item)
 
                 if parent is not None:
                     # принудительно разворачиваем ветвь, иначе TreeView не изменит selection
