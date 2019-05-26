@@ -154,11 +154,13 @@ class WindowState():
 
 class Config():
     MAINWINDOW = 'mainwindow'
+    ITEMEDITORWINDOW = 'itemeditorwindow'
     CFGFN = 'settings.json'
     CFGAPP = 'wishcalc'
 
     def __init__(self):
         self.mainWindow = WindowState()
+        self.itemEditorWindow = WindowState()
 
         # определяем каталог для настроек
         # или принудительно создаём, если его ещё нет
@@ -175,8 +177,12 @@ class Config():
                 if self.MAINWINDOW in d:
                     self.mainWindow.fromdict(d[self.MAINWINDOW])
 
+                if self.ITEMEDITORWINDOW in d:
+                    self.itemEditorWindow.fromdict(d[self.ITEMEDITORWINDOW])
+
     def save(self):
-        tmpd = {self.MAINWINDOW:self.mainWindow.todict()}
+        tmpd = {self.MAINWINDOW:self.mainWindow.todict(),
+            self.ITEMEDITORWINDOW:self.itemEditorWindow.todict()}
 
         with open(self.configPath, 'w+', encoding=JSON_ENCODING) as f:
             json.dump(tmpd, f, ensure_ascii=False, indent='  ')
@@ -184,8 +190,8 @@ class Config():
     def __repr__(self):
         # для отладки
 
-        return '%s(configDir="%s", configPath="%s", mainWindow=%s)' % (self.__class__.__name__,
-            self.configDir, self.configPath, self.mainWindow)
+        return '%s(configDir="%s", configPath="%s", mainWindow=%s, itemEditorWindow=%s)' % (self.__class__.__name__,
+            self.configDir, self.configPath, self.mainWindow, self.itemEditorWindow)
 
 
 if __name__ == '__main__':

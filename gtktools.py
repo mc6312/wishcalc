@@ -108,6 +108,14 @@ def set_widgets_sensitive(widgets, bsensitive):
         widget.set_sensitive(bsensitive)
 
 
+def set_widgets_visible(widgets, bvisible):
+    """Устанавливает значения свойства "visible" равным значению
+    bvisible для виджетов из списка widgets."""
+
+    for widget in widgets:
+        widget.set_visible(bvisible)
+
+
 def get_child_with_class(container, wantclass):
     """Ищет первый попавшийся виджет класса wantclass
     в виджете-контейнере container.

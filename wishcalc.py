@@ -3,7 +3,7 @@
 
 """wishcalc.py
 
-    Copyright 2017, 2018 MC-6312 <mc6312@gmail.com>
+    Copyright 2017, 2018, 2019 MC-6312 <mc6312@gmail.com>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -38,7 +38,7 @@ from wcconfig import *
 TITLE = 'WishCalc'
 SUB_TITLE = 'Калькулятор загребущего нищеброда'
 
-VERSION = '2.3.1'
+VERSION = '2.3.2'
 TITLE_VERSION = '%s v%s' % (TITLE, VERSION)
 COPYRIGHT = '(c) 2017-2019 MC-6312'
 URL = 'https://github.com/mc6312/wishcalc'
@@ -67,9 +67,12 @@ class ItemEditorDlg():
     Ибо как-то некрасиво в одной куче держать обработчики событий
     основного окна и прочие"""
 
-    def __init__(self, parentwnd, resldr):
+    def __init__(self, parentwnd, resldr, cfgWinState):
         """parentwnd    - родительское окно,
-        resldr          - экземпляр *ResourceLoader"""
+        resldr          - экземпляр *ResourceLoader,
+        cfgWinState     - экземпляр класса для сохранения состояния окна."""
+
+        self.windowState = cfgWinState
 
         uibldr = resldr.load_gtk_builder('wishcalc_itemeditor.ui')
 
@@ -80,7 +83,8 @@ class ItemEditorDlg():
 
         self.itemcostentry = uibldr.get_object('itemcostentry')
         self.itemquantityentry = uibldr.get_object('itemquantityentry')
-        self.costbox = uibldr.get_object('costbox')
+
+        self.costwidgets = get_ui_widgets(uibldr, ('costlabel', 'costbox'))
 
         self.iteminfoentry = uibldr.get_object('iteminfoentry')
         self.iteminfoentrybuf = self.iteminfoentry.get_buffer()
@@ -94,6 +98,19 @@ class ItemEditorDlg():
         self.blocksSave = set() # список виджетов, блокирующих btnItemSave
 
         uibldr.connect_signals(self)
+
+    def load_window_state(self):
+        self.windowState.set_window_state(self.dlgItemEditor)
+
+    def wnd_configure_event(self, wnd, event):
+        """Сменились размер/положение окна"""
+
+        self.windowState.wnd_configure_event(wnd, event)
+
+    def wnd_state_event(self, widget, event):
+        """Сменилось состояние окна"""
+
+        self.windowState.wnd_state_event(widget, event)
 
     E_NOVAL = 'Не указано значение'
     E_BADVAL = 'Неправильное значение'
@@ -169,7 +186,8 @@ class ItemEditorDlg():
         # для групп товаров цена считается при вызове recalculate(),
         # но количество можно указывать
 
-        self.itemcostentry.set_sensitive(not hasChildren)
+        set_widgets_sensitive(self.costwidgets, not hasChildren)
+        set_widgets_visible(self.costwidgets, not hasChildren)
 
         #self.costbox.set_sensitive(not hasChildren)
 
@@ -235,7 +253,7 @@ class MainWnd():
     CLIPBOARD_DATA = 'wishcalc2_clipboard_data'
 
     def destroy(self, widget, data=None):
-        if self.wishCalc is not None:
+        if self.wishCalc is not None and self:
             self.save_wishlist()
 
         self.cfg.save()
@@ -269,7 +287,6 @@ class MainWnd():
         # основное окно
         #
         self.window = uibldr.get_object('wndMain')
-        self.window.connect('destroy', self.destroy)
 
         self.headerbar = uibldr.get_object('headerbar')
 
@@ -315,7 +332,7 @@ class MainWnd():
         #
         # редактор товара
         #
-        self.itemEditor = ItemEditorDlg(self.window, resldr)
+        self.itemEditor = ItemEditorDlg(self.window, resldr, self.cfg.itemEditorWindow)
 
         # меню "товарных" команд - для вызова контекстного меню на списке товаров
         self.mnuItem = uibldr.get_object('mnuItem').get_submenu()
@@ -385,9 +402,11 @@ class MainWnd():
         self.cfg.load()
         #print('loaded:', self.cfg.mainWindow)
         self.load_window_state()
+        self.itemEditor.load_window_state()
         #print('load_window_state called:', self.cfg.mainWindow)
 
         self.clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
+
 
         uibldr.connect_signals(self)
 
@@ -758,14 +777,13 @@ class MainWnd():
                 itrsel = self.get_selected_item_iter()
                 if itrsel is None:
                     # ничего не выбрано - вставляем элемент в конец списка
-                    inserteditr = self.wishCalc.append_item()
+                    parent = None
                 else:
                     # иначе - после выбранного элемента на его уровне
                     parent = self.wishlist.iter_parent(itrsel)
 
-                    #inserteditr = self.wishCalc.store.insert_after(parent, itrsel,
-                    #    self.wishCalc.make_store_row(item))
-                    inserteditr = self.wishCalc.append_item(parent, item, itrsel)
+                inserteditr = self.wishCalc.store.insert_after(parent, itrsel,
+                    self.wishCalc.make_store_row(item))
 
                 # рекурсивно добавляем подэлементы, если они есть
                 if WishCalc.Item.ITEMS in itemdict:

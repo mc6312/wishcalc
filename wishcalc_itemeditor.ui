@@ -13,7 +13,7 @@
     <property name="icon_name">applications-internet</property>
   </object>
   <object class="GtkDialog" id="dlgItemEditor">
-    <property name="width_request">512</property>
+    <property name="width_request">640</property>
     <property name="height_request">256</property>
     <property name="can_focus">False</property>
     <property name="border_width">4</property>
@@ -22,6 +22,8 @@
     <property name="window_position">center-on-parent</property>
     <property name="destroy_with_parent">True</property>
     <property name="type_hint">dialog</property>
+    <signal name="configure-event" handler="wnd_configure_event" swapped="no"/>
+    <signal name="window-state-event" handler="wnd_state_event" swapped="no"/>
     <child type="titlebar">
       <placeholder/>
     </child>
@@ -100,7 +102,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkLabel">
+              <object class="GtkLabel" id="costlabel">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">Цена:</property>
@@ -109,19 +111,6 @@
               <packing>
                 <property name="left_attach">0</property>
                 <property name="top_attach">1</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkLabel">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="label" translatable="yes">Описание:</property>
-                <property name="xalign">0</property>
-                <property name="yalign">0</property>
-              </object>
-              <packing>
-                <property name="left_attach">0</property>
-                <property name="top_attach">2</property>
               </packing>
             </child>
             <child>
@@ -144,65 +133,10 @@
                     <property name="position">0</property>
                   </packing>
                 </child>
-                <child>
-                  <object class="GtkLabel">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="margin_left">8</property>
-                    <property name="label" translatable="yes">количество:</property>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="position">1</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkSpinButton" id="itemquantityentry">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="max_length">4</property>
-                    <property name="width_chars">8</property>
-                    <property name="max_width_chars">8</property>
-                    <property name="xalign">1</property>
-                    <property name="adjustment">adjitemquantity</property>
-                    <signal name="changed" handler="itemquantityentry_changed" swapped="no"/>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="position">2</property>
-                  </packing>
-                </child>
               </object>
               <packing>
                 <property name="left_attach">1</property>
                 <property name="top_attach">1</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkScrolledWindow">
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="hexpand">True</property>
-                <property name="vexpand">True</property>
-                <property name="hscrollbar_policy">never</property>
-                <property name="shadow_type">in</property>
-                <child>
-                  <object class="GtkTextView" id="iteminfoentry">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="wrap_mode">word-char</property>
-                    <property name="left_margin">4</property>
-                    <property name="right_margin">4</property>
-                    <property name="top_margin">4</property>
-                    <property name="bottom_margin">4</property>
-                  </object>
-                </child>
-              </object>
-              <packing>
-                <property name="left_attach">1</property>
-                <property name="top_attach">2</property>
               </packing>
             </child>
             <child>
@@ -214,7 +148,7 @@
               </object>
               <packing>
                 <property name="left_attach">0</property>
-                <property name="top_attach">3</property>
+                <property name="top_attach">4</property>
               </packing>
             </child>
             <child>
@@ -254,7 +188,85 @@
               </object>
               <packing>
                 <property name="left_attach">1</property>
+                <property name="top_attach">4</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Описание:</property>
+                <property name="xalign">0</property>
+                <property name="yalign">0</property>
+              </object>
+              <packing>
+                <property name="left_attach">0</property>
                 <property name="top_attach">3</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkScrolledWindow">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="hexpand">True</property>
+                <property name="vexpand">True</property>
+                <property name="hscrollbar_policy">never</property>
+                <property name="shadow_type">in</property>
+                <child>
+                  <object class="GtkTextView" id="iteminfoentry">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="wrap_mode">word-char</property>
+                    <property name="left_margin">4</property>
+                    <property name="right_margin">4</property>
+                    <property name="top_margin">4</property>
+                    <property name="bottom_margin">4</property>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="top_attach">3</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Количество:</property>
+                <property name="xalign">0</property>
+              </object>
+              <packing>
+                <property name="left_attach">0</property>
+                <property name="top_attach">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkBox" id="quantitybox">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="spacing">4</property>
+                <child>
+                  <object class="GtkSpinButton" id="itemquantityentry">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="max_length">4</property>
+                    <property name="width_chars">8</property>
+                    <property name="max_width_chars">8</property>
+                    <property name="xalign">1</property>
+                    <property name="adjustment">adjitemquantity</property>
+                    <signal name="changed" handler="itemquantityentry_changed" swapped="no"/>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="top_attach">2</property>
               </packing>
             </child>
           </object>

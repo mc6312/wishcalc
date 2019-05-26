@@ -407,26 +407,21 @@ class WishCalc():
 
         return (item, '', '', '', None, '', '', '', '')
 
-    def append_item(self, parentitr, item, afteritr=None):
+    def append_item(self, parentitr, item):
         """Добавление нового элемента в TreeStore.
         Возвращает экземпляр Gtk.TreeIter, соответствующий новому
         элементу TreeStore.
 
         parentitr   - None или экземпляр Gtk.TreeIter; новый элемент
                       будет добавлен как дочерний относительно parentitr;
-        item        - экземпляр WishCalc.Item;
-        afteritr    - None или экземпляр Gtk.TreeIter; если не None -
-                      новый элемент будет добавлен после указанного.
+        item        - экземпляр WishCalc.Item.
 
         Внимание! В store сейчас кладём только ссылку на объект,
         прочие поля будут заполняться из UI и методом recalculate()."""
 
         row = self.make_store_row(item)
 
-        if afteritr is None:
-            return self.store.append(parentitr, row)
-        else:
-            self.store.insert_after(parentitr, afteritr, row)
+        return self.store.append(parentitr, row)
 
     def items_to_list(self, parentitr):
         """Проходит по TreeStore и возвращает список словарей
