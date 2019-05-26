@@ -38,7 +38,7 @@ from wcconfig import *
 TITLE = 'WishCalc'
 SUB_TITLE = 'Калькулятор загребущего нищеброда'
 
-VERSION = '2.3.0'
+VERSION = '2.3.1'
 TITLE_VERSION = '%s v%s' % (TITLE, VERSION)
 COPYRIGHT = '(c) 2017-2019 MC-6312'
 URL = 'https://github.com/mc6312/wishcalc'
@@ -317,6 +317,9 @@ class MainWnd():
         #
         self.itemEditor = ItemEditorDlg(self.window, resldr)
 
+        # меню "товарных" команд - для вызова контекстного меню на списке товаров
+        self.mnuItem = uibldr.get_object('mnuItem').get_submenu()
+
         #
         # виджеты, свойство "sensitive" которых зависит от состояния списка
         #
@@ -408,6 +411,36 @@ class MainWnd():
             os.path.splitext(os.path.split(self.wishCalc.filename)[1])[0]))
 
         self.headerbar.set_subtitle(SUB_TITLE if not self.wishCalc.comment else self.wishCalc.comment)
+
+    def wishlist_pop_up_menu(self, event):
+        """Открытие всплывающего меню на списке товаров."""
+
+        # костылинг особенностей поведения GTK под разными бэкендами (X11/Wayland/...)
+        # см. документацию по обработке Gtk.Menu.popup()
+
+        if event is None:
+            etime = Gtk.get_current_event_time ()
+        else:
+            etime = event.time
+
+        self.mnuItem.popup(None, None, None, None, 3, etime)
+
+    def on_wishlistview_button_press_event(self, widget, event):
+        if event.button == 3:
+            # сначала принудительно выбираем элемент дерева, на котором торчит указатель мыша
+
+            ep = self.wishlistview.get_path_at_pos(event.x, event.y)
+            if ep is None:
+                return False
+
+            self.wishlistviewsel.select_path(ep[0])
+
+            # и таки открываем менюху
+            self.wishlist_pop_up_menu(event)
+            return True
+
+    def on_wishlistview_popup_menu(self, widget):
+        self.wishlist_pop_up_menu(None)
 
     def on_wishlistview_drag_end(self, wgt, ctx):
         self.refresh_wishlistview()
@@ -651,7 +684,7 @@ class MainWnd():
                 else:
                     parent = self.wishlist.iter_parent(itrsel) if itrsel is not None else None
 
-                self.wishCalc.append_item(parent, item)
+                self.wishCalc.append_item(parent, item, itrsel)
 
                 if parent is not None:
                     # принудительно разворачиваем ветвь, иначе TreeView не изменит selection
@@ -730,8 +763,9 @@ class MainWnd():
                     # иначе - после выбранного элемента на его уровне
                     parent = self.wishlist.iter_parent(itrsel)
 
-                    inserteditr = self.wishCalc.store.insert_after(parent, itrsel,
-                        (item, '', '', None, '', None, '', ''))
+                    #inserteditr = self.wishCalc.store.insert_after(parent, itrsel,
+                    #    self.wishCalc.make_store_row(item))
+                    inserteditr = self.wishCalc.append_item(parent, item, itrsel)
 
                 # рекурсивно добавляем подэлементы, если они есть
                 if WishCalc.Item.ITEMS in itemdict:

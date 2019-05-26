@@ -396,20 +396,37 @@ class WishCalc():
 
         self.store.set_value(itr, self.COL_ITEM_OBJ, item)
 
-    def append_item(self, parentitr, item):
+    def make_store_row(self, item):
+        """Создаёт и возвращает кортеж со значениями полей для вставки/добавления
+        в Gtk.TreeModel.
+        Фактически в кортеж помещается только ссылка на объект, т.к.
+        значения остальных полей изменяются из UI и вызовом метода
+        recalculate().
+        Метод же make_store_row() нужен для того, чтоб в ста местах
+        программы не вспоминать количество и порядок полей TreeModel."""
+
+        return (item, '', '', '', None, '', '', '', '')
+
+    def append_item(self, parentitr, item, afteritr=None):
         """Добавление нового элемента в TreeStore.
         Возвращает экземпляр Gtk.TreeIter, соответствующий новому
         элементу TreeStore.
 
         parentitr   - None или экземпляр Gtk.TreeIter; новый элемент
                       будет добавлен как дочерний относительно parentitr;
-        item        - экземпляр WishCalc.Item.
+        item        - экземпляр WishCalc.Item;
+        afteritr    - None или экземпляр Gtk.TreeIter; если не None -
+                      новый элемент будет добавлен после указанного.
 
         Внимание! В store сейчас кладём только ссылку на объект,
         прочие поля будут заполняться из UI и методом recalculate()."""
 
-        return self.store.append(parentitr,
-            (item, '', '', '', None, '', '', '', ''))
+        row = self.make_store_row(item)
+
+        if afteritr is None:
+            return self.store.append(parentitr, row)
+        else:
+            self.store.insert_after(parentitr, afteritr, row)
 
     def items_to_list(self, parentitr):
         """Проходит по TreeStore и возвращает список словарей
