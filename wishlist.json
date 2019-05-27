@@ -46,7 +46,8 @@
     {
       "name": "Нечто",
       "cost": 2300,
-      "quantity": 1
+      "quantity": 1,
+      "importance": 4
     },
     {
       "name": "Бессмысленно дорогой хлам",
@@ -56,18 +57,26 @@
     },
     {
       "name": "Какая-то ерунда",
-      "cost": 183,
-      "quantity": 1,
+      "cost": 381,
+      "quantity": 2,
       "items": [
         {
           "name": "Вложенная ерунда",
           "cost": 133,
-          "quantity": 1
+          "quantity": 1,
+          "importance": 1
         },
         {
           "name": "Другая ерунда",
           "cost": 50,
-          "quantity": 1
+          "quantity": 1,
+          "importance": 3
+        },
+        {
+          "name": "Ещё одна ерунда",
+          "cost": 66,
+          "quantity": 3,
+          "importance": 2
         }
       ]
     },

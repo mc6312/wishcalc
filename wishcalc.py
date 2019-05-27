@@ -33,218 +33,8 @@ from warnings import warn
 
 from wcdata import *
 from wcconfig import *
-
-
-TITLE = 'WishCalc'
-SUB_TITLE = 'Калькулятор загребущего нищеброда'
-
-VERSION = '2.3.3'
-TITLE_VERSION = '%s v%s' % (TITLE, VERSION)
-COPYRIGHT = '(c) 2017-2019 MC-6312'
-URL = 'https://github.com/mc6312/wishcalc'
-
-
-iconError = load_system_icon('dialog-error', Gtk.IconSize.MENU)
-
-def show_entry_error(entry, msg=None):
-    """Установка состояния индикации ошибки в виджете класса
-    Gtk.Entry.
-
-    entry   - виджет,
-    msg     - строка с сообщением об ошибке, если в поле ввода
-              неправильное значение
-              пустая строка или None, если ошибки нет."""
-
-    entry.set_icon_from_pixbuf(Gtk.EntryIconPosition.SECONDARY,
-        iconError if msg else None)
-    entry.set_icon_tooltip_text(Gtk.EntryIconPosition.SECONDARY,
-        msg if msg else None) # подстраховка для случая msg == ''
-
-
-class ItemEditorDlg():
-    """Обвязка диалогового окна редактора товара.
-
-    Ибо как-то некрасиво в одной куче держать обработчики событий
-    основного окна и прочие"""
-
-    def __init__(self, parentwnd, resldr, cfgWinState):
-        """parentwnd    - родительское окно,
-        resldr          - экземпляр *ResourceLoader,
-        cfgWinState     - экземпляр класса для сохранения состояния окна."""
-
-        self.windowState = cfgWinState
-
-        uibldr = resldr.load_gtk_builder('wishcalc_itemeditor.ui')
-
-        self.dlgItemEditor = uibldr.get_object('dlgItemEditor')
-        self.dlgItemEditor.set_transient_for(parentwnd)
-
-        self.itemnameentry = uibldr.get_object('itemnameentry')
-
-        self.itemcostentry = uibldr.get_object('itemcostentry')
-        self.itemquantityentry = uibldr.get_object('itemquantityentry')
-
-        self.costwidgets = get_ui_widgets(uibldr, ('costlabel', 'costbox'))
-
-        self.iteminfoentry = uibldr.get_object('iteminfoentry')
-        self.iteminfoentrybuf = self.iteminfoentry.get_buffer()
-        self.itemurlentry = uibldr.get_object('itemurlentry')
-        self.btnEdItemOpenURL = uibldr.get_object('btnEdItemOpenURL')
-        self.btnItemSave = uibldr.get_object('btnItemSave')
-
-        # буфер - присваивается из метода edit()
-        self.tempItem = WishCalc.Item()
-
-        self.blocksSave = set() # список виджетов, блокирующих btnItemSave
-
-        uibldr.connect_signals(self)
-
-    def load_window_state(self):
-        self.windowState.set_window_state(self.dlgItemEditor)
-
-    def wnd_configure_event(self, wnd, event):
-        """Сменились размер/положение окна"""
-
-        self.windowState.wnd_configure_event(wnd, event)
-
-    def wnd_state_event(self, widget, event):
-        """Сменилось состояние окна"""
-
-        self.windowState.wnd_state_event(widget, event)
-
-    E_NOVAL = 'Не указано значение'
-    E_BADVAL = 'Неправильное значение'
-
-    def block_save_button(self, widget, isblocks):
-        if isblocks:
-            self.blocksSave.add(widget)
-        elif widget in self.blocksSave:
-            self.blocksSave.remove(widget)
-
-        self.btnItemSave.set_sensitive(len(self.blocksSave) == 0)
-
-    def ied_show_entry_error(self, entry, emsg=None):
-        show_entry_error(entry, emsg)
-        self.block_save_button(entry, emsg)
-
-    def itemnameentry_changed(self, entry):
-        self.tempItem.name = normalize_str(self.itemnameentry.get_text())
-
-        self.ied_show_entry_error(self.itemnameentry,
-            None if self.tempItem.name else self.E_NOVAL)
-
-    def itemcostentry_changed(self, entry):
-        self.tempItem.cost = cost_str_to_int(self.itemcostentry.get_text())
-
-        self.ied_show_entry_error(self.itemcostentry,
-            None if self.tempItem.cost is not None else self.E_BADVAL)
-
-    def itemquantityentry_changed(self, entry):
-        self.tempItem.quantity = int(self.itemquantityentry.get_value())
-        #self.tempItem.quantity = cost_str_to_int(self.itemquantityentry.get_text(), 0)
-
-        #self.ied_show_entry_error(self.itemquantityentry,
-        #    None if self.tempItem.quantity is not None else self.E_BADVAL)
-
-    def itemurlentry_changed(self, entry):
-        self.tempItem.url = normalize_str(self.itemurlentry.get_text())
-
-        # проверяем только на непустое значение ради сраной кнопки
-        # проверку правильности формата URL оставим браузеру, и ниибёт
-        self.btnEdItemOpenURL.set_sensitive(self.tempItem.url != '')
-
-    def on_btnEdItemOpenURL_clicked(self, btn):
-        webbrowser.open_new_tab(self.tempItem.url)
-
-    def edit(self, item, hasChildren):
-        """Редактирование товара.
-
-        item        - экземпляр WishCalc.Item или None.
-                      В последнем случае создаётся новый экземпляр
-                      описания товара;
-        hasChildren - булевское значение, True, если есть дочерние элементы.
-
-        Возвращает None, если редактирование отменено (нажата кнопка
-        "Отмена"), или экземпляр WishCalc.Item с новыми или изменёнными
-        данными."""
-
-        if item is None:
-            dtitle = 'Новый товар'
-            self.tempItem = WishCalc.Item()
-        else:
-            dtitle = 'Изменение товара'
-            self.tempItem = item.new_copy()
-
-        self.dlgItemEditor.set_title(dtitle)
-
-        self.itemnameentry.set_text(self.tempItem.name)
-
-        self.itemcostentry.set_text(str(self.tempItem.cost) if not hasChildren else '')
-
-        self.itemquantityentry.set_value(self.tempItem.quantity)
-
-        # для групп товаров цена считается при вызове recalculate(),
-        # но количество можно указывать
-
-        set_widgets_sensitive(self.costwidgets, not hasChildren)
-        set_widgets_visible(self.costwidgets, not hasChildren)
-
-        #self.costbox.set_sensitive(not hasChildren)
-
-        self.iteminfoentrybuf.set_text(self.tempItem.info)
-        self.itemurlentry.set_text(self.tempItem.url)
-
-        self.blocksSave.clear()
-        # пинаем обработчики, чтоб при пустых полях иконки высветились и т.п.
-        for entry in (self.itemnameentry, self.itemcostentry, self.itemurlentry):
-            entry.emit('changed')
-
-        self.itemnameentry.grab_focus()
-
-        self.dlgItemEditor.show()
-        try:
-            while True:
-                # гоняем диалог, пока не получим правильные данные
-                # или пока не нажмут кнопку "Отмена"
-
-                r = self.dlgItemEditor.run()
-
-                if r != Gtk.ResponseType.OK:
-                    # нажата кнопка "Отмена" или диалог просто закрыт
-                    return None
-
-                #
-                # вообще, кнопка "сохранить" блокируется, если в важных
-                # полях фигня, потому проверки ниже торчат только на
-                # случай подстраховки от моего склероза
-                #
-
-                # поле изменяется из обработчика itemnameentry_changed()
-                if not self.tempItem.name:
-                    continue
-
-                # поле изменяется из обработчика itemcostentry_changed()
-                if self.tempItem.cost is None:
-                    continue
-
-                # поле изменяется из обработчика itemquantityentry_changed()
-                if self.tempItem.quantity is None:
-                    continue
-
-                # в этом поле может быть произвольный текст, его проверять не нужно -
-                # забираем прямо так
-                self.tempItem.info = normalize_text(self.iteminfoentrybuf.get_text(self.iteminfoentrybuf.get_start_iter(),
-                    self.iteminfoentrybuf.get_end_iter(), False))
-
-                # itemurlentry_changed() проверяет только на непустое значение,
-                # чтоб кнопку перехода на сайт (раз)блокировать,
-                # соответственно, поле item.url тут не проверяем и не трогаем
-
-                self.tempItem.calculate_sum()
-                return WishCalc.Item.new_copy(self.tempItem)
-
-        finally:
-            self.dlgItemEditor.hide()
+from wccommon import *
+from wcitemed import *
 
 
 class MainWnd():
@@ -297,6 +87,7 @@ class MainWnd():
         # список желаемого
         #
 
+        # иконки
         nmiconsizeix = Gtk.IconSize.MENU
         nmiconsize = Gtk.IconSize.lookup(nmiconsizeix)[1]
 
@@ -310,6 +101,8 @@ class MainWnd():
         self.iconNM36m = resldr.load_pixbuf('nmicon36m.svg', nmiconsize, nmiconsize)
 
         self.iconPercent = list(map(lambda i: resldr.load_pixbuf('nmicon_p%d.svg' % i, nmiconsize, nmiconsize), range(self.PERCENT_RANGE)))
+
+        self.importanceIcons = ImportanceIcons(nmiconsizeix)
 
         # TreeStore используется как хранилище данных во время работы
         # в первом столбце (WishCalc.COL_ITEM_OBJ) хранится ссылка
@@ -332,7 +125,8 @@ class MainWnd():
         #
         # редактор товара
         #
-        self.itemEditor = ItemEditorDlg(self.window, resldr, self.cfg.itemEditorWindow)
+        self.itemEditor = ItemEditorDlg(self.window, resldr,
+            self.cfg.itemEditorWindow, self.importanceIcons)
 
         # меню "товарных" команд - для вызова контекстного меню на списке товаров
         self.mnuItem = uibldr.get_object('mnuItem').get_submenu()
@@ -564,6 +358,15 @@ class MainWnd():
         # ну да и хрен с ним пока...
 
         def __refresh_node(parentitr):
+            """Обновление полей элементов TreeStore на основе соответствующих
+            значений полей экземпляров WishCalc.Item.
+
+            Возвращает кортеж из двух элементов:
+            1. экземпляр Gtk.TreeIter, указывающий на элемент дерева,
+               который должен стать активным после обновления всего дерева;
+            2. целое число - значение поля WishCalc.Item.importance,
+               максимальное для "вложенных" ветвей."""
+
             itr = self.wishlist.iter_children(parentitr)
 
             __itersel = None
@@ -632,12 +435,17 @@ class MainWnd():
                 if infomonthtxt:
                     infobuf += ['', infomonthtxt]
 
+                importance = item.importance
+                if importance == 0:
+                    importance = item.childImportance
+
                 self.wishlist.set(itr,
                     (WishCalc.COL_NAME,
                         WishCalc.COL_COST,
                         WishCalc.COL_NEEDED, WishCalc.COL_NEED_ICON,
                         WishCalc.COL_NEED_MONTHS, WishCalc.COL_INFO,
-                        WishCalc.COL_QUANTITY, WishCalc.COL_SUM),
+                        WishCalc.COL_QUANTITY, WishCalc.COL_SUM,
+                        WishCalc.COL_IMPORTANCE),
                     (item.name,
                         str(item.cost) if item.cost else '?',
                         needs,
@@ -645,7 +453,8 @@ class MainWnd():
                         needmonths,
                         '\n'.join(infobuf),
                         str(item.quantity),
-                        str(item.sum) if item.cost else '?'
+                        str(item.sum) if item.cost else '?',
+                        self.importanceIcons.icons[importance]
                         ))
 
                 __subsel = __refresh_node(itr)

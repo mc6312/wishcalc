@@ -12,6 +12,12 @@
     <property name="can_focus">False</property>
     <property name="icon_name">applications-internet</property>
   </object>
+  <object class="GtkListStore" id="itemimportancelstore">
+    <columns>
+      <!-- column-name GdkPixbuf1 -->
+      <column type="GdkPixbuf"/>
+    </columns>
+  </object>
   <object class="GtkDialog" id="dlgItemEditor">
     <property name="width_request">640</property>
     <property name="height_request">256</property>
@@ -125,6 +131,8 @@
                     <property name="activates_default">True</property>
                     <property name="width_chars">14</property>
                     <property name="max_width_chars">10</property>
+                    <property name="primary_icon_sensitive">False</property>
+                    <property name="secondary_icon_sensitive">False</property>
                     <signal name="changed" handler="itemcostentry_changed" swapped="no"/>
                   </object>
                   <packing>
@@ -143,12 +151,41 @@
               <object class="GtkLabel">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="label" translatable="yes">URL:</property>
+                <property name="label" translatable="yes">Количество:</property>
                 <property name="xalign">0</property>
               </object>
               <packing>
                 <property name="left_attach">0</property>
-                <property name="top_attach">4</property>
+                <property name="top_attach">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkBox" id="quantitybox">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="spacing">4</property>
+                <child>
+                  <object class="GtkSpinButton" id="itemquantityentry">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="max_length">4</property>
+                    <property name="activates_default">True</property>
+                    <property name="width_chars">8</property>
+                    <property name="max_width_chars">8</property>
+                    <property name="xalign">1</property>
+                    <property name="adjustment">adjitemquantity</property>
+                    <signal name="value-changed" handler="itemquantityentry_value_changed" swapped="no"/>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="top_attach">2</property>
               </packing>
             </child>
             <child>
@@ -188,7 +225,19 @@
               </object>
               <packing>
                 <property name="left_attach">1</property>
-                <property name="top_attach">4</property>
+                <property name="top_attach">5</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">URL:</property>
+                <property name="xalign">0</property>
+              </object>
+              <packing>
+                <property name="left_attach">0</property>
+                <property name="top_attach">5</property>
               </packing>
             </child>
             <child>
@@ -201,7 +250,7 @@
               </object>
               <packing>
                 <property name="left_attach">0</property>
-                <property name="top_attach">3</property>
+                <property name="top_attach">4</property>
               </packing>
             </child>
             <child>
@@ -226,36 +275,39 @@
               </object>
               <packing>
                 <property name="left_attach">1</property>
-                <property name="top_attach">3</property>
+                <property name="top_attach">4</property>
               </packing>
             </child>
             <child>
               <object class="GtkLabel">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="label" translatable="yes">Количество:</property>
+                <property name="label" translatable="yes">Важность:</property>
                 <property name="xalign">0</property>
               </object>
               <packing>
                 <property name="left_attach">0</property>
-                <property name="top_attach">2</property>
+                <property name="top_attach">3</property>
               </packing>
             </child>
             <child>
-              <object class="GtkBox" id="quantitybox">
+              <object class="GtkBox">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="spacing">4</property>
                 <child>
-                  <object class="GtkSpinButton" id="itemquantityentry">
+                  <object class="GtkComboBox" id="itemimportancecbox">
                     <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="max_length">4</property>
-                    <property name="width_chars">8</property>
-                    <property name="max_width_chars">8</property>
-                    <property name="xalign">1</property>
-                    <property name="adjustment">adjitemquantity</property>
-                    <signal name="changed" handler="itemquantityentry_changed" swapped="no"/>
+                    <property name="can_focus">False</property>
+                    <property name="model">itemimportancelstore</property>
+                    <property name="active_id">0</property>
+                    <signal name="changed" handler="itemimportancecbox_changed" swapped="no"/>
+                    <child>
+                      <object class="GtkCellRendererPixbuf" id="crColorIcon"/>
+                      <attributes>
+                        <attribute name="pixbuf">0</attribute>
+                      </attributes>
+                    </child>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -266,7 +318,7 @@
               </object>
               <packing>
                 <property name="left_attach">1</property>
-                <property name="top_attach">2</property>
+                <property name="top_attach">3</property>
               </packing>
             </child>
           </object>

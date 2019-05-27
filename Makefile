@@ -6,8 +6,9 @@ basename = wishcalc
 zipname = $(basename).zip
 arcname = $(basename)$(arcx)
 srcarcname = $(basename)-src$(arcx)
-srcs = __main__.py wishcalc.py wcconfig.py wcdata.py gtktools.py wishcalc*.ui wishcalc*.svg nmicon*.svg
-version = $(shell python3 -c 'from wishcalc import VERSION; print(VERSION)')
+srcs = __main__.py wishcalc.py wcconfig.py wccommon.py wcitemed.py wcdata.py gtktools.py wishcalc*.ui wishcalc*.svg nmicon*.svg
+srcversion = wccommon
+version = $(shell python3 -c 'from $(srcversion) import VERSION; print(VERSION)')
 title_version = $(shell python3 -c 'from $(srcversion) import TITLE_VERSION; print(TITLE_VERSION)')
 backupdir = ~/shareddocs/pgm/python/
 
