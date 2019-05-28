@@ -22,7 +22,7 @@
 TITLE = 'WishCalc'
 SUB_TITLE = 'Калькулятор загребущего нищеброда'
 
-VERSION = '2.3.4'
+VERSION = '2.3.5'
 TITLE_VERSION = '%s v%s' % (TITLE, VERSION)
 COPYRIGHT = '(c) 2017-2019 MC-6312'
 URL = 'https://github.com/mc6312/wishcalc'
@@ -86,37 +86,49 @@ class ImportanceIcons():
 
         self.icons = []
 
-        for color in self.COLORS:
-            self.icons.append(self.__create_icon(color))
+        sctx = Gtk.StyleContext.new()
+        _ok, borderclr = sctx.lookup_color('theme_text_color')
 
-    def __create_icon(self, color):
+        if not _ok:
+            borderclr = (0.0, 0.0, 0.0)
+        else:
+            # потому что lookup_color возвращает Gdk.RGBA, а не кортеж
+            borderclr = (borderclr.red, borderclr.green, borderclr.blue)
+
+        for color in self.COLORS:
+            self.icons.append(self.__create_icon(color, borderclr))
+
+    def __create_icon(self, color, bordercolor):
         """Создаёт и возвращает экземпляр GdkPixbuf.Pixbuf заданного цвета.
 
-        color - значение цвета в виде строки "#RRGGBB" или None."""
+        color   - значение цвета заполнения или None,
+        sctx    - значение цвета каймы.
+        Оба цветовых параметра - кортежи из трёх или четырёх вещественных
+        чисел (R, G, B)/(R, G, B, A)."""
 
         csurf = cairo.ImageSurface(cairo.FORMAT_ARGB32, self.iconSizePx, self.iconSizePx)
 
         cc = cairo.Context(csurf)
 
         center = self.iconSizePx / 2.0
-        radius = center * 0.5
+        radius = center * 0.6
         circle = 2 * pi
 
-        cc.set_source(cairo.SolidPattern(0.0, 0.0, 0.0))
+        alpha = 1.0 if color is not None else 0.4
+
+        cc.set_source(cairo.SolidPattern(*bordercolor[:3], alpha))
 
         cc.arc(center, center, radius, 0.0, circle)
 
         cc.set_line_width(1.0)
-        cc.stroke()
+        cc.stroke_preserve()
 
-        radius1 = radius - 1.0
+        radius1 = radius - 0.5
 
         if color is not None:
             patn = cairo.SolidPattern(*color)
 
             cc.set_source(patn)
-            cc.arc(center, center, radius1, 0.0, circle)
-            cc.stroke() # чтоб маленько поверх предыдущего круга намазало
             cc.arc(center, center, radius1, 0.0, circle)
             cc.fill()
 

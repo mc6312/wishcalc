@@ -57,7 +57,7 @@
     },
     {
       "name": "Какая-то ерунда",
-      "cost": 381,
+      "cost": 331,
       "quantity": 2,
       "items": [
         {
@@ -68,9 +68,17 @@
         },
         {
           "name": "Другая ерунда",
-          "cost": 50,
+          "cost": 0,
           "quantity": 1,
-          "importance": 3
+          "importance": 1,
+          "items": [
+            {
+              "name": "Более глубоко засунутая ерунда",
+              "cost": 0,
+              "quantity": 1,
+              "importance": 4
+            }
+          ]
         },
         {
           "name": "Ещё одна ерунда",

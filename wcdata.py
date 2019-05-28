@@ -34,6 +34,9 @@ MAX_ITEM_LEVEL = 3 # максимальный уровень вложеннос�
 # см. комментарий в WishCalc.Item.set_fields_dict()
 
 
+DEFAULT_FILENAME = 'wishlist.json'
+
+
 def str_to_int_range(s, minvalue=-1, maxvalue=None):
     """Преобразует строчное значение цены s в целое число и возвращает его.
     Значение принудительно впихивается в указанный диапазон:
@@ -276,7 +279,7 @@ class WishCalc():
 
     def __init__(self, filename):
         """Параметры:
-        filename    - имя файла в формате JSON для загрузки/сохранения.
+        filename    - None или имя файла в формате JSON для загрузки/сохранения.
 
         Поля:
         filename, store - см. параметры;
@@ -404,6 +407,9 @@ class WishCalc():
         Если файл filename не существует, метод просто очищает поля.
         В случае ошибок при загрузке файла генерируются исключения."""
 
+        if self.filename is None:
+            raise ValueError('%s.load(): не указано имя файла' % self.__class__.__name__)
+
         self.clear()
 
         if not os.path.exists(self.filename):
@@ -501,19 +507,20 @@ class WishCalc():
         в файле в формате JSON.
         В случае ошибок генерируются исключения."""
 
+
         if not self.filename:
-            raise ValueError('%s.save(): поле filename не содержит значения' % self.__class__.__name__)
-        else:
-            tmps = self.save_str()
+            raise ValueError('%s.save(): не указано имя файла' % self.__class__.__name__)
 
-            # пытаемся сохранить "безопасно"
-            tmpfn = self.filename + '.tmp'
-            with open(tmpfn, 'w+', encoding=JSON_ENCODING) as f:
-                f.write(tmps)
+        tmps = self.save_str()
 
-            if os.path.exists(self.filename):
-                os.remove(self.filename)
-            os.rename(tmpfn, self.filename)
+        # пытаемся сохранить "безопасно"
+        tmpfn = self.filename + '.tmp'
+        with open(tmpfn, 'w+', encoding=JSON_ENCODING) as f:
+            f.write(tmps)
+
+        if os.path.exists(self.filename):
+            os.remove(self.filename)
+        os.rename(tmpfn, self.filename)
 
     def __recalculate_items(self, parentitr, totalCash, refillCash, totalRemain):
         """Перерасчет.
@@ -556,11 +563,12 @@ class WishCalc():
                 if item.childImportance < subImportance:
                     item.childImportance = subImportance
 
-                if maxImportance < subImportance:
-                    maxImportance = subImportance
-            else:
-                if maxImportance < item.importance:
-                    maxImportance = item.importance
+                if item.importance == 0:
+                    if maxImportance < subImportance:
+                        maxImportance = subImportance
+
+            if maxImportance < item.importance:
+                maxImportance = item.importance
 
             totalCost += item.sum #!!!
 
@@ -639,7 +647,7 @@ class WishCalc():
 if __name__ == '__main__':
     print('[debugging %s]' % __file__)
 
-    wishcalc = WishCalc('wishlist.json')
+    wishcalc = WishCalc(DEFAULT_FILENAME)
     wishcalc.load()
 
     #wishcalc.load_str('{}')

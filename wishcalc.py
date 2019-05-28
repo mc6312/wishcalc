@@ -42,12 +42,20 @@ class MainWnd():
 
     CLIPBOARD_DATA = 'wishcalc2_clipboard_data'
 
-    def destroy(self, widget, data=None):
-        if self.wishCalc is not None and self:
-            self.save_wishlist()
+    def destroy(self, widget):
+        Gtk.main_quit()
+
+    def before_exit(self):
+        if self.wishCalc is not None:
+            if self.wishCalc.filename:
+                self.save_wishlist()
+            elif self.wishCalc.store.iter_n_children(None) > 0:
+                self.file_save_as(None)
 
         self.cfg.save()
-        Gtk.main_quit()
+
+    def wndMain_delete_event(self, wnd, event):
+        self.before_exit()
 
     def wnd_configure_event(self, wnd, event):
         """Сменились размер/положение окна"""
@@ -107,8 +115,6 @@ class MainWnd():
         # TreeStore используется как хранилище данных во время работы
         # в первом столбце (WishCalc.COL_ITEM_OBJ) хранится ссылка
         # на экземпляр WishCalc.Item (см. wcdata.py)
-        #self.wishlist = uibldr.get_object('wishlist')
-        # внимание! это поле будет присвоено в конце конструктора при загрузке файла!
 
         self.wishlistview = uibldr.get_object('wishlistview')
         self.wishlistview.set_tooltip_column(WishCalc.COL_INFO)
@@ -207,8 +213,11 @@ class MainWnd():
         #
         # первоначальное заполнение списка
         #
-        if not self.load_wishlist(wlfname):
-            exit(1)
+        if wlfname is not None:
+            if not self.load_wishlist(wlfname):
+                exit(1)
+        else:
+            self.wishCalc = WishCalc(None)
 
         self.wishlist_is_loaded()
 
@@ -220,8 +229,12 @@ class MainWnd():
         self.dlgAbout.hide()
 
     def refresh_window_title(self):
-        self.headerbar.set_title('%s: %s' % (TITLE_VERSION,
-            os.path.splitext(os.path.split(self.wishCalc.filename)[1])[0]))
+        if self.wishCalc.filename:
+            dispfname = os.path.splitext(os.path.split(self.wishCalc.filename)[1])[0]
+        else:
+            dispfname = '<новый файл>'
+
+        self.headerbar.set_title('%s: %s' % (TITLE_VERSION, dispfname))
 
         self.headerbar.set_subtitle(SUB_TITLE if not self.wishCalc.comment else self.wishCalc.comment)
 
@@ -260,10 +273,8 @@ class MainWnd():
         """Этот метод должен вызываться после успешной загрузки
         файла (т.е. если load_wishlist() не рухнул с исключением)."""
 
-        self.wishlist = self.wishCalc.store
-
         # обязательно заменяем TreeStore загруженной!
-        self.wishlistview.set_model(self.wishlist)
+        self.wishlistview.set_model(self.wishCalc.store)
         #...и надеемся, что предыдущий экземпляр будет укоцан потрохами PyGObject и питоньей сборкой мусора...
 
         self.refresh_wishlistview()
@@ -274,13 +285,29 @@ class MainWnd():
 
         self.refresh_window_title()
 
+    def file_exit(self, widget):
+        self.before_exit()
+        self.destroy(widget)
+
     def file_save(self, mnu):
-        self.save_wishlist()
+        """Сохранение файла"""
+
+        if self.wishCalc.filename:
+            self.save_wishlist()
+        else:
+            self.file_save_as(mnu)
+
+    def __run_filename_dialog(self, dlg):
+        dlg.select_filename(self.wishCalc.filename if self.wishCalc.filename else DEFAULT_FILENAME)
+        r = dlg.run()
+        dlg.hide()
+
+        return r
 
     def file_save_as(self, mnu):
-        self.dlgFileSaveAs.select_filename(self.wishCalc.filename)
-        r = self.dlgFileSaveAs.run()
-        self.dlgFileSaveAs.hide()
+        """Сохранение файла с выбором имени"""
+
+        r = self.__run_filename_dialog(self.dlgFileSaveAs)
 
         if r == Gtk.ResponseType.OK:
             self.wishCalc.filename = self.dlgFileSaveAs.get_filename()
@@ -288,17 +315,14 @@ class MainWnd():
                 self.refresh_window_title()
 
     def file_open(self, mnu):
-        self.dlgFileOpen.select_filename(self.wishCalc.filename)
-        r = self.dlgFileOpen.run()
-        self.dlgFileOpen.hide()
+        r = self.__run_filename_dialog(self.dlgFileOpen)
 
         if r == Gtk.ResponseType.OK:
             fname = self.dlgFileOpen.get_filename()
-            if os.path.samefile(fname, self.wishCalc.filename):
+            if self.wishCalc.filename and os.path.samefile(fname, self.wishCalc.filename):
                 return
 
-            if self.wishlist.iter_n_children(None) > 0:
-                self.save_wishlist()
+            self.save_wishlist()
 
             if self.load_wishlist(fname):
                 self.wishlist_is_loaded()
@@ -323,8 +347,8 @@ class MainWnd():
             bcanmovedown = False
             bcanopenurl = False
         else:
-            ix = self.wishlist.get_path(itr).get_indices()[-1]
-            lastix = self.wishlist.iter_n_children(self.wishlist.iter_parent(itr)) - 1
+            ix = self.wishCalc.store.get_path(itr).get_indices()[-1]
+            lastix = self.wishCalc.store.iter_n_children(self.wishCalc.store.iter_parent(itr)) - 1
 
             bsens = True
 
@@ -367,12 +391,12 @@ class MainWnd():
             2. целое число - значение поля WishCalc.Item.importance,
                максимальное для "вложенных" ветвей."""
 
-            itr = self.wishlist.iter_children(parentitr)
+            itr = self.wishCalc.store.iter_children(parentitr)
 
             __itersel = None
 
             while itr is not None:
-                item = self.wishlist.get_value(itr, WishCalc.COL_ITEM_OBJ)
+                item = self.wishCalc.store.get_value(itr, WishCalc.COL_ITEM_OBJ)
 
                 if item is selitem:
                     __itersel = itr
@@ -393,7 +417,7 @@ class MainWnd():
 
                 itemname = markup_escape_text(item.name)
 
-                nchildren = self.wishlist.iter_n_children(itr)
+                nchildren = self.wishCalc.store.iter_n_children(itr)
                 if nchildren > 1:
                     itemname = '%s (%d шт.)' % (itemname, nchildren)
 
@@ -439,7 +463,7 @@ class MainWnd():
                 if importance == 0:
                     importance = item.childImportance
 
-                self.wishlist.set(itr,
+                self.wishCalc.store.set(itr,
                     (WishCalc.COL_NAME,
                         WishCalc.COL_COST,
                         WishCalc.COL_NEEDED, WishCalc.COL_NEED_ICON,
@@ -461,7 +485,7 @@ class MainWnd():
                 if __subsel is not None:
                     __itersel = __subsel
 
-                itr = self.wishlist.iter_next(itr)
+                itr = self.wishCalc.store.iter_next(itr)
 
             return __itersel
 
@@ -469,7 +493,7 @@ class MainWnd():
 
         # вертаем выбор взад
         if itersel is not None:
-            path = self.wishlist.get_path(itersel)
+            path = self.wishCalc.store.get_path(itersel)
             self.wishlistviewsel.select_path(path)
             self.wishlistview.set_cursor(path, None, False)
 
@@ -504,7 +528,7 @@ class MainWnd():
             item = self.wishCalc.get_item(itrsel)
 
         item = self.itemEditor.edit(item,
-            False if itrsel is None else self.wishlist.iter_n_children(itrsel) > 0)
+            False if itrsel is None else self.wishCalc.store.iter_n_children(itrsel) > 0)
 
         if item is not None:
             if not newitem:
@@ -515,13 +539,13 @@ class MainWnd():
                 if newaschild:
                     parent = itrsel
                 else:
-                    parent = self.wishlist.iter_parent(itrsel) if itrsel is not None else None
+                    parent = self.wishCalc.store.iter_parent(itrsel) if itrsel is not None else None
 
                 self.wishCalc.append_item(parent, item)
 
                 if parent is not None:
                     # принудительно разворачиваем ветвь, иначе TreeView не изменит selection
-                    path = self.wishlist.get_path(parent)
+                    path = self.wishCalc.store.get_path(parent)
                     self.wishlistview.expand_row(path, False)
 
             self.refresh_wishlistview(item)
@@ -594,7 +618,7 @@ class MainWnd():
                     parent = None
                 else:
                     # иначе - после выбранного элемента на его уровне
-                    parent = self.wishlist.iter_parent(itrsel)
+                    parent = self.wishCalc.store.iter_parent(itrsel)
 
                 inserteditr = self.wishCalc.store.insert_after(parent, itrsel,
                     self.wishCalc.make_store_row(item))
@@ -632,7 +656,7 @@ class MainWnd():
         if not itr:
             return
 
-        nchildren = self.wishlist.iter_n_children(itr)
+        nchildren = self.wishCalc.store.iter_n_children(itr)
 
         sitem = ('группу товаров (из %d)' % nchildren) if nchildren else 'товар'
 
@@ -667,10 +691,10 @@ class MainWnd():
 
         itr = self.get_selected_item_iter()
         if itr is not None:
-            movefunc = self.wishlist.move_before if (down ^ onepos) else self.wishlist.move_after
+            movefunc = self.wishCalc.store.move_before if (down ^ onepos) else self.wishCalc.store.move_after
 
             if onepos:
-                moveref = self.wishlist.iter_next(itr) if down else self.wishlist.iter_previous(itr)
+                moveref = self.wishCalc.store.iter_next(itr) if down else self.wishCalc.store.iter_previous(itr)
                 #print(itr, moveref)
             else:
                 moveref = None
@@ -739,6 +763,7 @@ class MainWnd():
 
         try:
             self.wishCalc.save()
+
             return True
         except Exception as ex:
             msg_dialog(self.window, TITLE, 'Ошибка сохранения файла "%s":\n%s' % (self.wishCalc.filename, str(ex)))
@@ -769,7 +794,7 @@ def main(args):
     if len(args) > 1:
         wlfname = os.path.abspath(args[1])
     else:
-        wlfname = os.path.join(os.path.split(sys.argv[0])[0], 'wishlist.json')
+        wlfname = None
 
     MainWnd(wlfname).main()
 
