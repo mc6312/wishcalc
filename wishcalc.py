@@ -541,7 +541,11 @@ class MainWnd():
                 else:
                     parent = self.wishCalc.store.iter_parent(itrsel) if itrsel is not None else None
 
-                self.wishCalc.append_item(parent, item)
+                if itrsel is None:
+                    # потому что см. поведение GtkTreeStore.insert_after с sibling=None
+                    self.wishCalc.append_item(parent, item)
+                else:
+                    self.wishCalc.store.insert_after(parent, itrsel, self.wishCalc.make_store_row(item))
 
                 if parent is not None:
                     # принудительно разворачиваем ветвь, иначе TreeView не изменит selection
@@ -790,15 +794,22 @@ class MainWnd():
         Gtk.main()
 
 
-def main(args):
+def process_cmdline(args):
     if len(args) > 1:
-        wlfname = os.path.abspath(args[1])
+        return os.path.abspath(args[1])
     else:
-        wlfname = None
+        for wlfname in ('.', os.path.split(args[0])[0]):
+            wlfname = os.path.join(os.path.abspath(wlfname), DEFAULT_FILENAME)
 
-    MainWnd(wlfname).main()
+            if os.path.exists(wlfname):
+                return(wlfname)
+
+
+def main(args):
+    MainWnd(process_cmdline(args)).main()
 
     return 0
+
 
 if __name__ == '__main__':
     exit(main(sys.argv))
