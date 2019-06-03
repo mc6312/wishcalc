@@ -49,7 +49,8 @@ class ItemEditorDlg():
 
         self.itemnameentry = uibldr.get_object('itemnameentry')
 
-        self.costwidgets = get_ui_widgets(uibldr, ('costlabel', 'costbox'))
+        self.costlabel, self.costentry, self.quantitylabel = get_ui_widgets(uibldr,
+            ('costlabel', 'itemcostentry', 'quantitylabel'))
 
         self.itemcostentry = uibldr.get_object('itemcostentry')
         self.itemquantityentry = uibldr.get_object('itemquantityentry')
@@ -161,10 +162,15 @@ class ItemEditorDlg():
         self.itemimportancecbox.set_active(self.tempItem.importance)
 
         # для групп товаров цена считается при вызове recalculate(),
+        # и виджет должен быть скрыт;
         # но количество можно указывать
 
-        set_widgets_sensitive(self.costwidgets, not hasChildren)
-        set_widgets_visible(self.costwidgets, not hasChildren)
+        self.costentry.set_sensitive(not hasChildren)
+        self.costentry.set_visible(not hasChildren)
+
+        self.quantitylabel.set_visible(not hasChildren)
+
+        self.costlabel.set_text('Количество:' if hasChildren else 'Цена:')
 
         #self.costbox.set_sensitive(not hasChildren)
 

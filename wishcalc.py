@@ -509,7 +509,7 @@ class MainWnd():
                       False, если нужно отредактировать выбранный
                       товар,
                       True, если нужно создать новый товар;
-        newaschild   - используется только если newitem==True;
+        newaschild  - используется только если newitem==True;
                       булевское значение:
                       False - новый товар добавляется на том же уровне
                       дерева, что и выбранный товар (или на верхнем уровне,
@@ -528,7 +528,7 @@ class MainWnd():
             item = self.wishCalc.get_item(itrsel)
 
         item = self.itemEditor.edit(item,
-            False if itrsel is None else self.wishCalc.store.iter_n_children(itrsel) > 0)
+            not newitem and (False if itrsel is None else self.wishCalc.store.iter_n_children(itrsel) > 0))
 
         if item is not None:
             if not newitem:
