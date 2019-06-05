@@ -124,10 +124,14 @@ class MainWnd():
         #
         # наличность и остаток
         #
-        self.cashentry = uibldr.get_object('cashentry')
-        self.refillentry = uibldr.get_object('refillentry')
-        self.remainsentry = uibldr.get_object('remainsentry')
+        self.cashentry, self.refillentry, self.remainsentry = get_ui_widgets(uibldr,
+            ('cashentry', 'refillentry', 'remainsentry'))
 
+        # сумма выбранных в дереве
+        self.selectedsumbox, self.selectedsumentry, self.selectedneedsentry,\
+        self.selectedneedsbox = get_ui_widgets(uibldr,
+            ('selectedsumbox', 'selectedsumentry', 'selectedneedsentry',
+            'selectedneedsbox'))
         #
         # редактор товара
         #
@@ -282,6 +286,7 @@ class MainWnd():
         self.refresh_totalcash_view()
         self.refillentry.set_text(str(self.wishCalc.refillCash))
         self.refresh_remains_view()
+        self.refresh_selected_sum_view()
 
         self.refresh_window_title()
 
@@ -369,6 +374,65 @@ class MainWnd():
     def refresh_totalcash_view(self):
         self.cashentry.set_text(str(self.wishCalc.totalCash))
 
+    def get_percent_icon(self, avail, total):
+        """Возвращает иконку (экземпляр Pixbuf), соответствующий прОценту."""
+
+        if total <= 0:
+            return self.iconNMunk
+        else:
+            if avail > total:
+                avail = total
+
+            return self.iconPercent[int((avail / float(total)) * self.PERCENT_RANGE)]
+
+    def get_need_months_icon_text(self, needsTotal, itemSum, nmonths, deficon):
+        """Сочиняет текст для всплывающей подсказки и подбирает подобающую иконку.
+
+        Параметры:
+        needsTotal  - общая необходимая сумма;
+        itemSum     - если не None - цена товара для вызова из refresh_wishlistview();
+        nmonths     - кол-во месяцев, необходимых на накопление;
+        deficon     - экземпляр Pixbuf с предварительно выбранной иконкой,
+                      (напр. вызовом get_percent_icon).
+
+        Возвращает кортеж из трёх элементов:
+        1й: строка с количеством месяцев,
+        2й: экземпляр Pixbuf; для небольших сроков возвращает deficon,
+            для больших см. ниже в коде;
+        3й: текст для всплывающей подсказки (в формате Pango Markup)."""
+
+        nmicon = deficon
+        infomonths = ''
+
+        if nmonths is None or nmonths <= 0:
+            needmonths = '-'
+        else:
+            needmonths = str(nmonths)
+
+            if nmonths > 36:
+                infomonths = 'трёх лет.\nС твоими мозгами что-то не так, сильно не так!'
+                nmicon = self.iconNM36m
+            elif nmonths > 18:
+                infomonths = 'полутора лет.\nУ тебя с головой всё в порядке?'
+                nmicon = self.iconNM18m
+            elif nmonths > 12:
+                infomonths = 'года.\nМожет, лучше забить?'
+                nmicon = self.iconNM12m
+            elif nmonths > 6:
+                infomonths = 'полугода.\nТебе точно это надо?'
+                nmicon = self.iconNM6m
+
+        if infomonths:
+            infomonthtxt = '<b>На накопление %sнужно более %s</b>' %\
+                ('' if not needsTotal else '%d бабла ' % needsTotal,
+                infomonths)
+        elif itemSum <= 0:
+            infomonthtxt = '<b>Ценник не указан. Время накопления - неизвестно...</b>'
+        else:
+            infomonthtxt = ''
+
+        return (needmonths, nmicon, infomonthtxt)
+
     def refresh_wishlistview(self, selitem=None):
         """Перерасчёт списка товаров, обновление содержимого TreeView.
 
@@ -410,10 +474,13 @@ class MainWnd():
                 else:
                     if item.availCash > 0:
                         needs = str(item.needCash)
-                        needsicon = self.iconPercent[int((item.availCash / float(item.sum)) * self.PERCENT_RANGE)]
+                        needsicon = self.get_percent_icon(item.availCash, item.sum)
                     else:
                         needs = str(item.needTotal) if item.needTotal else ''
                         needsicon = self.iconNMempty
+
+                needmonths, needsicon, infomonthtxt = self.get_need_months_icon_text(item.needTotal,
+                    item.sum, item.needMonths, needsicon)
 
                 itemname = markup_escape_text(item.name)
 
@@ -424,37 +491,8 @@ class MainWnd():
                 infobuf = ['<b>%s</b>' % itemname]
                 infomonths = ''
 
-                if item.needMonths == 0:
-                    needmonths = '-'
-                elif item.needMonths is None:
-                    needmonths = '-'
-                else:
-                    needmonths = str(item.needMonths)
-
-                    if item.needMonths > 36:
-                        infomonths = 'трёх лет.\nС твоими мозгами что-то не так, сильно не так!'
-                        needsicon = self.iconNM36m
-                    elif item.needMonths > 18:
-                        infomonths = 'полутора лет.\nУ тебя с головой всё в порядке?'
-                        needsicon = self.iconNM18m
-                    elif item.needMonths > 12:
-                        infomonths = 'года.\nМожет, лучше забить?'
-                        needsicon = self.iconNM12m
-                    elif item.needMonths > 6:
-                        infomonths = 'полугода.\nТебе точно это надо?'
-                        needsicon = self.iconNM6m
-
                 if item.info:
                     infobuf += ['', markup_escape_text(item.info)]
-
-                if infomonths:
-                    infomonthtxt = '<b>На накопление %sнужно более %s</b>' %\
-                        ('' if not item.needTotal else '%d бабла ' % item.needTotal,
-                        infomonths)
-                elif item.sum <= 0:
-                    infomonthtxt = '<b>Ценник не указан. Время накопления - неизвестно...</b>'
-                else:
-                    infomonthtxt = ''
 
                 if infomonthtxt:
                     infobuf += ['', infomonthtxt]
@@ -556,6 +594,58 @@ class MainWnd():
 
     def wl_row_activated(self, treeview, path, col):
         self.__do_edit_item(False)
+
+    def wl_item_selected_toggled(self, cr, path):
+        # тыкнут чекбокс выбора элемента дерева
+        # пока у нас один чекбокс на строку - столбец не проверяем
+        itr = self.wishCalc.store.get_iter(path)
+
+        item = self.wishCalc.store.get_value(itr, WishCalc.COL_ITEM_OBJ)
+
+        itemsel = not self.wishCalc.store.get_value(itr, WishCalc.COL_SELECTED)
+        self.wishCalc.store.set_value(itr, WishCalc.COL_SELECTED, itemsel)
+
+        # пересчитываем сумму ценников выбранных товаров
+        # refresh_wishlistview() при этом вызывать не требуется
+        self.wishCalc.recalculate()
+        self.refresh_selected_sum_view()
+
+    def refresh_selected_sum_view(self):
+        if self.wishCalc.totalSelectedSum:
+            vsel = True
+
+            self.selectedsumentry.set_text(str(self.wishCalc.totalSelectedSum))
+
+            if self.wishCalc.totalCash >= self.wishCalc.totalSelectedSum:
+                vneed = False
+            else:
+                vneed = True
+
+                if self.wishCalc.totalCash > 0:
+                    need = self.wishCalc.totalSelectedSum - self.wishCalc.totalCash
+                    needs = str(need)
+
+                    needsicon = self.get_percent_icon(self.wishCalc.totalCash, self.wishCalc.totalSelectedSum)
+                    needmonths, needsicon, needsinfo = self.get_need_months_icon_text(need,
+                        self.wishCalc.totalSelectedSum,
+                        need / self.wishCalc.refillCash,
+                        needsicon)
+                else:
+                    needs = str(self.wishCalc.totalSelectedSum) if self.wishCalc.totalSelectedSum else ''
+                    needsicon = self.iconNMempty
+                    needsinfo = '<b>Денег нет совсем!</b>'
+
+                self.selectedneedsentry.set_text(needs)
+                self.selectedneedsentry.set_icon_from_pixbuf(Gtk.EntryIconPosition.PRIMARY, needsicon)
+                self.selectedneedsentry.set_icon_tooltip_markup(Gtk.EntryIconPosition.PRIMARY, needsinfo)
+
+            self.selectedneedsbox.set_sensitive(vneed)
+            self.selectedneedsbox.set_visible(vneed)
+        else:
+            vsel = False
+
+        self.selectedsumbox.set_sensitive(vsel)
+        self.selectedsumbox.set_visible(vsel)
 
     def get_selected_item_iter(self):
         """Возвращает Gtk.TreeIter если в TreeView выбрана строка,
@@ -736,9 +826,11 @@ class MainWnd():
         """Изменение поля доступной суммы"""
 
         v = self.get_cash_entry_changes(entry, 'Доступная сумма указана неправильно')
-        if v is not None:
-            self.wishCalc.totalCash = v
-            self.refresh_wishlistview()
+
+        self.wishCalc.totalCash = v if v is not None else 0
+
+        self.refresh_wishlistview()
+        self.refresh_selected_sum_view()
 
     def refillentry_changed(self, entry):
         """Изменение поля суммы ежемесячных пополнений"""

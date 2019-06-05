@@ -128,7 +128,7 @@ class WishCalc():
 
     COL_ITEM_OBJ, COL_NAME, COL_COST, COL_NEEDED,\
     COL_NEED_ICON, COL_NEED_MONTHS, COL_INFO, COL_QUANTITY, COL_SUM,\
-    COL_IMPORTANCE = range(10)
+    COL_IMPORTANCE, COL_SELECTED = range(11)
 
     class Item():
         """Данные для описания товара.
@@ -168,6 +168,10 @@ class WishCalc():
             self.importance = 0
             # "важность" товара, она же индекс в wccommon.ImportanceIcons.icons;
             # 0 - "не важно/не указано", 1 и более - возрастающая важность
+
+            #
+            # следующие поля используются только UI и в файле не сохраняются!
+            #
 
             # поля, которые вычисляются при вызове WishCalc.recalculate()
             # их значения могут зависеть от предыдущих по списку товаров!
@@ -299,12 +303,14 @@ class WishCalc():
             GObject.TYPE_STRING, GObject.TYPE_STRING,
             Pixbuf, GObject.TYPE_STRING, GObject.TYPE_STRING,
             GObject.TYPE_STRING, GObject.TYPE_STRING,
-            Pixbuf
+            Pixbuf,
+            GObject.TYPE_BOOLEAN
             )
 
         self.totalCash = 0
         self.refillCash = 0
         self.totalRemain = 0
+        self.totalSelectedSum = 0
         self.comment = ''
 
     def __str__(self):
@@ -446,7 +452,7 @@ class WishCalc():
         Метод же make_store_row() нужен для того, чтоб в ста местах
         программы не вспоминать количество и порядок полей TreeModel."""
 
-        return (item, '', '', '', None, '', '', '', '', None)
+        return (item, '', '', '', None, '', '', '', '', None, False)
 
     def append_item(self, parentitr, item):
         """Добавление нового элемента в TreeStore.
@@ -531,19 +537,22 @@ class WishCalc():
         на основе параметров totalCash, refillCash, totalRemain
         и значений полей элементов (при необходимости рекурсивно).
 
-        Возвращает кортеж из трёх элементов:
+        Возвращает кортеж из четырёх элементов:
         1й: суммарная цена элементов (с учётом количества),
         2й: обновлённое значение totalRemain,
         3й: максимальное значение поля importance вложенных элементов
-            (товаров)."""
+            (товаров),
+        4й: суммарная стоимость помеченных чекбоксами в UI элементов."""
 
         totalNeedCash = 0
         totalCost = 0
         maxImportance = 0
+        totalSelectedSum = 0
 
         itr = self.store.iter_children(parentitr)
         while itr is not None:
-            item = self.store.get(itr, self.COL_ITEM_OBJ)[0]
+            item = self.store.get_value(itr, self.COL_ITEM_OBJ)
+            itemsel = self.store.get_value(itr, self.COL_SELECTED)
 
             # сбрасываем, дабы обновлялось!
             item.childImportance = 0
@@ -553,12 +562,23 @@ class WishCalc():
             # "дети" есть?
             nchildren = self.store.iter_n_children(itr)
 
-            if nchildren > 0:
+            if nchildren == 0:
+                # одиночный товар
+                if itemsel:
+                    totalSelectedSum += item.sum
+            else:
                 # не товар, а группа товаров! для них цена -
                 # общая стоимость вложенных!
-                item.cost, subRemain, subImportance = self.__recalculate_items(itr,
+                item.cost, subRemain, subImportance, subSelectedSum = self.__recalculate_items(itr,
                     totalCash, refillCash, totalRemain)
                 item.calculate_sum()
+
+                # внимание! если помечена группа товаров - учитываем общую сумму,
+                # а не отдельные помеченные вложенные!
+                if itemsel:
+                    totalSelectedSum += item.sum
+                elif subSelectedSum:
+                    totalSelectedSum += subSelectedSum
 
                 if item.childImportance < subImportance:
                     item.childImportance = subImportance
@@ -610,7 +630,7 @@ class WishCalc():
         if totalRemain < 0:
             totalRemain = 0
 
-        return (totalCost, totalRemain, maxImportance)
+        return (totalCost, totalRemain, maxImportance, totalSelectedSum)
 
     def recalculate(self):
         """Перерасчет.
@@ -620,7 +640,7 @@ class WishCalc():
         полей элементов).
         По завершению обновляется значение self.totalRemain."""
 
-        __totalCost, self.totalRemain, __importance = self.__recalculate_items(None,
+        __totalCost, self.totalRemain, __importance, self.totalSelectedSum = self.__recalculate_items(None,
             self.totalCash, self.refillCash, self.totalCash)
 
     def item_delete(self, itr, ispurchased):
