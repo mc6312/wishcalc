@@ -666,9 +666,13 @@ class MainWnd():
             needmonths = ''
 
         self.selectedsumentry.set_text(selsums)
+
         self.selectedneedsentry.set_text(needs)
+        self.selectedneedsentry.set_tooltip_markup(needsinfo)
+
         self.selectedneedsentry.set_icon_from_pixbuf(Gtk.EntryIconPosition.PRIMARY, needsicon)
         self.selectedneedsentry.set_icon_tooltip_markup(Gtk.EntryIconPosition.PRIMARY, needsinfo)
+
         self.selectedmonthsentry.set_text(needmonths)
 
         self.selectedsumbox.set_sensitive(vsel)
