@@ -129,9 +129,9 @@ class MainWnd():
 
         # сумма выбранных в дереве
         self.selectedsumbox, self.selectedsumentry, self.selectedneedsentry,\
-        self.selectedneedsbox = get_ui_widgets(uibldr,
+        self.selectedmonthsentry = get_ui_widgets(uibldr,
             ('selectedsumbox', 'selectedsumentry', 'selectedneedsentry',
-            'selectedneedsbox'))
+            'selectedmonthsentry'))
         #
         # редактор товара
         #
@@ -166,6 +166,10 @@ class MainWnd():
         # а вот оно будет рулиться НЕ из setup_widgets_sensitive()!
         self.widgetsRefillCash = get_ui_widgets(uibldr,
             ('mnuRefillCash', 'btnRefillCash'))
+
+        # выделение галками
+        self.widgetsSelectAll = get_ui_widgets(uibldr, ('btnSelectAll', 'mnuItemSelectAll'))
+        self.widgetsSelectNone = get_ui_widgets(uibldr, ('btnUnselectAll', 'mnuItemUnselectAll'))
 
         #
         #
@@ -345,28 +349,38 @@ class MainWnd():
 
     def setup_widgets_sensitive(self):
         itr = self.get_selected_item_iter()
+        hasitems = self.wishCalc.store.iter_n_children(None) > 0
 
-        if itr is None:
-            bsens = False
-            bcanmoveup = False
-            bcanmovedown = False
-            bcanopenurl = False
-        else:
-            ix = self.wishCalc.store.get_path(itr).get_indices()[-1]
-            lastix = self.wishCalc.store.iter_n_children(self.wishCalc.store.iter_parent(itr)) - 1
+        bsens = False
+        bcanmoveup = False
+        bcanmovedown = False
+        bcanopenurl = False
+        bcanselect = False
+        bcanunselect = False
 
-            bsens = True
+        if hasitems:
+            if itr is not None:
+                ix = self.wishCalc.store.get_path(itr).get_indices()[-1]
+                lastix = self.wishCalc.store.iter_n_children(self.wishCalc.store.iter_parent(itr)) - 1
 
-            bcanmoveup = ix > 0
-            bcanmovedown = ix < lastix
+                bsens = True
 
-            bcanopenurl = self.wishCalc.get_item(itr).url != ''
+                bcanmoveup = ix > 0
+                bcanmovedown = ix < lastix
+
+                bcanopenurl = self.wishCalc.get_item(itr).url != ''
+
+            bcanselect = True
+            bcanunselect = self.wishCalc.totalSelectedCount > 0
 
         set_widgets_sensitive(self.widgetsItemCopyPaste, bsens)
         set_widgets_sensitive(self.widgetsItemEditing, bsens)
         set_widgets_sensitive(self.widgetsItemMoveUp, bsens & bcanmoveup)
         set_widgets_sensitive(self.widgetsItemMoveDown, bsens & bcanmovedown)
         set_widgets_sensitive(self.widgetsItemOpenURL, bsens & bcanopenurl)
+
+        set_widgets_sensitive(self.widgetsSelectAll, bcanselect)
+        set_widgets_sensitive(self.widgetsSelectNone, bcanselect & bcanunselect)
 
     def wishlistviewsel_changed(self, selection):
         self.setup_widgets_sensitive()
@@ -548,12 +562,14 @@ class MainWnd():
                       товар,
                       True, если нужно создать новый товар;
         newaschild  - используется только если newitem==True;
-                      булевское значение:
+                      значения:
+                      None  - новый товар добавляется в корневой уровень
+                              дерева;
                       False - новый товар добавляется на том же уровне
-                      дерева, что и выбранный товар (или на верхнем уровне,
-                      если ничего не выбрано);
-                      True - новый товар добавляется как дочерний
-                      к выбранному."""
+                              дерева, что и выбранный товар (или в корневом
+                              уровне, если ничего не выбрано);
+                      True  - новый товар добавляется как дочерний
+                              к выбранному."""
 
         itrsel = self.get_selected_item_iter()
 
@@ -574,7 +590,9 @@ class MainWnd():
                 self.wishCalc.replace_item(itrsel, item)
             else:
                 # добавляем новый
-                if newaschild:
+                if newaschild is None:
+                    parent = None
+                elif newaschild == True:
                     parent = itrsel
                 else:
                     parent = self.wishCalc.store.iter_parent(itrsel) if itrsel is not None else None
@@ -607,20 +625,22 @@ class MainWnd():
 
         # пересчитываем сумму ценников выбранных товаров
         # refresh_wishlistview() при этом вызывать не требуется
-        self.wishCalc.recalculate()
         self.refresh_selected_sum_view()
 
     def refresh_selected_sum_view(self):
-        if self.wishCalc.totalSelectedSum:
+        self.wishCalc.recalculate()
+
+        if self.wishCalc.totalSelectedCount:
             vsel = True
 
-            self.selectedsumentry.set_text(str(self.wishCalc.totalSelectedSum))
+            selsums = str(self.wishCalc.totalSelectedSum)
 
             if self.wishCalc.totalCash >= self.wishCalc.totalSelectedSum:
-                vneed = False
+                needs = 'хватает'
+                needsicon = self.iconNMok
+                needsinfo = needs
+                needmonths = ''
             else:
-                vneed = True
-
                 if self.wishCalc.totalCash > 0:
                     need = self.wishCalc.totalSelectedSum - self.wishCalc.totalCash
                     needs = str(need)
@@ -628,24 +648,32 @@ class MainWnd():
                     needsicon = self.get_percent_icon(self.wishCalc.totalCash, self.wishCalc.totalSelectedSum)
                     needmonths, needsicon, needsinfo = self.get_need_months_icon_text(need,
                         self.wishCalc.totalSelectedSum,
-                        need / self.wishCalc.refillCash,
+                        WishCalc.need_months(need, self.wishCalc.refillCash),
                         needsicon)
                 else:
                     needs = str(self.wishCalc.totalSelectedSum) if self.wishCalc.totalSelectedSum else ''
                     needsicon = self.iconNMempty
                     needsinfo = '<b>Денег нет совсем!</b>'
+                    needmonths = '?'
 
-                self.selectedneedsentry.set_text(needs)
-                self.selectedneedsentry.set_icon_from_pixbuf(Gtk.EntryIconPosition.PRIMARY, needsicon)
-                self.selectedneedsentry.set_icon_tooltip_markup(Gtk.EntryIconPosition.PRIMARY, needsinfo)
-
-            self.selectedneedsbox.set_sensitive(vneed)
-            self.selectedneedsbox.set_visible(vneed)
         else:
             vsel = False
 
+            selsums = ''
+            needs = ''
+            needsicon = self.iconNMempty
+            needsinfo = ''
+            needmonths = ''
+
+        self.selectedsumentry.set_text(selsums)
+        self.selectedneedsentry.set_text(needs)
+        self.selectedneedsentry.set_icon_from_pixbuf(Gtk.EntryIconPosition.PRIMARY, needsicon)
+        self.selectedneedsentry.set_icon_tooltip_markup(Gtk.EntryIconPosition.PRIMARY, needsinfo)
+        self.selectedmonthsentry.set_text(needmonths)
+
         self.selectedsumbox.set_sensitive(vsel)
-        self.selectedsumbox.set_visible(vsel)
+
+        self.setup_widgets_sensitive() #!!!
 
     def get_selected_item_iter(self):
         """Возвращает Gtk.TreeIter если в TreeView выбрана строка,
@@ -660,6 +688,16 @@ class MainWnd():
 
     def item_add_subitem(self, btn):
         self.__do_edit_item(True, True)
+
+    def __item_select_all(self, select):
+        self.wishCalc.select_items(select)
+        self.refresh_selected_sum_view()
+
+    def item_select_all(self, widget):
+        self.__item_select_all(True)
+
+    def item_unselect_all(self, widget):
+        self.__item_select_all(False)
 
     def item_copy(self, btn):
         itrsel = self.get_selected_item_iter()
@@ -890,7 +928,7 @@ def process_cmdline(args):
     if len(args) > 1:
         return os.path.abspath(args[1])
     else:
-        for wlfname in ('.', os.path.split(args[0])[0]):
+        for wlfname in ('.',):# os.path.split(args[0])[0]):
             wlfname = os.path.join(os.path.abspath(wlfname), DEFAULT_FILENAME)
 
             if os.path.exists(wlfname):

@@ -311,6 +311,7 @@ class WishCalc():
         self.refillCash = 0
         self.totalRemain = 0
         self.totalSelectedSum = 0
+        self.totalSelectedCount = 0
         self.comment = ''
 
     def __str__(self):
@@ -443,6 +444,23 @@ class WishCalc():
 
         self.store.set_value(itr, self.COL_ITEM_OBJ, item)
 
+    def select_items(self, select):
+        """Устанавливает значение столбца COL_SELECTED для всех элементов
+        store значением select (булевским)."""
+
+        def __select_items(parentitr):
+            itr = self.store.iter_children(parentitr)
+            while itr is not None:
+                item = self.store.set_value(itr, self.COL_SELECTED, select)
+
+                # "дети" есть? а если найду?
+                if self.store.iter_n_children(itr) > 0:
+                    __select_items(itr)
+
+                itr = self.store.iter_next(itr)
+
+        __select_items(None)
+
     def make_store_row(self, item):
         """Создаёт и возвращает кортеж со значениями полей для вставки/добавления
         в Gtk.TreeModel.
@@ -482,7 +500,7 @@ class WishCalc():
 
         itr = self.store.iter_children(parentitr)
         while itr is not None:
-            item = self.store.get(itr, self.COL_ITEM_OBJ)[0]
+            item = self.store.get_value(itr, self.COL_ITEM_OBJ)
             itemdict = item.get_fields_dict()
 
             # "дети" есть? а если найду?
@@ -537,17 +555,19 @@ class WishCalc():
         на основе параметров totalCash, refillCash, totalRemain
         и значений полей элементов (при необходимости рекурсивно).
 
-        Возвращает кортеж из четырёх элементов:
+        Возвращает кортеж из пяти элементов:
         1й: суммарная цена элементов (с учётом количества),
         2й: обновлённое значение totalRemain,
         3й: максимальное значение поля importance вложенных элементов
             (товаров),
-        4й: суммарная стоимость помеченных чекбоксами в UI элементов."""
+        4й: суммарная стоимость помеченных чекбоксами в UI элементов;
+        5й: количество помеченных элементов."""
 
         totalNeedCash = 0
         totalCost = 0
         maxImportance = 0
         totalSelectedSum = 0
+        totalSelectedCount = 0
 
         itr = self.store.iter_children(parentitr)
         while itr is not None:
@@ -566,10 +586,11 @@ class WishCalc():
                 # одиночный товар
                 if itemsel:
                     totalSelectedSum += item.sum
+                    totalSelectedCount += 1
             else:
                 # не товар, а группа товаров! для них цена -
                 # общая стоимость вложенных!
-                item.cost, subRemain, subImportance, subSelectedSum = self.__recalculate_items(itr,
+                item.cost, subRemain, subImportance, subSelectedSum, subSelectedCount = self.__recalculate_items(itr,
                     totalCash, refillCash, totalRemain)
                 item.calculate_sum()
 
@@ -577,8 +598,10 @@ class WishCalc():
                 # а не отдельные помеченные вложенные!
                 if itemsel:
                     totalSelectedSum += item.sum
+                    totalSelectedCount += 1
                 elif subSelectedSum:
                     totalSelectedSum += subSelectedSum
+                    totalSelectedCount += subSelectedCount
 
                 if item.childImportance < subImportance:
                     item.childImportance = subImportance
@@ -614,9 +637,7 @@ class WishCalc():
                     item.needTotal = totalNeedCash
 
                     if refillCash > 0:
-                        item.needMonths = totalNeedCash // refillCash
-                        if totalNeedCash % float(refillCash) > 0.0:
-                            item.needMonths += 1
+                        item.needMonths = self.need_months(totalNeedCash, refillCash)
                     else:
                         item.needMonths = None
                 else:
@@ -630,7 +651,7 @@ class WishCalc():
         if totalRemain < 0:
             totalRemain = 0
 
-        return (totalCost, totalRemain, maxImportance, totalSelectedSum)
+        return (totalCost, totalRemain, maxImportance, totalSelectedSum, totalSelectedCount)
 
     def recalculate(self):
         """Перерасчет.
@@ -640,8 +661,19 @@ class WishCalc():
         полей элементов).
         По завершению обновляется значение self.totalRemain."""
 
-        __totalCost, self.totalRemain, __importance, self.totalSelectedSum = self.__recalculate_items(None,
+        __totalCost, self.totalRemain, __importance, self.totalSelectedSum, self.totalSelectedCount = self.__recalculate_items(None,
             self.totalCash, self.refillCash, self.totalCash)
+
+    @staticmethod
+    def need_months(needcash, refillcash):
+        """Возвращает целое - кол-во полных месяцев, необходимых на накопление
+        суммы needcash при ежемесячном пополнении кошелька refillcash."""
+
+        m = needcash // refillcash
+        if needcash % float(refillcash) > 0.0:
+            m += 1
+
+        return m
 
     def item_delete(self, itr, ispurchased):
         """Удаление товара из списка.
@@ -675,6 +707,8 @@ if __name__ == '__main__':
     #print(wishcalc.save_str())
     #exit(0)
 
+    wishcalc.select_items(True)
+
     wishcalc.recalculate()
 
     def __print_items(store, parentitr, indent):
@@ -683,13 +717,14 @@ if __name__ == '__main__':
         sindent = ' ' * indent * 2
 
         while itr is not None:
-            item = store.get(itr, WishCalc.COL_ITEM_OBJ)[0]
+            item = store.get_value(itr, WishCalc.COL_ITEM_OBJ)
+            selected = store.get_value(itr, WishCalc.COL_SELECTED)
             nchildren = store.iter_n_children(itr)
 
-            print('%s%s %s (%d, %d, %d), %d' % (sindent,
+            print('%s%s %s (%d, %d, %d), %d (%s)' % (sindent,
                 '*' if nchildren == 0 else '>',
                 item.name, item.cost, item.quantity, item.sum,
-                item.importance))
+                item.importance, selected))
 
             if nchildren > 0:
                 __print_items(store, itr, indent + 1)

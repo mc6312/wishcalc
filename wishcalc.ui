@@ -281,6 +281,32 @@
                       </object>
                     </child>
                     <child>
+                      <object class="GtkMenuItem" id="mnuItemSelectAll">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">Выделить все товары</property>
+                        <property name="use_underline">True</property>
+                        <signal name="activate" handler="item_select_all" swapped="no"/>
+                        <accelerator key="a" signal="activate" modifiers="GDK_CONTROL_MASK"/>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkMenuItem" id="mnuItemUnselectAll">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">Снять выделение со всех товаров</property>
+                        <property name="use_underline">True</property>
+                        <signal name="activate" handler="item_unselect_all" swapped="no"/>
+                        <accelerator key="a" signal="activate" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkSeparatorMenuItem">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                      </object>
+                    </child>
+                    <child>
                       <object class="GtkMenuItem" id="mnuItemRemove">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
@@ -327,161 +353,17 @@
         <property name="orientation">vertical</property>
         <property name="spacing">4</property>
         <child>
-          <object class="GtkBox">
+          <object class="GtkBox" id="ctrlhbox">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <child>
-              <object class="GtkScrolledWindow" id="scrolledwindow">
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="hscrollbar_policy">never</property>
-                <property name="shadow_type">in</property>
-                <child>
-                  <object class="GtkTreeView" id="wishlistview">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="model">wishlist</property>
-                    <property name="reorderable">True</property>
-                    <property name="enable_grid_lines">both</property>
-                    <property name="enable_tree_lines">True</property>
-                    <signal name="button-press-event" handler="on_wishlistview_button_press_event" swapped="no"/>
-                    <signal name="drag-end" handler="on_wishlistview_drag_end" swapped="no"/>
-                    <signal name="popup-menu" handler="on_wishlistview_popup_menu" swapped="no"/>
-                    <signal name="row-activated" handler="wl_row_activated" swapped="no"/>
-                    <child internal-child="selection">
-                      <object class="GtkTreeSelection" id="wishlistviewsel">
-                        <signal name="changed" handler="wishlistviewsel_changed" swapped="no"/>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkTreeViewColumn" id="colItemName">
-                        <property name="sizing">autosize</property>
-                        <property name="title" translatable="yes">Название</property>
-                        <property name="expand">True</property>
-                        <child>
-                          <object class="GtkCellRendererToggle" id="crCheckbox">
-                            <signal name="toggled" handler="wl_item_selected_toggled" swapped="no"/>
-                          </object>
-                          <attributes>
-                            <attribute name="active">10</attribute>
-                          </attributes>
-                        </child>
-                        <child>
-                          <object class="GtkCellRendererPixbuf" id="crColor"/>
-                          <attributes>
-                            <attribute name="pixbuf">9</attribute>
-                          </attributes>
-                        </child>
-                        <child>
-                          <object class="GtkCellRendererText" id="crName"/>
-                          <attributes>
-                            <attribute name="text">1</attribute>
-                          </attributes>
-                        </child>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkTreeViewColumn" id="colItemCost">
-                        <property name="title" translatable="yes">Цена</property>
-                        <property name="alignment">0.5</property>
-                        <child>
-                          <object class="GtkCellRendererText" id="crCost">
-                            <property name="xalign">1</property>
-                            <property name="alignment">right</property>
-                          </object>
-                          <attributes>
-                            <attribute name="text">2</attribute>
-                          </attributes>
-                        </child>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkTreeViewColumn" id="colItemQuantity">
-                        <property name="title" translatable="yes">Кол-
-во</property>
-                        <property name="alignment">1</property>
-                        <child>
-                          <object class="GtkCellRendererText" id="crQuantity">
-                            <property name="xalign">1</property>
-                            <property name="alignment">right</property>
-                          </object>
-                          <attributes>
-                            <attribute name="text">7</attribute>
-                          </attributes>
-                        </child>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkTreeViewColumn" id="colItemSum">
-                        <property name="title" translatable="yes">Сумма</property>
-                        <property name="alignment">1</property>
-                        <child>
-                          <object class="GtkCellRendererText" id="crSum">
-                            <property name="xalign">1</property>
-                            <property name="alignment">right</property>
-                          </object>
-                          <attributes>
-                            <attribute name="text">8</attribute>
-                          </attributes>
-                        </child>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkTreeViewColumn" id="colItemNeedCash">
-                        <property name="spacing">4</property>
-                        <property name="title" translatable="yes">Не хватает</property>
-                        <property name="alignment">0.5</property>
-                        <child>
-                          <object class="GtkCellRendererPixbuf" id="crNeededIcon"/>
-                          <attributes>
-                            <attribute name="pixbuf">4</attribute>
-                          </attributes>
-                        </child>
-                        <child>
-                          <object class="GtkCellRendererText" id="crNeeded">
-                            <property name="xalign">0</property>
-                          </object>
-                          <attributes>
-                            <attribute name="text">3</attribute>
-                          </attributes>
-                        </child>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkTreeViewColumn" id="colItemNeedMonths">
-                        <property name="spacing">4</property>
-                        <property name="title" translatable="yes">Копить
-(мес.)</property>
-                        <property name="alignment">1</property>
-                        <child>
-                          <object class="GtkCellRendererText" id="crNeedMonths">
-                            <property name="xalign">1</property>
-                            <property name="alignment">right</property>
-                            <property name="single_paragraph_mode">True</property>
-                          </object>
-                          <attributes>
-                            <attribute name="text">5</attribute>
-                          </attributes>
-                        </child>
-                      </object>
-                    </child>
-                  </object>
-                </child>
-              </object>
-              <packing>
-                <property name="expand">True</property>
-                <property name="fill">True</property>
-                <property name="position">0</property>
-              </packing>
-            </child>
+            <property name="spacing">4</property>
             <child>
               <object class="GtkToolbar">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="orientation">vertical</property>
                 <property name="toolbar_style">icons</property>
                 <property name="show_arrow">False</property>
-                <property name="icon_size">1</property>
+                <property name="icon_size">2</property>
                 <child>
                   <object class="GtkToolButton" id="btnItemAdd">
                     <property name="visible">True</property>
@@ -675,106 +557,145 @@
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
-                <property name="position">1</property>
-              </packing>
-            </child>
-          </object>
-          <packing>
-            <property name="expand">True</property>
-            <property name="fill">True</property>
-            <property name="position">0</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkBox" id="selectedsumbox">
-            <property name="sensitive">False</property>
-            <property name="can_focus">False</property>
-            <property name="orientation">vertical</property>
-            <property name="spacing">4</property>
-            <child>
-              <object class="GtkSeparator">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
                 <property name="position">0</property>
               </packing>
             </child>
             <child>
-              <object class="GtkBox" id="__selectedsumbox">
+              <object class="GtkBox" id="_selsumbox">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="spacing">4</property>
                 <child>
-                  <object class="GtkLabel">
+                  <object class="GtkSeparator">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="label" translatable="yes">Выбрано товаров на сумму:</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
                     <property name="fill">True</property>
-                    <property name="position">1</property>
+                    <property name="position">0</property>
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkEntry" id="selectedsumentry">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="editable">False</property>
-                    <property name="width_chars">10</property>
-                    <property name="xalign">1</property>
-                    <property name="primary_icon_activatable">False</property>
-                    <property name="secondary_icon_activatable">False</property>
-                    <property name="primary_icon_sensitive">False</property>
-                    <property name="secondary_icon_sensitive">False</property>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="position">2</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkBox" id="selectedneedsbox">
+                  <object class="GtkAlignment">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="spacing">3</property>
+                    <property name="valign">center</property>
+                    <property name="xalign">0</property>
                     <child>
-                      <object class="GtkLabel">
+                      <object class="GtkBox" id="selectedsumbox">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">, не хватает:</property>
+                        <property name="spacing">4</property>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="label" translatable="yes">Выбрано:</property>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkEntry" id="selectedsumentry">
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="editable">False</property>
+                            <property name="width_chars">10</property>
+                            <property name="xalign">1</property>
+                            <property name="primary_icon_activatable">False</property>
+                            <property name="secondary_icon_activatable">False</property>
+                            <property name="primary_icon_sensitive">False</property>
+                            <property name="secondary_icon_sensitive">False</property>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">1</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="margin_left">4</property>
+                            <property name="label" translatable="yes">Не хватает</property>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">2</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkEntry" id="selectedneedsentry">
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="editable">False</property>
+                            <property name="activates_default">True</property>
+                            <property name="width_chars">12</property>
+                            <property name="secondary_icon_activatable">False</property>
+                            <property name="secondary_icon_sensitive">False</property>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">3</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="margin_left">4</property>
+                            <property name="label" translatable="yes">Копить:</property>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">4</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkEntry" id="selectedmonthsentry">
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="editable">False</property>
+                            <property name="width_chars">6</property>
+                            <property name="xalign">1</property>
+                            <property name="primary_icon_activatable">False</property>
+                            <property name="secondary_icon_activatable">False</property>
+                            <property name="primary_icon_sensitive">False</property>
+                            <property name="secondary_icon_sensitive">False</property>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">5</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="label" translatable="yes">мес.</property>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">6</property>
+                          </packing>
+                        </child>
                       </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">0</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkEntry" id="selectedneedsentry">
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="editable">False</property>
-                        <property name="activates_default">True</property>
-                        <property name="width_chars">12</property>
-                        <property name="secondary_icon_activatable">False</property>
-                        <property name="secondary_icon_sensitive">False</property>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">1</property>
-                      </packing>
                     </child>
                   </object>
                   <packing>
-                    <property name="expand">False</property>
+                    <property name="expand">True</property>
                     <property name="fill">True</property>
-                    <property name="position">3</property>
+                    <property name="position">1</property>
                   </packing>
                 </child>
               </object>
@@ -785,19 +706,195 @@
               </packing>
             </child>
             <child>
-              <object class="GtkSeparator">
+              <object class="GtkToolbar">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="toolbar_style">icons</property>
+                <property name="show_arrow">False</property>
+                <property name="icon_size">2</property>
+                <child>
+                  <object class="GtkToolButton" id="btnSelectAll">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="tooltip_text" translatable="yes">Выделить все товары</property>
+                    <property name="use_underline">True</property>
+                    <property name="stock_id">gtk-select-all</property>
+                    <signal name="clicked" handler="item_select_all" swapped="no"/>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="homogeneous">True</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkToolButton" id="btnUnselectAll">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="tooltip_text" translatable="yes">Снять выделение со всех товаров</property>
+                    <property name="use_underline">True</property>
+                    <property name="stock_id">gtk-clear</property>
+                    <signal name="clicked" handler="item_unselect_all" swapped="no"/>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="homogeneous">True</property>
+                  </packing>
+                </child>
               </object>
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
+                <property name="pack_type">end</property>
                 <property name="position">2</property>
               </packing>
             </child>
           </object>
           <packing>
             <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkScrolledWindow" id="scrolledwindow">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="hscrollbar_policy">never</property>
+            <property name="shadow_type">in</property>
+            <child>
+              <object class="GtkTreeView" id="wishlistview">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="model">wishlist</property>
+                <property name="reorderable">True</property>
+                <property name="enable_grid_lines">both</property>
+                <property name="enable_tree_lines">True</property>
+                <signal name="button-press-event" handler="on_wishlistview_button_press_event" swapped="no"/>
+                <signal name="drag-end" handler="on_wishlistview_drag_end" swapped="no"/>
+                <signal name="popup-menu" handler="on_wishlistview_popup_menu" swapped="no"/>
+                <signal name="row-activated" handler="wl_row_activated" swapped="no"/>
+                <child internal-child="selection">
+                  <object class="GtkTreeSelection" id="wishlistviewsel">
+                    <signal name="changed" handler="wishlistviewsel_changed" swapped="no"/>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkTreeViewColumn" id="colItemName">
+                    <property name="sizing">autosize</property>
+                    <property name="title" translatable="yes">Название</property>
+                    <property name="expand">True</property>
+                    <child>
+                      <object class="GtkCellRendererToggle" id="crCheckbox">
+                        <signal name="toggled" handler="wl_item_selected_toggled" swapped="no"/>
+                      </object>
+                      <attributes>
+                        <attribute name="active">10</attribute>
+                      </attributes>
+                    </child>
+                    <child>
+                      <object class="GtkCellRendererPixbuf" id="crColor"/>
+                      <attributes>
+                        <attribute name="pixbuf">9</attribute>
+                      </attributes>
+                    </child>
+                    <child>
+                      <object class="GtkCellRendererText" id="crName"/>
+                      <attributes>
+                        <attribute name="text">1</attribute>
+                      </attributes>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkTreeViewColumn" id="colItemCost">
+                    <property name="title" translatable="yes">Цена</property>
+                    <property name="alignment">0.5</property>
+                    <child>
+                      <object class="GtkCellRendererText" id="crCost">
+                        <property name="xalign">1</property>
+                        <property name="alignment">right</property>
+                      </object>
+                      <attributes>
+                        <attribute name="text">2</attribute>
+                      </attributes>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkTreeViewColumn" id="colItemQuantity">
+                    <property name="title" translatable="yes">Кол-
+во</property>
+                    <property name="alignment">1</property>
+                    <child>
+                      <object class="GtkCellRendererText" id="crQuantity">
+                        <property name="xalign">1</property>
+                        <property name="alignment">right</property>
+                      </object>
+                      <attributes>
+                        <attribute name="text">7</attribute>
+                      </attributes>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkTreeViewColumn" id="colItemSum">
+                    <property name="title" translatable="yes">Сумма</property>
+                    <property name="alignment">1</property>
+                    <child>
+                      <object class="GtkCellRendererText" id="crSum">
+                        <property name="xalign">1</property>
+                        <property name="alignment">right</property>
+                      </object>
+                      <attributes>
+                        <attribute name="text">8</attribute>
+                      </attributes>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkTreeViewColumn" id="colItemNeedCash">
+                    <property name="spacing">4</property>
+                    <property name="title" translatable="yes">Не хватает</property>
+                    <property name="alignment">0.5</property>
+                    <child>
+                      <object class="GtkCellRendererPixbuf" id="crNeededIcon"/>
+                      <attributes>
+                        <attribute name="pixbuf">4</attribute>
+                      </attributes>
+                    </child>
+                    <child>
+                      <object class="GtkCellRendererText" id="crNeeded">
+                        <property name="xalign">0</property>
+                      </object>
+                      <attributes>
+                        <attribute name="text">3</attribute>
+                      </attributes>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkTreeViewColumn" id="colItemNeedMonths">
+                    <property name="spacing">4</property>
+                    <property name="title" translatable="yes">Копить
+(мес.)</property>
+                    <property name="alignment">1</property>
+                    <child>
+                      <object class="GtkCellRendererText" id="crNeedMonths">
+                        <property name="xalign">1</property>
+                        <property name="alignment">right</property>
+                        <property name="single_paragraph_mode">True</property>
+                      </object>
+                      <attributes>
+                        <attribute name="text">5</attribute>
+                      </attributes>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">True</property>
             <property name="fill">True</property>
             <property name="position">1</property>
           </packing>
