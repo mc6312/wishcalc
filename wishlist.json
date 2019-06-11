@@ -69,6 +69,11 @@
           "importance": 1
         },
         {
+          "name": "Тоже ерунда",
+          "cost": 0,
+          "quantity": 1
+        },
+        {
           "name": "Другая ерунда",
           "cost": 0,
           "quantity": 1,

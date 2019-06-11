@@ -22,7 +22,7 @@
 TITLE = 'WishCalc'
 SUB_TITLE = 'Калькулятор загребущего нищеброда'
 
-VERSION = '2.3.9'
+VERSION = '2.3.10'
 TITLE_VERSION = '%s v%s' % (TITLE, VERSION)
 COPYRIGHT = '(c) 2017-2019 MC-6312'
 URL = 'https://github.com/mc6312/wishcalc'
@@ -31,7 +31,7 @@ URL = 'https://github.com/mc6312/wishcalc'
 from gtktools import *
 
 from gi.repository import Gtk, Gdk, GObject, Pango, GLib
-from gi.repository.GdkPixbuf import Pixbuf
+from gi.repository.GdkPixbuf import Pixbuf, InterpType
 import cairo
 
 from math import pi
@@ -62,7 +62,7 @@ class ImportanceIcons():
     цветовых меток."""
 
     COLORS = (
-        None,
+        (0.8, 0.8, 0.8),
         (0.0, 1.0, 0.0),
         (1.0, 1.0, 0.0),
         (1.0, 0.6, 0.0),
@@ -79,12 +79,13 @@ class ImportanceIcons():
             iconSize    - константа Gtk.IconSize.*.
 
         Поля:
-            icons       - список экземпляров colorlabelicon."""
+            icons       - список экземпляров Pixbuf."""
 
         _ok, self.iconSizePx, ih = Gtk.IconSize.lookup(iconSize)
         # прочие возвращённые значения фпень - у нас тут иконки строго квадратные
 
         self.icons = []
+        self.foldericons = []
 
         sctx = Gtk.StyleContext.new()
         _ok, borderclr = sctx.lookup_color('theme_text_color')
@@ -101,8 +102,9 @@ class ImportanceIcons():
     def __create_icon(self, color, bordercolor):
         """Создаёт и возвращает экземпляр GdkPixbuf.Pixbuf заданного цвета.
 
-        color   - значение цвета заполнения или None,
-        sctx    - значение цвета каймы.
+        color       - значение цвета заполнения или None,
+        bordercolor - значение цвета каймы,
+        bgpixbuf    - экземпляр Pixbuf фонового изображения.
         Оба цветовых параметра - кортежи из трёх или четырёх вещественных
         чисел (R, G, B)/(R, G, B, A)."""
 
@@ -111,12 +113,10 @@ class ImportanceIcons():
         cc = cairo.Context(csurf)
 
         center = self.iconSizePx / 2.0
-        radius = center * 0.6
+        radius = center * 0.7
         circle = 2 * pi
 
-        alpha = 1.0 if color is not None else 0.4
-
-        cc.set_source(cairo.SolidPattern(*bordercolor[:3], alpha))
+        cc.set_source(cairo.SolidPattern(*bordercolor[:3]))
 
         cc.arc(center, center, radius, 0.0, circle)
 
@@ -139,3 +139,5 @@ if __name__ == '__main__':
     print('[debugging %s]' % __file__)
 
     labels = ImportanceIcons(Gtk.IconSize.MENU)
+    for pbs in labels.icons:
+        print(pbs)

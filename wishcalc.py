@@ -522,7 +522,7 @@ class MainWnd():
                         WishCalc.COL_NEED_MONTHS, WishCalc.COL_INFO,
                         WishCalc.COL_QUANTITY, WishCalc.COL_SUM,
                         WishCalc.COL_IMPORTANCE),
-                    (item.name,
+                    ('%s%s' % (item.name, '' if nchildren == 0 else ' (%d)' % nchildren),
                         str(item.cost) if item.cost else '?',
                         needs,
                         needsicon,
@@ -530,7 +530,7 @@ class MainWnd():
                         '\n'.join(infobuf),
                         str(item.quantity),
                         str(item.sum) if item.cost else '?',
-                        self.importanceIcons.icons[importance]
+                        self.importanceIcons.icons[importance],
                         ))
 
                 __subsel = __refresh_node(itr)
