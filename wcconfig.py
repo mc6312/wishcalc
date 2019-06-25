@@ -23,9 +23,8 @@ from gtktools import *
 
 from gi.repository import Gtk, Gdk
 
-import xdg.BaseDirectory
 import json
-import os.path
+import os, os.path
 
 
 JSON_ENCODING = 'utf-8'
@@ -164,7 +163,11 @@ class Config():
 
         # определяем каталог для настроек
         # или принудительно создаём, если его ещё нет
-        self.configDir = xdg.BaseDirectory.save_config_path(self.CFGAPP)
+
+        # некоторый костылинг вместо xdg.BaseDirectory, которого есть не для всех ОС
+        self.configDir = os.path.join(os.path.expanduser('~'), '.config', self.CFGAPP)
+        if not os.path.exists(self.configDir):
+            os.makedirs(self.configDir)
 
         self.configPath = os.path.join(self.configDir, self.CFGFN)
         # вот сейчас самого файла может ещё не быть!
