@@ -29,6 +29,8 @@ import webbrowser
 import os.path
 import sys
 
+from random import choice as random_choice
+
 from warnings import warn
 
 from wcdata import *
@@ -545,14 +547,21 @@ class MainWnd():
 
         # вертаем выбор взад
         if itersel is not None:
-            path = self.wishCalc.store.get_path(itersel)
-            self.wishlistviewsel.select_path(path)
-            self.wishlistview.set_cursor(path, None, False)
+            self.item_select_by_iter(itersel)
 
         self.setup_widgets_sensitive()
 
         self.refresh_totalcash_view()
         self.refresh_remains_view()
+
+    def item_select_by_iter(self, itr, expandrow=False):
+        path = self.wishCalc.store.get_path(itr)
+
+        if expandrow:
+            self.wishlistview.expand_row(path, False)
+
+        self.wishlistviewsel.select_path(path)
+        self.wishlistview.set_cursor(path, None, False)
 
     def __do_edit_item(self, newitem, newaschild=False):
         """Вызов редактора описания товара.
@@ -702,6 +711,28 @@ class MainWnd():
 
     def item_unselect_all(self, widget):
         self.__item_select_all(False)
+
+    def item_expand_all(self, widget):
+        self.wishlistview.expand_all()
+
+    def item_collapse_all(self, widget):
+        self.wishlistview.collapse_all()
+
+    def item_random_choice(self, widget):
+        # список всех Gtk.TreeIter дерева товаров
+        alliters = []
+
+        def __gather_children(parentitr):
+            itr = self.wishCalc.store.iter_children(parentitr)
+            while itr is not None:
+                alliters.append(itr)
+                __gather_children(itr)
+                itr = self.wishCalc.store.iter_next(itr)
+
+        __gather_children(None)
+
+        if alliters:
+            self.item_select_by_iter(random_choice(alliters), True)
 
     def item_copy(self, btn):
         itrsel = self.get_selected_item_iter()

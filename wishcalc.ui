@@ -301,6 +301,36 @@
                       </object>
                     </child>
                     <child>
+                      <object class="GtkMenuItem" id="mnuItemExpandAll">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">Развернуть все</property>
+                        <property name="use_underline">True</property>
+                        <signal name="activate" handler="item_expand_all" swapped="no"/>
+                        <accelerator key="x" signal="activate" modifiers="GDK_MOD1_MASK"/>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkMenuItem" id="mnuItemCollapseAll">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">Свернуть все</property>
+                        <property name="use_underline">True</property>
+                        <signal name="activate" handler="item_collapse_all" swapped="no"/>
+                        <accelerator key="c" signal="activate" modifiers="GDK_MOD1_MASK"/>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkMenuItem" id="mnuItemRandomChoice">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">Случайный выбор</property>
+                        <property name="use_underline">True</property>
+                        <signal name="activate" handler="item_random_choice" swapped="no"/>
+                        <accelerator key="r" signal="activate" modifiers="GDK_MOD1_MASK"/>
+                      </object>
+                    </child>
+                    <child>
                       <object class="GtkSeparatorMenuItem">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
