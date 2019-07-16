@@ -502,7 +502,7 @@ class MainWnd():
 
                 nchildren = self.wishCalc.store.iter_n_children(itr)
                 if nchildren > 1:
-                    itemname = '%s (%d шт.)' % (itemname, nchildren)
+                    itemname = '%s <span size="smaller"><i>(%d)</i></span>' % (itemname, nchildren)
 
                 infobuf = ['<b>%s</b>' % itemname]
                 infomonths = ''
@@ -524,7 +524,8 @@ class MainWnd():
                         WishCalc.COL_NEED_MONTHS, WishCalc.COL_INFO,
                         WishCalc.COL_QUANTITY, WishCalc.COL_SUM,
                         WishCalc.COL_IMPORTANCE),
-                    ('%s%s' % (item.name, '' if nchildren == 0 else ' (%d)' % nchildren),
+                    (itemname,
+                        #'%s%s' % (item.name, '' if nchildren == 0 else ' (%d)' % nchildren),
                         str(item.cost) if item.cost else '?',
                         needs,
                         needsicon,
