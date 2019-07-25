@@ -651,8 +651,17 @@ class MainWnd():
                 needsinfo = needs
                 needmonths = ''
             else:
-                if self.wishCalc.totalCash > 0:
-                    need = self.wishCalc.totalSelectedSum - self.wishCalc.totalCash
+                if self.wishCalc.totalSelectedSum == 0:
+                    needs = ''
+                    needsicon = self.iconNMempty
+                    needsinfo = '<b>Денег нет совсем!</b>'
+                    needmonths = '?'
+                else:
+                    need = self.wishCalc.totalSelectedSum
+
+                    if self.wishCalc.totalCash > 0:
+                        need -= self.wishCalc.totalCash
+
                     needs = str(need)
 
                     needsicon = self.get_percent_icon(self.wishCalc.totalCash, self.wishCalc.totalSelectedSum)
@@ -660,11 +669,6 @@ class MainWnd():
                         self.wishCalc.totalSelectedSum,
                         WishCalc.need_months(need, self.wishCalc.refillCash),
                         needsicon)
-                else:
-                    needs = str(self.wishCalc.totalSelectedSum) if self.wishCalc.totalSelectedSum else ''
-                    needsicon = self.iconNMempty
-                    needsinfo = '<b>Денег нет совсем!</b>'
-                    needmonths = '?'
 
         else:
             vsel = False
