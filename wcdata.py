@@ -128,7 +128,7 @@ class WishCalc():
 
     COL_ITEM_OBJ, COL_NAME, COL_COST, COL_NEEDED,\
     COL_NEED_ICON, COL_NEED_MONTHS, COL_INFO, COL_QUANTITY, COL_SUM,\
-    COL_IMPORTANCE, COL_SELECTED = range(11)
+    COL_IMPORTANCE, COL_SELECTED, COL_INCART, COL_SELECTEDSUBITEMS = range(13)
 
     class Item():
         """Данные для описания товара.
@@ -146,6 +146,7 @@ class WishCalc():
         INFO = 'info'
         URL = 'url'
         IMPORTANCE = 'importance'
+        INCART = 'incart'
         ITEMS = 'items'
 
         def new_copy(self):
@@ -164,6 +165,7 @@ class WishCalc():
             self.quantity = 1
             self.info = ''
             self.url = ''
+            self.incart = False
 
             self.importance = 0
             # "важность" товара, она же индекс в wccommon.ImportanceIcons.icons;
@@ -194,8 +196,11 @@ class WishCalc():
             # кол-во месяцев на накопление
             self.needMonths = None
 
-            # служебное поле - только для GUI, в файле не сохраняется
-            self.childImportance = 0
+            # максимальное значение importance вложенных товаров
+            self.childrenImportance = 0
+
+            self.childrenSelected = False
+            self.childrenInCart = False
 
         def clear(self):
             """Очистка полей данных"""
@@ -207,7 +212,11 @@ class WishCalc():
             self.info = ''
             self.url = ''
             self.importance = 0
-            self.childImportance = 0
+            self.incart = None
+
+            self.childrenImportance = 0
+            self.childSelected = False
+            self.childInCart = False
 
         def calculate_sum(self):
             if self.cost > 0:
@@ -225,15 +234,17 @@ class WishCalc():
             self.info = other.info
             self.url = other.url
 
+            self.incart = other.incart
+
             self.importance = other.importance
 
         def __repr__(self):
             # для отладки
-            return '%s(name="%s", cost=%d, quantity=%d, sum=%d, info="%s", url="%s", importance=%d, needCash=%s, needTotal=%s, availCash=%s, needMonths=%s)' %\
+            return '%s(name="%s", cost=%d, quantity=%d, sum=%d, info="%s", url="%s", importance=%d, incart=%s, needCash=%s, needTotal=%s, availCash=%s, needMonths=%s)' %\
                 (self.__class__.__name__,
                  self.name, self.cost, self.quantity, self.sum,
                  self.info, self.url,
-                 self.importance,
+                 self.importance, self.incart,
                  self.needCash, self.needTotal, self.availCash, self.needMonths)
 
         def get_fields_dict(self):
@@ -241,6 +252,8 @@ class WishCalc():
 
             d = {self.NAME:self.name, self.COST:self.cost, self.QUANTITY:self.quantity}
 
+            # необязательные поля кладём в словарь только при наличии "неумолчальных" значений
+            # дабы JSON не распухал
             if self.info:
                 d[self.INFO] = self.info
 
@@ -249,6 +262,9 @@ class WishCalc():
 
             if self.importance > 0:
                 d[self.IMPORTANCE] = self.importance
+
+            if self.incart:
+                d[self.INCART] = self.incart
 
             # поля sum и need* для сохранения не предназначены и в словарь не кладутся!
 
@@ -281,6 +297,8 @@ class WishCalc():
             elif self.importance > ImportanceIcons.MAX:
                 self.importance = ImportanceIcons.MAX
 
+            self.incart = get_dict_item(srcdict, self.INCART, bool, fallback=False)
+
     def __init__(self, filename):
         """Параметры:
         filename    - None или имя файла в формате JSON для загрузки/сохранения.
@@ -304,7 +322,9 @@ class WishCalc():
             Pixbuf, GObject.TYPE_STRING, GObject.TYPE_STRING,
             GObject.TYPE_STRING, GObject.TYPE_STRING,
             Pixbuf,
-            GObject.TYPE_BOOLEAN
+            GObject.TYPE_BOOLEAN,
+            Pixbuf,
+            GObject.TYPE_BOOLEAN,
             )
 
         self.totalCash = 0
@@ -312,6 +332,8 @@ class WishCalc():
         self.totalRemain = 0
         self.totalSelectedSum = 0
         self.totalSelectedCount = 0
+        self.totalInCartSum = 0
+        self.totalInCartCount = 0
         self.comment = ''
 
     def __str__(self):
@@ -470,7 +492,7 @@ class WishCalc():
         Метод же make_store_row() нужен для того, чтоб в ста местах
         программы не вспоминать количество и порядок полей TreeModel."""
 
-        return (item, '', '', '', None, '', '', '', '', None, False)
+        return (item, '', '', '', None, '', '', '', '', None, False, None, False)
 
     def append_item(self, parentitr, item):
         """Добавление нового элемента в TreeStore.
@@ -555,19 +577,23 @@ class WishCalc():
         на основе параметров totalCash, refillCash, totalRemain
         и значений полей элементов (при необходимости рекурсивно).
 
-        Возвращает кортеж из пяти элементов:
+        Возвращает кортеж из семи элементов:
         1й: суммарная цена элементов (с учётом количества),
         2й: обновлённое значение totalRemain,
         3й: максимальное значение поля importance вложенных элементов
             (товаров),
         4й: суммарная стоимость помеченных чекбоксами в UI элементов;
-        5й: количество помеченных элементов."""
+        5й: количество помеченных элементов;
+        6й: суммарная стоимость заказанных товаров;
+        7й: количество заказанных товаров."""
 
         totalNeedCash = 0
         totalCost = 0
         maxImportance = 0
         totalSelectedSum = 0
         totalSelectedCount = 0
+        totalInCartSum = 0
+        totalInCartCount = 0
 
         itr = self.store.iter_children(parentitr)
         while itr is not None:
@@ -575,11 +601,11 @@ class WishCalc():
             itemsel = self.store.get_value(itr, self.COL_SELECTED)
 
             # сбрасываем, дабы обновлялось!
-            item.childImportance = 0
+            item.childrenImportance = 0
 
             # внимание! всё считаем на основе item.sum, а не item.cost!
 
-            # "дети" есть?
+            # "дети" есть? а если найду?
             nchildren = self.store.iter_n_children(itr)
 
             if nchildren == 0:
@@ -587,12 +613,21 @@ class WishCalc():
                 if itemsel:
                     totalSelectedSum += item.sum
                     totalSelectedCount += 1
+                if item.incart:
+                    totalInCartSum += item.sum
+                    totalInCartCount += 1
+
+                item.childSelected = False
+                item.childInCart = False
             else:
                 # не товар, а группа товаров! для них цена -
                 # общая стоимость вложенных!
-                item.cost, subRemain, subImportance, subSelectedSum, subSelectedCount = self.__recalculate_items(itr,
+                item.cost, subRemain, subImportance, subSelectedSum, subSelectedCount, subInCartSum, subInCartCount = self.__recalculate_items(itr,
                     totalCash, refillCash, totalRemain)
                 item.calculate_sum()
+
+                item.childrenSelected = subSelectedCount > 0
+                item.childrenInCart = subInCartCount > 0
 
                 # внимание! если помечена группа товаров - учитываем общую сумму,
                 # а не отдельные помеченные вложенные!
@@ -603,8 +638,17 @@ class WishCalc():
                     totalSelectedSum += subSelectedSum
                     totalSelectedCount += subSelectedCount
 
-                if item.childImportance < subImportance:
-                    item.childImportance = subImportance
+                # внимание! если заказана группа товаров - учитываем общую сумму,
+                # а не отдельные заказанные вложенные!
+                if item.incart:
+                    totalInCartSum += item.sum
+                    totalInCartCount += 1
+                elif subInCartSum:
+                    totalInCartSum += subInCartSum
+                    totalInCartCount += subInCartCount
+
+                if item.childrenImportance < subImportance:
+                    item.childrenImportance = subImportance
 
                 if item.importance == 0:
                     if maxImportance < subImportance:
@@ -651,7 +695,9 @@ class WishCalc():
         if totalRemain < 0:
             totalRemain = 0
 
-        return (totalCost, totalRemain, maxImportance, totalSelectedSum, totalSelectedCount)
+        return (totalCost, totalRemain, maxImportance,
+            totalSelectedSum, totalSelectedCount,
+            totalInCartSum, totalInCartCount)
 
     def recalculate(self):
         """Перерасчет.
@@ -661,7 +707,9 @@ class WishCalc():
         полей элементов).
         По завершению обновляется значение self.totalRemain."""
 
-        __totalCost, self.totalRemain, __importance, self.totalSelectedSum, self.totalSelectedCount = self.__recalculate_items(None,
+        __totalCost, self.totalRemain, __importance, \
+        self.totalSelectedSum, self.totalSelectedCount , \
+        self.totalInCartSum, self.totalInCartCount = self.__recalculate_items(None,
             self.totalCash, self.refillCash, self.totalCash)
 
     @staticmethod
@@ -735,6 +783,8 @@ if __name__ == '__main__':
 
     #print(wishcalc.get_item(wishcalc.store.get_iter_first()))
 
-    print('total: %d, remain: %d, refill: %d' % (wishcalc.totalCash, wishcalc.totalRemain, wishcalc.refillCash))
+    print('total: %d, remain: %d, refill: %d, in cart: %d (%d)' %\
+        (wishcalc.totalCash, wishcalc.totalRemain, wishcalc.refillCash,
+        wishcalc.totalInCartCount, wishcalc.totalInCartSum))
 
     #wishcalc.save()

@@ -25,11 +25,13 @@
           "name": "Ненужная фигня номер 1",
           "cost": 238,
           "quantity": 3,
+          "importance": 3,
           "items": [
             {
               "name": "Вложенная в фигню номер 1 подфигня",
               "cost": 238,
-              "quantity": 1
+              "quantity": 1,
+              "incart": true
             }
           ]
         },
