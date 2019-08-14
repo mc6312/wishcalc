@@ -104,6 +104,10 @@ class MainWnd():
         self.iconNMok = resldr.load_pixbuf('nmiconok.svg', nmiconsize, nmiconsize)
         self.iconNMempty = resldr.load_pixbuf('nmiconempty.svg', nmiconsize, nmiconsize)
 
+        self.iconNMincart = resldr.load_pixbuf('nmiconincart.svg', nmiconsize, nmiconsize)
+        self.iconNMchildrenincart = resldr.load_pixbuf('nmiconchildrenincart.svg', nmiconsize, nmiconsize)
+        self.iconNMnotincart = resldr.load_pixbuf('nmiconnotincart.svg', nmiconsize, nmiconsize)
+
         self.iconNMunk = resldr.load_pixbuf('nmiconunk.svg', nmiconsize, nmiconsize)
         self.iconNM6m = resldr.load_pixbuf('nmicon6m.svg', nmiconsize, nmiconsize)
         self.iconNM12m = resldr.load_pixbuf('nmicon12m.svg', nmiconsize, nmiconsize)
@@ -130,10 +134,15 @@ class MainWnd():
             ('cashentry', 'refillentry', 'remainsentry'))
 
         # сумма выбранных в дереве
-        self.selectedsumbox, self.selectedsumentry, self.selectedneedsentry,\
+        self.selectedsumbox, self.selectedcountentry, self.selectedsumentry, self.selectedneedsentry,\
         self.selectedmonthsentry = get_ui_widgets(uibldr,
-            ('selectedsumbox', 'selectedsumentry', 'selectedneedsentry',
+            ('selectedsumbox', 'selectedcountentry', 'selectedsumentry', 'selectedneedsentry',
             'selectedmonthsentry'))
+
+        # сумма заказанных товаров
+        self.incartbox, self.incartcountentry, self.incartsumentry = get_ui_widgets(uibldr,
+            ('incartbox', 'incartcountentry', 'incartsumentry'))
+
         #
         # редактор товара
         #
@@ -465,11 +474,8 @@ class MainWnd():
             """Обновление полей элементов TreeStore на основе соответствующих
             значений полей экземпляров WishCalc.Item.
 
-            Возвращает кортеж из двух элементов:
-            1. экземпляр Gtk.TreeIter, указывающий на элемент дерева,
-               который должен стать активным после обновления всего дерева;
-            2. целое число - значение поля WishCalc.Item.importance,
-               максимальное для "вложенных" ветвей."""
+            Возвращает экземпляр Gtk.TreeIter, указывающий на элемент дерева,
+            который должен стать активным после обновления всего дерева."""
 
             itr = self.wishCalc.store.iter_children(parentitr)
 
@@ -515,7 +521,32 @@ class MainWnd():
 
                 importance = item.importance
                 if importance == 0:
-                    importance = item.childImportance
+                    importance = item.childrenImportance
+
+                #!
+                if item.incart:
+                    inCartIcon = self.iconNMincart
+                    infoincart = '<u>Товар заказан.</u>'
+                elif item.childrenInCart:
+                    inCartIcon = self.iconNMchildrenincart
+                    infoincart = '<u>Некоторые из вложенных товаров заказаны.</u>'
+                else:
+                    inCartIcon = self.iconNMnotincart
+                    infoincart = ''
+
+                if infoincart:
+                    infobuf += ['', infoincart]
+
+                # пока отключено, т.к. не уверен, что стоит долбать treeview
+                # обновлениями всех ветвей при клике по чекбоксам
+                #if item.childrenSelected:
+                #    infobuf += ['', 'Выбрано несколько вложенных товаров.']
+
+                #
+                __subsel = __refresh_node(itr)
+
+                if __subsel is not None:
+                    __itersel = __subsel
 
                 self.wishCalc.store.set(itr,
                     (WishCalc.COL_NAME,
@@ -523,9 +554,11 @@ class MainWnd():
                         WishCalc.COL_NEEDED, WishCalc.COL_NEED_ICON,
                         WishCalc.COL_NEED_MONTHS, WishCalc.COL_INFO,
                         WishCalc.COL_QUANTITY, WishCalc.COL_SUM,
-                        WishCalc.COL_IMPORTANCE),
+                        WishCalc.COL_IMPORTANCE,
+                        WishCalc.COL_INCART,
+                        #WishCalc.COL_SELECTEDSUBITEMS,
+                        ),
                     (itemname,
-                        #'%s%s' % (item.name, '' if nchildren == 0 else ' (%d)' % nchildren),
                         str(item.cost) if item.cost else '?',
                         needs,
                         needsicon,
@@ -534,11 +567,9 @@ class MainWnd():
                         str(item.quantity),
                         str(item.sum) if item.cost else '?',
                         self.importanceIcons.icons[importance],
+                        inCartIcon,
+                        #item.childrenSelected,
                         ))
-
-                __subsel = __refresh_node(itr)
-                if __subsel is not None:
-                    __itersel = __subsel
 
                 itr = self.wishCalc.store.iter_next(itr)
 
@@ -551,6 +582,8 @@ class MainWnd():
             self.item_select_by_iter(itersel)
 
         self.setup_widgets_sensitive()
+
+        self.refresh_incart_view()
 
         self.refresh_totalcash_view()
         self.refresh_remains_view()
@@ -635,7 +668,15 @@ class MainWnd():
 
         # пересчитываем сумму ценников выбранных товаров
         # refresh_wishlistview() при этом вызывать не требуется
+        #self.wishCalc.recalculate()
         self.refresh_selected_sum_view()
+
+
+    def refresh_incart_view(self):
+        self.incartbox.set_sensitive(self.wishCalc.totalInCartCount > 0)
+
+        self.incartcountentry.set_text(str(self.wishCalc.totalInCartCount))
+        self.incartsumentry.set_text(str(self.wishCalc.totalInCartSum))
 
     def refresh_selected_sum_view(self):
         self.wishCalc.recalculate()
@@ -643,6 +684,7 @@ class MainWnd():
         if self.wishCalc.totalSelectedCount:
             vsel = True
 
+            selcount = str(self.wishCalc.totalSelectedCount)
             selsums = str(self.wishCalc.totalSelectedSum)
 
             if self.wishCalc.totalCash >= self.wishCalc.totalSelectedSum:
@@ -674,12 +716,14 @@ class MainWnd():
             vsel = False
 
             selsums = ''
+            selcount = 'нет'
             needs = ''
             needsicon = self.iconNMempty
             needsinfo = ''
             needmonths = ''
 
         self.selectedsumentry.set_text(selsums)
+        self.selectedcountentry.set_text(selcount)
 
         self.selectedneedsentry.set_text(needs)
         self.selectedneedsentry.set_tooltip_markup(needsinfo)
