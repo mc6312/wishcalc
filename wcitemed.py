@@ -46,6 +46,8 @@ class ItemEditorDlg():
 
         self.dlgItemEditor = uibldr.get_object('dlgItemEditor')
         self.dlgItemEditor.set_transient_for(parentwnd)
+        self.dlgItemEditor.set_skip_pager_hint(True)
+        self.dlgItemEditor.set_skip_taskbar_hint(True)
 
         self.itemnameentry = uibldr.get_object('itemnameentry')
 
