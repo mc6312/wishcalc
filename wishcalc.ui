@@ -193,6 +193,16 @@
                       </object>
                     </child>
                     <child>
+                      <object class="GtkMenuItem" id="mnuItemToggleInCart">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">Пометить товар как (не)заказанный</property>
+                        <property name="use_underline">True</property>
+                        <signal name="activate" handler="item_toggle_incart" swapped="no"/>
+                        <accelerator key="t" signal="activate" modifiers="GDK_CONTROL_MASK"/>
+                      </object>
+                    </child>
+                    <child>
                       <object class="GtkMenuItem" id="mnuItemPurchased">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
@@ -230,6 +240,15 @@
                         <property name="use_underline">True</property>
                         <signal name="activate" handler="item_open_url" swapped="no"/>
                         <accelerator key="o" signal="activate" modifiers="GDK_CONTROL_MASK"/>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkMenuItem" id="mnuItemImportance">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">Важность...</property>
+                        <property name="use_underline">True</property>
+                        <accelerator key="i" signal="grab-focus" modifiers="GDK_CONTROL_MASK"/>
                       </object>
                     </child>
                     <child>
@@ -606,6 +625,7 @@
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="model">wishlist</property>
+                    <property name="expander_column">colItemName</property>
                     <property name="reorderable">True</property>
                     <property name="enable_grid_lines">both</property>
                     <property name="enable_tree_lines">True</property>
@@ -619,11 +639,8 @@
                       </object>
                     </child>
                     <child>
-                      <object class="GtkTreeViewColumn" id="colItemName">
-                        <property name="spacing">4</property>
-                        <property name="sizing">autosize</property>
-                        <property name="title" translatable="yes">Название</property>
-                        <property name="expand">True</property>
+                      <object class="GtkTreeViewColumn" id="colItemSelect">
+                        <property name="title" translatable="yes">Товар</property>
                         <child>
                           <object class="GtkCellRendererToggle" id="crSelectedCB">
                             <signal name="toggled" handler="wl_item_selected_toggled" swapped="no"/>
@@ -634,17 +651,25 @@
                           </attributes>
                         </child>
                         <child>
-                          <object class="GtkCellRendererPixbuf" id="crColor"/>
-                          <attributes>
-                            <attribute name="pixbuf">9</attribute>
-                          </attributes>
-                        </child>
-                        <child>
                           <object class="GtkCellRendererPixbuf" id="crInCart"/>
                           <attributes>
                             <attribute name="pixbuf">11</attribute>
                           </attributes>
                         </child>
+                        <child>
+                          <object class="GtkCellRendererPixbuf" id="crColor"/>
+                          <attributes>
+                            <attribute name="pixbuf">9</attribute>
+                          </attributes>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkTreeViewColumn" id="colItemName">
+                        <property name="spacing">4</property>
+                        <property name="sizing">autosize</property>
+                        <property name="title" translatable="yes">Название</property>
+                        <property name="expand">True</property>
                         <child>
                           <object class="GtkCellRendererText" id="crName"/>
                           <attributes>
