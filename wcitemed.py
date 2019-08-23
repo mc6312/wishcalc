@@ -134,6 +134,9 @@ class ItemEditorDlg():
     def itemincartchk_toggled(self, chkbox):
         self.tempItem.incart = chkbox.get_active()
 
+    def itempaidchk_toggled(self, chkbox):
+        self.tempItem.paid = chkbox.get_active()
+
     def on_btnEdItemOpenURL_clicked(self, btn):
         webbrowser.open_new_tab(self.tempItem.url)
 
@@ -174,6 +177,7 @@ class ItemEditorDlg():
         self.costentry.set_visible(not hasChildren)
 
         self.itemincartchk.set_active(self.tempItem.incart)
+        self.itempaidchk.set_active(self.tempItem.paid)
 
         self.quantitylabel.set_visible(not hasChildren)
 
