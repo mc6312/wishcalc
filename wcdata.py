@@ -147,7 +147,6 @@ class WishCalc():
         URL = 'url'
         IMPORTANCE = 'importance'
         INCART = 'incart'
-        PAID = 'paid'
         ITEMS = 'items'
 
         def new_copy(self):
@@ -167,7 +166,6 @@ class WishCalc():
             self.info = ''
             self.url = ''
             self.incart = False
-            self.paid = False
 
             self.importance = 0
             # "важность" товара, она же индекс в wccommon.ImportanceIcons.icons;
@@ -214,8 +212,7 @@ class WishCalc():
             self.info = ''
             self.url = ''
             self.importance = 0
-            self.incart = False
-            self.paid = False
+            self.incart = None
 
             self.childrenImportance = 0
             self.childSelected = False
@@ -238,17 +235,16 @@ class WishCalc():
             self.url = other.url
 
             self.incart = other.incart
-            self.paid = other.paid
 
             self.importance = other.importance
 
         def __repr__(self):
             # для отладки
-            return '%s(name="%s", cost=%d, quantity=%d, sum=%d, info="%s", url="%s", importance=%d, incart=%s, paid=%s, needCash=%s, needTotal=%s, availCash=%s, needMonths=%s)' %\
+            return '%s(name="%s", cost=%d, quantity=%d, sum=%d, info="%s", url="%s", importance=%d, incart=%s, needCash=%s, needTotal=%s, availCash=%s, needMonths=%s)' %\
                 (self.__class__.__name__,
                  self.name, self.cost, self.quantity, self.sum,
                  self.info, self.url,
-                 self.importance, self.incart, self.paid,
+                 self.importance, self.incart,
                  self.needCash, self.needTotal, self.availCash, self.needMonths)
 
         def get_fields_dict(self):
@@ -269,9 +265,6 @@ class WishCalc():
 
             if self.incart:
                 d[self.INCART] = self.incart
-
-            if self.paid:
-                d[self.PAID] = self.paid
 
             # поля sum и need* для сохранения не предназначены и в словарь не кладутся!
 
@@ -305,7 +298,6 @@ class WishCalc():
                 self.importance = ImportanceIcons.MAX
 
             self.incart = get_dict_item(srcdict, self.INCART, bool, fallback=False)
-            self.paid = get_dict_item(srcdict, self.PAID, bool, fallback=False)
 
     def __init__(self, filename):
         """Параметры:
