@@ -14,12 +14,15 @@
       "name": "Бесполезный мусор",
       "cost": 666,
       "quantity": 3,
-      "url": "http://google.com"
+      "url": "http://google.com",
+      "importance": 3
     },
     {
       "name": "Какая-то ненужная ерунда",
       "cost": 747,
       "quantity": 1,
+      "importance": 2,
+      "incart": true,
       "items": [
         {
           "name": "Ненужная фигня номер 1",
@@ -30,8 +33,7 @@
             {
               "name": "Вложенная в фигню номер 1 подфигня",
               "cost": 238,
-              "quantity": 1,
-              "incart": true
+              "quantity": 1
             }
           ]
         },
@@ -45,7 +47,9 @@
     {
       "name": "Какая-то дорогая фигня",
       "cost": 23800,
-      "quantity": 1
+      "quantity": 1,
+      "importance": 1,
+      "incart": true
     },
     {
       "name": "Нечто",
@@ -68,7 +72,9 @@
           "name": "Вложенная ерунда",
           "cost": 133,
           "quantity": 1,
-          "importance": 1
+          "importance": 1,
+          "incart": true,
+          "paid": true
         },
         {
           "name": "Тоже ерунда",

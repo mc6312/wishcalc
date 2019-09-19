@@ -58,6 +58,7 @@ class ItemEditorDlg():
         self.itemquantityentry = uibldr.get_object('itemquantityentry')
 
         self.itemincartchk = uibldr.get_object('itemincartchk')
+        self.itempaidchk = uibldr.get_object('itempaidchk')
 
         self.itemimportancecbox = uibldr.get_object('itemimportancecbox')
         itemimportancelstore = uibldr.get_object('itemimportancelstore')
@@ -133,8 +134,20 @@ class ItemEditorDlg():
         # проверку правильности формата URL оставим браузеру, и ниибёт
         self.btnEdItemOpenURL.set_sensitive(self.tempItem.url != '')
 
+    def set_paid_chk_sensitive(self):
+        self.itempaidchk.set_sensitive(self.tempItem.incart)
+
     def itemincartchk_toggled(self, chkbox):
         self.tempItem.incart = chkbox.get_active()
+
+        if not self.tempItem.incart:
+            self.tempItem.paid = False
+            self.itempaidchk.set_active(False)
+
+        self.set_paid_chk_sensitive()
+
+    def itempaidchk_toggled(self, chkbox):
+        self.tempItem.paid = chkbox.get_active()
 
     def on_btnEdItemOpenURL_clicked(self, btn):
         webbrowser.open_new_tab(self.tempItem.url)
@@ -176,6 +189,8 @@ class ItemEditorDlg():
         self.costentry.set_visible(not hasChildren)
 
         self.itemincartchk.set_active(self.tempItem.incart)
+        self.itempaidchk.set_active(False if not self.tempItem.incart else self.tempItem.paid)
+        self.set_paid_chk_sensitive()
 
         self.quantitylabel.set_visible(not hasChildren)
 
@@ -252,3 +267,4 @@ if __name__ == '__main__':
         cfg.itemEditorWindow,
         importanceIcons)
     itemEditor.edit(None, False)
+    print(itemEditor.tempItem)

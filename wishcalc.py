@@ -127,6 +127,8 @@ class MainWnd():
 
         self.wishlistviewsel = uibldr.get_object('wishlistviewsel')
 
+        self.wlv_colItemSelect = uibldr.get_object('colItemSelect')
+
         #
         # наличность и остаток
         #
@@ -152,6 +154,20 @@ class MainWnd():
         # меню "товарных" команд - для вызова контекстного меню на списке товаров
         self.mnuItem = uibldr.get_object('mnuItem').get_submenu()
 
+        # меню "важности" товара
+        self.mnuItemImportance = uibldr.get_object('mnuItemImportance')
+        self.submnuItemImportance = Gtk.Menu()
+        self.submnuItemImportance.set_reserve_toggle_size(False)
+
+        self.mnuItemImportance.set_submenu(self.submnuItemImportance)
+
+        for importance, iicon in enumerate(self.importanceIcons.icons):
+            mitem = Gtk.MenuItem.new()
+            mitem.add(Gtk.Image.new_from_pixbuf(iicon))
+            mitem.connect('activate', self.item_set_importance, importance)
+
+            self.submnuItemImportance.append(mitem)
+
         #
         # виджеты, свойство "sensitive" которых зависит от состояния списка
         #
@@ -160,6 +176,7 @@ class MainWnd():
         self.widgetsItemEditing = get_ui_widgets(uibldr,
             ('mnuItemEdit', 'btnItemEdit', 'mnuItemPurchased', 'btnItemPurchased',
              'mnuItemAddSubItem', 'btnItemAddSubItem',
+             'mnuItemToggleInCart', 'mnuItemTogglePaid', 'mnuItemImportance',
              'mnuItemOpenURL', 'btnItemOpenURL', 'mnuItemRemove', 'btnItemRemove'))
         self.widgetsItemMoveUp = get_ui_widgets(uibldr,
             ('mnuItemMoveUp', 'btnItemMoveUp',
@@ -257,7 +274,7 @@ class MainWnd():
 
         self.headerbar.set_subtitle(SUB_TITLE if not self.wishCalc.comment else self.wishCalc.comment)
 
-    def wishlist_pop_up_menu(self, event):
+    def wishlist_pop_up_menu(self, event, menu=None):
         """Открытие всплывающего меню на списке товаров."""
 
         # костылинг особенностей поведения GTK под разными бэкендами (X11/Wayland/...)
@@ -268,21 +285,34 @@ class MainWnd():
         else:
             etime = event.time
 
-        self.mnuItem.popup(None, None, None, None, 3, etime)
+        if menu is None:
+            menu = self.mnuItem
+
+        menu.popup(None, None, None, None, 3, etime)
 
     def on_wishlistview_button_press_event(self, widget, event):
+        # вызов popup menu мышом
         if event.button == 3:
             # сначала принудительно выбираем элемент дерева, на котором торчит указатель мыша
 
+            menu = None
+
             ep = self.wishlistview.get_path_at_pos(event.x, event.y)
             if ep is not None:
+                # если мышь на столбце с иконками - вместо общего контекстного
+                # меню вызываем менюху "важности" товара
+                if ep[1] == self.wlv_colItemSelect:
+                    menu = self.submnuItemImportance
+
                 self.wishlistviewsel.select_path(ep[0])
 
             # и таки открываем менюху
-            self.wishlist_pop_up_menu(event)
+            self.wishlist_pop_up_menu(event, menu)
+
             return True
 
     def on_wishlistview_popup_menu(self, widget):
+        # вызов popup menu клавиатурой
         self.wishlist_pop_up_menu(None)
 
     def on_wishlistview_drag_end(self, wgt, ctx):
@@ -487,22 +517,28 @@ class MainWnd():
                 if item is selitem:
                     __itersel = itr
 
-                if item.needCash == 0:
-                    needs = 'хватает'
+                if item.incart and item.paid:
+                    needs = 'оплачено'
                     needsicon = self.iconNMok
-                elif item.needCash is None:
-                    needs = '?'
-                    needsicon = self.iconNMunk
+                    needmonths = ''
+                    infomonthtxt = ''
                 else:
-                    if item.availCash > 0:
-                        needs = str(item.needCash)
-                        needsicon = self.get_percent_icon(item.availCash, item.sum)
+                    if item.needCash == 0:
+                        needs = 'хватает'
+                        needsicon = self.iconNMok
+                    elif item.needCash is None:
+                        needs = '?'
+                        needsicon = self.iconNMunk
                     else:
-                        needs = str(item.needTotal) if item.needTotal else ''
-                        needsicon = self.iconNMempty
+                        if item.availCash > 0:
+                            needs = str(item.needCash)
+                            needsicon = self.get_percent_icon(item.availCash, item.sum)
+                        else:
+                            needs = str(item.needTotal) if item.needTotal else ''
+                            needsicon = self.iconNMempty
 
-                needmonths, needsicon, infomonthtxt = self.get_need_months_icon_text(item.needTotal,
-                    item.sum, item.needMonths, needsicon)
+                    needmonths, needsicon, infomonthtxt = self.get_need_months_icon_text(item.needTotal,
+                        item.sum, item.needMonths, needsicon)
 
                 itemname = markup_escape_text(item.name)
 
@@ -526,7 +562,7 @@ class MainWnd():
                 #!
                 if item.incart:
                     inCartIcon = self.iconNMincart
-                    infoincart = '<u>Товар заказан.</u>'
+                    infoincart = '<u>Товар заказан%s.</u>' % ('' if not item.paid else ' и оплачен')
                 elif item.childrenInCart:
                     inCartIcon = self.iconNMchildrenincart
                     infoincart = '<u>Некоторые из вложенных товаров заказаны.</u>'
@@ -666,11 +702,14 @@ class MainWnd():
         itemsel = not self.wishCalc.store.get_value(itr, WishCalc.COL_SELECTED)
         self.wishCalc.store.set_value(itr, WishCalc.COL_SELECTED, itemsel)
 
-        # пересчитываем сумму ценников выбранных товаров
-        # refresh_wishlistview() при этом вызывать не требуется
-        #self.wishCalc.recalculate()
-        self.refresh_selected_sum_view()
+        #if itemsel:
+        #    self.wishCalc.store.set_value(itr, WishCalc.COL_SELECTEDSUBITEMS, False)
 
+        # пересчитываем сумму ценников выбранных товаров
+        # self.refresh_wishlistview() при этом вызывать не требуется
+        self.wishCalc.recalculate()
+        #self.refresh_wishlistview()
+        self.refresh_selected_sum_view()
 
     def refresh_incart_view(self):
         self.incartbox.set_sensitive(self.wishCalc.totalInCartCount > 0)
@@ -741,6 +780,43 @@ class MainWnd():
         """Возвращает Gtk.TreeIter если в TreeView выбрана строка,
         иначе None."""
         return self.wishlistviewsel.get_selected()[1]
+
+    def item_set_importance(self, widget, importance=None):
+        itrsel = self.get_selected_item_iter()
+
+        if itrsel is None:
+            return
+
+        item = self.wishCalc.get_item(itrsel)
+
+        item.importance = importance
+        self.refresh_wishlistview(item)
+
+    def item_toggle_incart(self, widget):
+        itrsel = self.get_selected_item_iter()
+
+        if itrsel is None:
+            return
+
+        item = self.wishCalc.get_item(itrsel)
+        item.incart = not item.incart
+        if not item.incart:
+            item.paid = False
+
+        self.refresh_wishlistview(item)
+
+    def item_toggle_paid(self, widget):
+        itrsel = self.get_selected_item_iter()
+
+        if itrsel is None:
+            return
+
+        item = self.wishCalc.get_item(itrsel)
+
+        if item.incart:
+            item.paid = not item.paid
+
+            self.refresh_wishlistview(item)
 
     def item_edit(self, btn):
         self.__do_edit_item(False)
