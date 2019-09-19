@@ -147,6 +147,7 @@ class WishCalc():
         URL = 'url'
         IMPORTANCE = 'importance'
         INCART = 'incart'
+        PAID = 'paid'
         ITEMS = 'items'
 
         def new_copy(self):
@@ -166,6 +167,7 @@ class WishCalc():
             self.info = ''
             self.url = ''
             self.incart = False
+            self.paid = False
 
             self.importance = 0
             # "важность" товара, она же индекс в wccommon.ImportanceIcons.icons;
@@ -212,7 +214,8 @@ class WishCalc():
             self.info = ''
             self.url = ''
             self.importance = 0
-            self.incart = None
+            self.incart = False
+            self.paid = False
 
             self.childrenImportance = 0
             self.childSelected = False
@@ -235,16 +238,17 @@ class WishCalc():
             self.url = other.url
 
             self.incart = other.incart
+            self.paid = other.paid
 
             self.importance = other.importance
 
         def __repr__(self):
             # для отладки
-            return '%s(name="%s", cost=%d, quantity=%d, sum=%d, info="%s", url="%s", importance=%d, incart=%s, needCash=%s, needTotal=%s, availCash=%s, needMonths=%s)' %\
+            return '%s(name="%s", cost=%d, quantity=%d, sum=%d, info="%s", url="%s", importance=%d, incart=%s, paid=%s, needCash=%s, needTotal=%s, availCash=%s, needMonths=%s)' %\
                 (self.__class__.__name__,
                  self.name, self.cost, self.quantity, self.sum,
                  self.info, self.url,
-                 self.importance, self.incart,
+                 self.importance, self.incart, self.paid,
                  self.needCash, self.needTotal, self.availCash, self.needMonths)
 
         def get_fields_dict(self):
@@ -265,6 +269,9 @@ class WishCalc():
 
             if self.incart:
                 d[self.INCART] = self.incart
+
+            if self.paid:
+                d[self.PAID] = self.paid
 
             # поля sum и need* для сохранения не предназначены и в словарь не кладутся!
 
@@ -298,6 +305,7 @@ class WishCalc():
                 self.importance = ImportanceIcons.MAX
 
             self.incart = get_dict_item(srcdict, self.INCART, bool, fallback=False)
+            self.paid = get_dict_item(srcdict, self.PAID, bool, fallback=False)
 
     def __init__(self, filename):
         """Параметры:
@@ -664,30 +672,31 @@ class WishCalc():
                 item.availCash = None
                 item.needMonths = None
             else:
-                if totalRemain >= item.sum:
-                    item.needCash = 0
-                    item.availCash = item.sum
-                    totalRemain -= item.sum
-                elif totalRemain > 0:
-                    item.needCash = item.sum - totalRemain
-                    item.availCash = totalRemain
-                    totalRemain = 0
-                else:
-                    item.needCash = item.sum
-                    item.availCash = 0
+                item.needCash = 0
+                item.needTotal = 0
+                item.needMonths = 0
 
-                if item.needCash:
-                    totalNeedCash += item.needCash
-                    item.needTotal = totalNeedCash
-
-                    if refillCash > 0:
-                        item.needMonths = self.need_months(totalNeedCash, refillCash)
+                if not (item.incart and item.paid):
+                    if totalRemain >= item.sum:
+                        item.needCash = 0
+                        item.availCash = item.sum
+                        totalRemain -= item.sum
+                    elif totalRemain > 0:
+                        item.needCash = item.sum - totalRemain
+                        item.availCash = totalRemain
+                        totalRemain = 0
                     else:
-                        item.needMonths = None
-                else:
-                    item.needCash = 0
-                    item.needTotal = 0
-                    item.needMonths = 0
+                        item.needCash = item.sum
+                        item.availCash = 0
+
+                    if item.needCash:
+                        totalNeedCash += item.needCash
+                        item.needTotal = totalNeedCash
+
+                        if refillCash > 0:
+                            item.needMonths = self.need_months(totalNeedCash, refillCash)
+                        else:
+                            item.needMonths = None
 
             itr = self.store.iter_next(itr)
 
