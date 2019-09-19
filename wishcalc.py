@@ -520,9 +520,7 @@ class MainWnd():
                 if item.incart and item.paid:
                     needs = 'оплачено'
                     needsicon = self.iconNMok
-
                     needmonths = ''
-                    needsicon = self.iconNMempty
                     infomonthtxt = ''
                 else:
                     if item.needCash == 0:
@@ -813,8 +811,9 @@ class MainWnd():
         if itrsel is None:
             return
 
+        item = self.wishCalc.get_item(itrsel)
+
         if item.incart:
-            item = self.wishCalc.get_item(itrsel)
             item.paid = not item.paid
 
             self.refresh_wishlistview(item)

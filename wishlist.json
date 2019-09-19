@@ -72,7 +72,9 @@
           "name": "Вложенная ерунда",
           "cost": 133,
           "quantity": 1,
-          "importance": 1
+          "importance": 1,
+          "incart": true,
+          "paid": true
         },
         {
           "name": "Тоже ерунда",
