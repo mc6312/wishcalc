@@ -24,6 +24,8 @@ from gtktools import *
 from gi.repository import Gtk, Gdk, GObject, Pango, GLib
 from gi.repository.GdkPixbuf import Pixbuf
 
+import webbrowser
+
 from wccommon import *
 from wcdata import *
 
@@ -56,6 +58,7 @@ class ItemEditorDlg():
         self.itemquantityentry = uibldr.get_object('itemquantityentry')
 
         self.itemincartchk = uibldr.get_object('itemincartchk')
+        self.itempaidchk = uibldr.get_object('itempaidchk')
 
         self.itemimportancecbox = uibldr.get_object('itemimportancecbox')
         itemimportancelstore = uibldr.get_object('itemimportancelstore')
