@@ -24,6 +24,8 @@ from gtktools import *
 from gi.repository import Gtk, Gdk, GObject, Pango, GLib
 from gi.repository.GdkPixbuf import Pixbuf
 
+import webbrowser
+
 from wccommon import *
 from wcdata import *
 
