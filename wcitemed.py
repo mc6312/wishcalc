@@ -48,6 +48,8 @@ class ItemEditorDlg():
 
         self.dlgItemEditor = uibldr.get_object('dlgItemEditor')
         self.dlgItemEditor.set_transient_for(parentwnd)
+        self.dlgItemEditor.set_skip_pager_hint(True)
+        self.dlgItemEditor.set_skip_taskbar_hint(True)
 
         self.itemnameentry = uibldr.get_object('itemnameentry')
 
@@ -134,8 +136,17 @@ class ItemEditorDlg():
         # проверку правильности формата URL оставим браузеру, и ниибёт
         self.btnEdItemOpenURL.set_sensitive(self.tempItem.url != '')
 
+    def set_paid_chk_sensitive(self):
+        self.itempaidchk.set_sensitive(self.tempItem.incart)
+
     def itemincartchk_toggled(self, chkbox):
         self.tempItem.incart = chkbox.get_active()
+
+        if not self.tempItem.incart:
+            self.tempItem.paid = False
+            self.itempaidchk.set_active(False)
+
+        self.set_paid_chk_sensitive()
 
     def itempaidchk_toggled(self, chkbox):
         self.tempItem.paid = chkbox.get_active()
@@ -180,7 +191,8 @@ class ItemEditorDlg():
         self.costentry.set_visible(not hasChildren)
 
         self.itemincartchk.set_active(self.tempItem.incart)
-        self.itempaidchk.set_active(self.tempItem.paid)
+        self.itempaidchk.set_active(False if not self.tempItem.incart else self.tempItem.paid)
+        self.set_paid_chk_sensitive()
 
         self.quantitylabel.set_visible(not hasChildren)
 
@@ -257,3 +269,4 @@ if __name__ == '__main__':
         cfg.itemEditorWindow,
         importanceIcons)
     itemEditor.edit(None, False)
+    print(itemEditor.tempItem)

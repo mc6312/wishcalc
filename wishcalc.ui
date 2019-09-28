@@ -203,6 +203,16 @@
                       </object>
                     </child>
                     <child>
+                      <object class="GtkMenuItem" id="mnuItemTogglePaid">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">Пометить товар как (не)оплаченный</property>
+                        <property name="use_underline">True</property>
+                        <signal name="activate" handler="item_toggle_paid" swapped="no"/>
+                        <accelerator key="p" signal="activate" modifiers="GDK_CONTROL_MASK"/>
+                      </object>
+                    </child>
+                    <child>
                       <object class="GtkMenuItem" id="mnuItemPurchased">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>

@@ -585,18 +585,20 @@ class WishCalc():
         на основе параметров totalCash, refillCash, totalRemain
         и значений полей элементов (при необходимости рекурсивно).
 
-        Возвращает кортеж из семи элементов:
+        Возвращает кортеж из следующих элементов:
         1й: суммарная цена элементов (с учётом количества),
-        2й: обновлённое значение totalRemain,
-        3й: максимальное значение поля importance вложенных элементов
+        2й: суммарная цена за вычетом оплаченных товаров,
+        3й: обновлённое значение totalRemain,
+        4й: максимальное значение поля importance вложенных элементов
             (товаров),
-        4й: суммарная стоимость помеченных чекбоксами в UI элементов;
-        5й: количество помеченных элементов;
-        6й: суммарная стоимость заказанных товаров;
-        7й: количество заказанных товаров."""
+        5й: суммарная стоимость помеченных чекбоксами в UI элементов;
+        6й: количество помеченных элементов;
+        7й: суммарная стоимость заказанных товаров;
+        8й: количество заказанных товаров."""
 
         totalNeedCash = 0
-        totalCost = 0
+        totalCost = 0 # общая сумма
+        totalNeed = 0 # общая сумма за вычетом оплаченных
         maxImportance = 0
         totalSelectedSum = 0
         totalSelectedCount = 0
@@ -630,7 +632,7 @@ class WishCalc():
             else:
                 # не товар, а группа товаров! для них цена -
                 # общая стоимость вложенных!
-                item.cost, subRemain, subImportance, subSelectedSum, subSelectedCount, subInCartSum, subInCartCount = self.__recalculate_items(itr,
+                item.cost, subNeed, subRemain, subImportance, subSelectedSum, subSelectedCount, subInCartSum, subInCartCount = self.__recalculate_items(itr,
                     totalCash, refillCash, totalRemain)
                 item.calculate_sum()
 
@@ -672,30 +674,31 @@ class WishCalc():
                 item.availCash = None
                 item.needMonths = None
             else:
-                if totalRemain >= item.sum:
-                    item.needCash = 0
-                    item.availCash = item.sum
-                    totalRemain -= item.sum
-                elif totalRemain > 0:
-                    item.needCash = item.sum - totalRemain
-                    item.availCash = totalRemain
-                    totalRemain = 0
-                else:
-                    item.needCash = item.sum
-                    item.availCash = 0
+                item.needCash = 0
+                item.needTotal = 0
+                item.needMonths = 0
 
-                if item.needCash:
-                    totalNeedCash += item.needCash
-                    item.needTotal = totalNeedCash
-
-                    if refillCash > 0:
-                        item.needMonths = self.need_months(totalNeedCash, refillCash)
+                if not (item.incart and item.paid):
+                    if totalRemain >= item.sum:
+                        item.needCash = 0
+                        item.availCash = item.sum
+                        totalRemain -= item.sum
+                    elif totalRemain > 0:
+                        item.needCash = item.sum - totalRemain
+                        item.availCash = totalRemain
+                        totalRemain = 0
                     else:
-                        item.needMonths = None
-                else:
-                    item.needCash = 0
-                    item.needTotal = 0
-                    item.needMonths = 0
+                        item.needCash = item.sum
+                        item.availCash = 0
+
+                    if item.needCash:
+                        totalNeedCash += item.needCash
+                        item.needTotal = totalNeedCash
+
+                        if refillCash > 0:
+                            item.needMonths = self.need_months(totalNeedCash, refillCash)
+                        else:
+                            item.needMonths = None
 
             itr = self.store.iter_next(itr)
 
@@ -703,7 +706,7 @@ class WishCalc():
         if totalRemain < 0:
             totalRemain = 0
 
-        return (totalCost, totalRemain, maxImportance,
+        return (totalCost, totalNeed, totalRemain, maxImportance,
             totalSelectedSum, totalSelectedCount,
             totalInCartSum, totalInCartCount)
 
@@ -715,7 +718,7 @@ class WishCalc():
         полей элементов).
         По завершению обновляется значение self.totalRemain."""
 
-        __totalCost, self.totalRemain, __importance, \
+        __totalCost, __totalNeed, self.totalRemain, __importance, \
         self.totalSelectedSum, self.totalSelectedCount , \
         self.totalInCartSum, self.totalInCartCount = self.__recalculate_items(None,
             self.totalCash, self.refillCash, self.totalCash)

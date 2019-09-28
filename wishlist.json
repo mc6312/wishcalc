@@ -15,7 +15,9 @@
       "cost": 666,
       "quantity": 3,
       "url": "http://google.com",
-      "importance": 3
+      "importance": 3,
+      "incart": true,
+      "paid": true
     },
     {
       "name": "Какая-то ненужная ерунда",
@@ -72,7 +74,9 @@
           "name": "Вложенная ерунда",
           "cost": 133,
           "quantity": 1,
-          "importance": 1
+          "importance": 1,
+          "incart": true,
+          "paid": true
         },
         {
           "name": "Тоже ерунда",

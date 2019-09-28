@@ -176,7 +176,7 @@ class MainWnd():
         self.widgetsItemEditing = get_ui_widgets(uibldr,
             ('mnuItemEdit', 'btnItemEdit', 'mnuItemPurchased', 'btnItemPurchased',
              'mnuItemAddSubItem', 'btnItemAddSubItem',
-             'mnuItemToggleInCart', 'mnuItemImportance',
+             'mnuItemToggleInCart', 'mnuItemTogglePaid', 'mnuItemImportance',
              'mnuItemOpenURL', 'btnItemOpenURL', 'mnuItemRemove', 'btnItemRemove'))
         self.widgetsItemMoveUp = get_ui_widgets(uibldr,
             ('mnuItemMoveUp', 'btnItemMoveUp',
@@ -517,22 +517,28 @@ class MainWnd():
                 if item is selitem:
                     __itersel = itr
 
-                if item.needCash == 0:
-                    needs = 'хватает'
+                if item.incart and item.paid:
+                    needs = 'оплачено'
                     needsicon = self.iconNMok
-                elif item.needCash is None:
-                    needs = '?'
-                    needsicon = self.iconNMunk
+                    needmonths = ''
+                    infomonthtxt = ''
                 else:
-                    if item.availCash > 0:
-                        needs = str(item.needCash)
-                        needsicon = self.get_percent_icon(item.availCash, item.sum)
+                    if item.needCash == 0:
+                        needs = 'хватает'
+                        needsicon = self.iconNMok
+                    elif item.needCash is None:
+                        needs = '?'
+                        needsicon = self.iconNMunk
                     else:
-                        needs = str(item.needTotal) if item.needTotal else ''
-                        needsicon = self.iconNMempty
+                        if item.availCash > 0:
+                            needs = str(item.needCash)
+                            needsicon = self.get_percent_icon(item.availCash, item.sum)
+                        else:
+                            needs = str(item.needTotal) if item.needTotal else ''
+                            needsicon = self.iconNMempty
 
-                needmonths, needsicon, infomonthtxt = self.get_need_months_icon_text(item.needTotal,
-                    item.sum, item.needMonths, needsicon)
+                    needmonths, needsicon, infomonthtxt = self.get_need_months_icon_text(item.needTotal,
+                        item.sum, item.needMonths, needsicon)
 
                 itemname = markup_escape_text(item.name)
 
@@ -556,7 +562,7 @@ class MainWnd():
                 #!
                 if item.incart:
                     inCartIcon = self.iconNMincart
-                    infoincart = '<u>Товар заказан.</u>'
+                    infoincart = '<u>Товар заказан%s.</u>' % ('' if not item.paid else ' и оплачен')
                 elif item.childrenInCart:
                     inCartIcon = self.iconNMchildrenincart
                     infoincart = '<u>Некоторые из вложенных товаров заказаны.</u>'
@@ -794,8 +800,23 @@ class MainWnd():
 
         item = self.wishCalc.get_item(itrsel)
         item.incart = not item.incart
+        if not item.incart:
+            item.paid = False
 
         self.refresh_wishlistview(item)
+
+    def item_toggle_paid(self, widget):
+        itrsel = self.get_selected_item_iter()
+
+        if itrsel is None:
+            return
+
+        item = self.wishCalc.get_item(itrsel)
+
+        if item.incart:
+            item.paid = not item.paid
+
+            self.refresh_wishlistview(item)
 
     def item_edit(self, btn):
         self.__do_edit_item(False)
