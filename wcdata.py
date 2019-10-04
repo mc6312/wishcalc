@@ -34,6 +34,11 @@ MAX_ITEM_LEVEL = 3 # максимальный уровень вложеннос�
 # см. комментарий в WishCalc.Item.set_fields_dict()
 
 
+# кол-во уровней "важности" товара, 0 - "неизвестно/неважно"
+IMPORTANCE_LEVELS = 5
+IMPORTANCE_LEVEL_MIN = 0
+IMPORTANCE_LEVEL_MAX = 4
+
 DEFAULT_FILENAME = 'wishlist.json'
 
 
@@ -170,7 +175,7 @@ class WishCalc():
             self.paid = False
 
             self.importance = 0
-            # "важность" товара, она же индекс в wccommon.ImportanceIcons.icons;
+            # "важность" товара, она же индекс в wccommon.ImportanceIcons;
             # 0 - "не важно/не указано", 1 и более - возрастающая важность
 
             #
@@ -299,10 +304,10 @@ class WishCalc():
 
             self.importance = get_dict_item(srcdict, self.IMPORTANCE, int, fallback=0)
             # принудительно вгоним в рамки
-            if self.importance < ImportanceIcons.MIN:
-                self.importance = ImportanceIcons.MIN
-            elif self.importance > ImportanceIcons.MAX:
-                self.importance = ImportanceIcons.MAX
+            if self.importance < IMPORTANCE_LEVEL_MIN:
+                self.importance = IMPORTANCE_LEVEL_MIN
+            elif self.importance > IMPORTANCE_LEVEL_MAX:
+                self.importance = IMPORTANCE_LEVEL_MAX
 
             self.incart = get_dict_item(srcdict, self.INCART, bool, fallback=False)
             self.paid = get_dict_item(srcdict, self.PAID, bool, fallback=False)

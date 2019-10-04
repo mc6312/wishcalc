@@ -277,6 +277,7 @@
                     <property name="right_margin">4</property>
                     <property name="top_margin">4</property>
                     <property name="bottom_margin">4</property>
+                    <property name="accepts_tab">False</property>
                   </object>
                 </child>
               </object>

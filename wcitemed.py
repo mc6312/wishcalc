@@ -36,11 +36,12 @@ class ItemEditorDlg():
     Ибо как-то некрасиво в одной куче держать обработчики событий
     основного окна и прочие"""
 
-    def __init__(self, parentwnd, resldr, cfgWinState, colorLabels):
+    def __init__(self, parentwnd, resldr, cfgWinState, importanceIcons):
         """parentwnd    - родительское окно,
         resldr          - экземпляр *ResourceLoader,
         cfgWinState     - экземпляр класса для сохранения состояния окна,
-        colorLabels     - экземпляр класса ColorLabelIcons."""
+        importanceIcons - список экземпляров Gdk.Pixbuf - иконок
+                          для комбобокса "важность"."""
 
         self.windowState = cfgWinState
 
@@ -65,7 +66,7 @@ class ItemEditorDlg():
         self.itemimportancecbox = uibldr.get_object('itemimportancecbox')
         itemimportancelstore = uibldr.get_object('itemimportancelstore')
 
-        for icon in colorLabels.icons:
+        for icon in importanceIcons:
             itemimportancelstore.append((icon,))
 
         self.iteminfoentry = uibldr.get_object('iteminfoentry')

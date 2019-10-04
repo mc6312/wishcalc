@@ -116,7 +116,9 @@ class MainWnd():
 
         self.iconPercent = list(map(lambda i: resldr.load_pixbuf('nmicon_p%d.svg' % i, nmiconsize, nmiconsize), range(self.PERCENT_RANGE)))
 
-        self.importanceIcons = ImportanceIcons(nmiconsizeix)
+        self.importanceIcons = []
+        for iximpicon in range(IMPORTANCE_LEVELS):
+            self.importanceIcons.append(resldr.load_pixbuf('impicon%.2d.svg' % iximpicon, nmiconsize, nmiconsize))
 
         # TreeStore используется как хранилище данных во время работы
         # в первом столбце (WishCalc.COL_ITEM_OBJ) хранится ссылка
@@ -161,7 +163,7 @@ class MainWnd():
 
         self.mnuItemImportance.set_submenu(self.submnuItemImportance)
 
-        for importance, iicon in enumerate(self.importanceIcons.icons):
+        for importance, iicon in enumerate(self.importanceIcons):
             mitem = Gtk.MenuItem.new()
             mitem.add(Gtk.Image.new_from_pixbuf(iicon))
             mitem.connect('activate', self.item_set_importance, importance)
@@ -602,7 +604,7 @@ class MainWnd():
                         '\n'.join(infobuf),
                         str(item.quantity),
                         str(item.sum) if item.cost else '?',
-                        self.importanceIcons.icons[importance],
+                        self.importanceIcons[importance],
                         inCartIcon,
                         #item.childrenSelected,
                         ))
