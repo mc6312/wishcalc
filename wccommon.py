@@ -22,7 +22,7 @@
 TITLE = 'WishCalc'
 SUB_TITLE = 'Калькулятор загребущего нищеброда'
 
-VERSION = '2.5.3'
+VERSION = '2.5.4'
 
 TITLE_VERSION = '%s v%s' % (TITLE, VERSION)
 COPYRIGHT = '(c) 2017-2019 MC-6312'

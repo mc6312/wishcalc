@@ -90,7 +90,7 @@ class MainWnd():
 
         self.headerbar = uibldr.get_object('headerbar')
 
-        icon = resldr.load_pixbuf_icon_size('wishcalc.svg', Gtk.IconSize.DIALOG, 'calc')
+        icon = resldr.load_pixbuf_icon_size('images/wishcalc.svg', Gtk.IconSize.DIALOG, 'calc')
         self.window.set_icon(icon)
 
         #
@@ -101,24 +101,24 @@ class MainWnd():
         nmiconsizeix = Gtk.IconSize.MENU
         nmiconsize = Gtk.IconSize.lookup(nmiconsizeix)[1]
 
-        self.iconNMok = resldr.load_pixbuf('nmiconok.svg', nmiconsize, nmiconsize)
-        self.iconNMempty = resldr.load_pixbuf('nmiconempty.svg', nmiconsize, nmiconsize)
+        self.iconNMok = resldr.load_pixbuf('images/nmiconok.svg', nmiconsize, nmiconsize)
+        self.iconNMempty = resldr.load_pixbuf('images/nmiconempty.svg', nmiconsize, nmiconsize)
 
-        self.iconNMincart = resldr.load_pixbuf('nmiconincart.svg', nmiconsize, nmiconsize)
-        self.iconNMchildrenincart = resldr.load_pixbuf('nmiconchildrenincart.svg', nmiconsize, nmiconsize)
-        self.iconNMnotincart = resldr.load_pixbuf('nmiconnotincart.svg', nmiconsize, nmiconsize)
+        self.iconNMincart = resldr.load_pixbuf('images/nmiconincart.svg', nmiconsize, nmiconsize)
+        self.iconNMchildrenincart = resldr.load_pixbuf('images/nmiconchildrenincart.svg', nmiconsize, nmiconsize)
+        self.iconNMnotincart = resldr.load_pixbuf('images/nmiconnotincart.svg', nmiconsize, nmiconsize)
 
-        self.iconNMunk = resldr.load_pixbuf('nmiconunk.svg', nmiconsize, nmiconsize)
-        self.iconNM6m = resldr.load_pixbuf('nmicon6m.svg', nmiconsize, nmiconsize)
-        self.iconNM12m = resldr.load_pixbuf('nmicon12m.svg', nmiconsize, nmiconsize)
-        self.iconNM18m = resldr.load_pixbuf('nmicon18m.svg', nmiconsize, nmiconsize)
-        self.iconNM36m = resldr.load_pixbuf('nmicon36m.svg', nmiconsize, nmiconsize)
+        self.iconNMunk = resldr.load_pixbuf('images/nmiconunk.svg', nmiconsize, nmiconsize)
+        self.iconNM6m = resldr.load_pixbuf('images/nmicon6m.svg', nmiconsize, nmiconsize)
+        self.iconNM12m = resldr.load_pixbuf('images/nmicon12m.svg', nmiconsize, nmiconsize)
+        self.iconNM18m = resldr.load_pixbuf('images/nmicon18m.svg', nmiconsize, nmiconsize)
+        self.iconNM36m = resldr.load_pixbuf('images/nmicon36m.svg', nmiconsize, nmiconsize)
 
-        self.iconPercent = list(map(lambda i: resldr.load_pixbuf('nmicon_p%d.svg' % i, nmiconsize, nmiconsize), range(self.PERCENT_RANGE)))
+        self.iconPercent = list(map(lambda i: resldr.load_pixbuf('images/nmicon_p%d.svg' % i, nmiconsize, nmiconsize), range(self.PERCENT_RANGE)))
 
         self.importanceIcons = []
         for iximpicon in range(IMPORTANCE_LEVELS):
-            self.importanceIcons.append(resldr.load_pixbuf('impicon%.2d.svg' % iximpicon, nmiconsize, nmiconsize))
+            self.importanceIcons.append(resldr.load_pixbuf('images/impicon%.2d.svg' % iximpicon, nmiconsize, nmiconsize))
 
         # TreeStore используется как хранилище данных во время работы
         # в первом столбце (WishCalc.COL_ITEM_OBJ) хранится ссылка
@@ -218,7 +218,7 @@ class MainWnd():
         # ыбаутбокс
         #
         self.dlgAbout = uibldr.get_object('dlgAbout')
-        self.dlgAbout.set_logo(resldr.load_pixbuf('wishcalc_logo.svg', 128, 128))
+        self.dlgAbout.set_logo(resldr.load_pixbuf('images/wishcalc_logo.svg', 128, 128))
         self.dlgAbout.set_program_name(TITLE)
         self.dlgAbout.set_comments(SUB_TITLE)
         self.dlgAbout.set_version('v%s' % VERSION)
