@@ -170,6 +170,10 @@ class MainWnd():
 
             self.submnuItemImportance.append(mitem)
 
+        # костыль для избавления от лишней дерготни подменю "важности":
+        # когда оно уже открыто из меню уровнем выше, тут д.б. значение > 0
+        self.mnuItemImportanceVisible = 0
+
         #
         # виджеты, свойство "sensitive" которых зависит от состояния списка
         #
@@ -186,8 +190,8 @@ class MainWnd():
         self.widgetsItemMoveDown = get_ui_widgets(uibldr,
             ('mnuItemMoveDown', 'btnItemMoveDown',
              'mnuItemMoveToBottom', 'btnItemMoveToBottom'))
-        self.widgetsItemOpenURL = get_ui_widgets(uibldr,
-            ('mnuItemOpenURL', 'btnItemOpenURL'))
+        self.widgetsItemURL = get_ui_widgets(uibldr,
+            ('mnuItemOpenURL', 'btnItemOpenURL', 'mnuItemCopyURL'))
         self.widgetsItemCopyPaste = get_ui_widgets(uibldr,
             ('mnuItemCopy', 'btnItemCopy'))
             # эти - всегда будут доступны, т.к. возможна вставка при невыбранном элементе
@@ -317,6 +321,22 @@ class MainWnd():
         # вызов popup menu клавиатурой
         self.wishlist_pop_up_menu(None)
 
+    def on_mnuItemImportance_select(self, widget):
+        # меню "важности" открывается
+        self.mnuItemImportanceVisible += 1
+
+    def on_mnuItemImportance_deselect(self, widget):
+        # меню "важности" закрывается
+        if self.mnuItemImportanceVisible > 0:
+            self.mnuItemImportanceVisible -= 1
+
+    def item_choose_importance(self, btn):
+        # обработка сигнала по нажатию Ctrl+I из основного окна
+        # НЕ должна срабатывать, если меню submnuItemImportance
+        # уже открыто из основного или контекстного меню
+        if self.mnuItemImportanceVisible == 0:
+            self.wishlist_pop_up_menu(None, self.submnuItemImportance)
+
     def on_wishlistview_drag_end(self, wgt, ctx):
         self.refresh_wishlistview()
 
@@ -420,7 +440,7 @@ class MainWnd():
         set_widgets_sensitive(self.widgetsItemEditing, bsens)
         set_widgets_sensitive(self.widgetsItemMoveUp, bsens & bcanmoveup)
         set_widgets_sensitive(self.widgetsItemMoveDown, bsens & bcanmovedown)
-        set_widgets_sensitive(self.widgetsItemOpenURL, bsens & bcanopenurl)
+        set_widgets_sensitive(self.widgetsItemURL, bsens & bcanopenurl)
 
         set_widgets_sensitive(self.widgetsSelectAll, bcanselect)
         set_widgets_sensitive(self.widgetsSelectNone, bcanselect & bcanunselect)
@@ -940,6 +960,13 @@ class MainWnd():
             item = self.wishCalc.get_item(itr)
             if item.url:
                 webbrowser.open_new_tab(item.url)
+
+    def item_copy_url(self, btn):
+        itr = self.get_selected_item_iter()
+        if itr:
+            item = self.wishCalc.get_item(itr)
+            if item.url:
+                self.clipboard.set_text(item.url, -1)
 
     def __delete_item(self, ispurchased):
         """Удаление товара из списка.

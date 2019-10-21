@@ -253,12 +253,25 @@
                       </object>
                     </child>
                     <child>
+                      <object class="GtkMenuItem" id="mnuItemCopyURL">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">Копировать адрес сайта с описанием товара</property>
+                        <property name="use_underline">True</property>
+                        <signal name="activate" handler="item_copy_url" swapped="no"/>
+                        <accelerator key="c" signal="activate" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>
+                      </object>
+                    </child>
+                    <child>
                       <object class="GtkMenuItem" id="mnuItemImportance">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
                         <property name="label" translatable="yes">Важность...</property>
                         <property name="use_underline">True</property>
-                        <accelerator key="i" signal="grab-focus" modifiers="GDK_CONTROL_MASK"/>
+                        <signal name="activate" handler="item_choose_importance" swapped="no"/>
+                        <signal name="deselect" handler="on_mnuItemImportance_deselect" swapped="no"/>
+                        <signal name="select" handler="on_mnuItemImportance_select" swapped="no"/>
+                        <accelerator key="i" signal="activate" modifiers="GDK_CONTROL_MASK"/>
                       </object>
                     </child>
                     <child>
