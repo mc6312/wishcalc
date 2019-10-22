@@ -15,7 +15,7 @@
    version="1.1"
    id="svg8"
    inkscape:version="0.92.4 (5da689c313, 2019-01-14)"
-   sodipodi:docname="nmiconnotinprogress.svg">
+   sodipodi:docname="nmiconnotincart.svg">
   <defs
      id="defs2" />
   <sodipodi:namedview
@@ -60,7 +60,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -69,30 +69,39 @@
      inkscape:groupmode="layer"
      id="layer1"
      transform="translate(0,-292.76667)">
-    <rect
-       style="opacity:1;fill:#e1e1e1;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.26458332;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:stroke markers fill"
-       id="rect1368"
-       width="3.7041667"
-       height="3.7041667"
-       x="0.26458332"
-       y="293.03125"
-       ry="0.26458332" />
     <circle
-       style="opacity:1;fill:#aaaaaa;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:6;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:markers stroke fill"
+       style="opacity:1;fill:#aaaaaa;fill-opacity:1;fill-rule:nonzero;stroke:#e1e1e1;stroke-width:0.52916665;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:markers stroke fill"
        id="path840"
        cx="1.3229166"
        cy="295.94168"
        r="0.26458332" />
     <circle
-       style="opacity:1;fill:#aaaaaa;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:6;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:markers stroke fill"
+       style="opacity:1;fill:#aaaaaa;fill-opacity:1;fill-rule:nonzero;stroke:#e1e1e1;stroke-width:0.52916665;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:markers stroke fill"
        id="path842"
        cx="2.9104166"
        cy="295.94168"
        r="0.26458332" />
     <path
-       style="fill:#aaaaaa;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       style="fill:#aaaaaa;fill-opacity:1;fill-rule:evenodd;stroke:#e1e1e1;stroke-width:1.99999996;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none;paint-order:markers stroke fill"
        d="M 12 3 L 11.5 5 L 3 5 L 4 10 L 12 10 L 13 4 L 14 4 L 14 3 L 12 3 z M 4.5 6 L 11.5 6 C 11.777 6 12 6.223 12 6.5 C 12 6.777 11.777 7 11.5 7 L 4.5 7 C 4.223 7 4 6.777 4 6.5 C 4 6.223 4.223 6 4.5 6 z M 5 8 L 11 8 C 11.277 8 11.5 8.223 11.5 8.5 C 11.5 8.777 11.277 9 11 9 L 5 9 C 4.723 9 4.5 8.777 4.5 8.5 C 4.5 8.223 4.723 8 5 8 z "
        transform="matrix(0.26458333,0,0,0.26458333,0,292.76667)"
        id="path844" />
+    <circle
+       r="0.26458332"
+       cy="295.94168"
+       cx="1.3229166"
+       id="circle1937"
+       style="opacity:1;fill:#aaaaaa;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.52916665;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:markers stroke fill" />
+    <circle
+       r="0.26458332"
+       cy="295.94168"
+       cx="2.9104166"
+       id="circle1939"
+       style="opacity:1;fill:#aaaaaa;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.52916665;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:markers stroke fill" />
+    <path
+       id="path1941"
+       transform="matrix(0.26458333,0,0,0.26458333,0,292.76667)"
+       d="M 12 3 L 11.5 5 L 3 5 L 4 10 L 12 10 L 13 4 L 14 4 L 14 3 L 12 3 z M 4.5 6 L 11.5 6 C 11.777 6 12 6.223 12 6.5 C 12 6.777 11.777 7 11.5 7 L 4.5 7 C 4.223 7 4 6.777 4 6.5 C 4 6.223 4.223 6 4.5 6 z M 5 8 L 11 8 C 11.277 8 11.5 8.223 11.5 8.5 C 11.5 8.777 11.277 9 11 9 L 5 9 C 4.723 9 4.5 8.777 4.5 8.5 C 4.5 8.223 4.723 8 5 8 z "
+       style="fill:#aaaaaa;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1.99999996;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none;paint-order:markers stroke fill" />
   </g>
 </svg>

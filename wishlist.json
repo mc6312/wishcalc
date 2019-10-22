@@ -67,8 +67,9 @@
     },
     {
       "name": "Какая-то ерунда",
-      "cost": 331,
+      "cost": 997,
       "quantity": 2,
+      "importance": 3,
       "items": [
         {
           "name": "Вложенная ерунда",
@@ -85,13 +86,13 @@
         },
         {
           "name": "Другая ерунда",
-          "cost": 0,
+          "cost": 666,
           "quantity": 1,
           "importance": 1,
           "items": [
             {
               "name": "Более глубоко засунутая ерунда",
-              "cost": 0,
+              "cost": 666,
               "quantity": 1,
               "importance": 4
             }
@@ -101,7 +102,7 @@
           "name": "Ещё одна ерунда",
           "cost": 66,
           "quantity": 3,
-          "importance": 2
+          "importance": 4
         }
       ]
     },

@@ -129,7 +129,11 @@ class MainWnd():
 
         self.wishlistviewsel = uibldr.get_object('wishlistviewsel')
 
-        self.wlv_colItemSelect = uibldr.get_object('colItemSelect')
+        self.wlv_colItemSelect, self.wlv_colItemInCart, self.wlv_colItemImportance = get_ui_widgets(uibldr,
+            ('colItemSelect', 'colItemInCart', 'colItemImportance'))
+
+        uibldr.get_object('imgCart').set_from_pixbuf(self.iconNMincart)
+        uibldr.get_object('imgImportance').set_from_pixbuf(self.importanceIcons[0])
 
         #
         # наличность и остаток
@@ -202,8 +206,9 @@ class MainWnd():
             ('mnuRefillCash', 'btnRefillCash'))
 
         # выделение галками
-        self.widgetsSelectAll = get_ui_widgets(uibldr, ('btnSelectAll', 'mnuItemSelectAll'))
-        self.widgetsSelectNone = get_ui_widgets(uibldr, ('btnUnselectAll', 'mnuItemUnselectAll'))
+        self.widgetsSelectAll = get_ui_widgets(uibldr, ('cbSelectAll', 'mnuItemSelectAll'))
+        self.widgetsSelectNone = get_ui_widgets(uibldr, ('mnuItemUnselectAll',))
+        self.cbSelectAll = uibldr.get_object('cbSelectAll')
 
         #
         #
@@ -296,7 +301,10 @@ class MainWnd():
 
         menu.popup(None, None, None, None, 3, etime)
 
-    def on_wishlistview_button_press_event(self, widget, event):
+    def on_colItemSelect_clicked(self, cbtn):
+        self.__item_select_all(not (self.cbSelectAll.get_active() or self.cbSelectAll.get_inconsistent()))
+
+    def wl_button_press_event(self, widget, event):
         # вызов popup menu мышом
         if event.button == 3:
             # сначала принудительно выбираем элемент дерева, на котором торчит указатель мыша
@@ -307,7 +315,7 @@ class MainWnd():
             if ep is not None:
                 # если мышь на столбце с иконками - вместо общего контекстного
                 # меню вызываем менюху "важности" товара
-                if ep[1] == self.wlv_colItemSelect:
+                if ep[1] == self.wlv_colItemImportance:
                     menu = self.submnuItemImportance
 
                 self.wishlistviewsel.select_path(ep[0])
@@ -510,6 +518,22 @@ class MainWnd():
 
         return (needmonths, nmicon, infomonthtxt)
 
+    def recalculate_items(self):
+        """Полный пересчёт (а также обновление состояния чекбокса
+        "выбрать всё")."""
+
+        nTotal, nSelected = self.wishCalc.recalculate()
+
+        if nTotal == 0:
+            sa = False
+            si = False
+        else:
+            sa = nSelected == nTotal
+            si = (nSelected != 0) and (not sa)
+
+        self.cbSelectAll.set_active(sa)
+        self.cbSelectAll.set_inconsistent(si)
+
     def refresh_wishlistview(self, selitem=None):
         """Перерасчёт списка товаров, обновление содержимого TreeView.
 
@@ -517,7 +541,7 @@ class MainWnd():
                   после обновления TreeView в нём должен быть подсвечен
                   элемент дерева, содержащий соотв. Item."""
 
-        self.wishCalc.recalculate()
+        self.recalculate_items()
 
         # получается, что проходим по TreeStore второй раз (после recalculate)
         # ну да и хрен с ним пока...
@@ -729,7 +753,8 @@ class MainWnd():
 
         # пересчитываем сумму ценников выбранных товаров
         # self.refresh_wishlistview() при этом вызывать не требуется
-        self.wishCalc.recalculate()
+
+        self.recalculate_items()
         #self.refresh_wishlistview()
         self.refresh_selected_sum_view()
 
@@ -851,7 +876,11 @@ class MainWnd():
 
     def __item_select_all(self, select):
         self.wishCalc.select_items(select)
+        self.recalculate_items()
         self.refresh_selected_sum_view()
+
+        self.cbSelectAll.set_active(select)
+        self.cbSelectAll.set_inconsistent(False)
 
     def item_select_all(self, widget):
         self.__item_select_all(True)

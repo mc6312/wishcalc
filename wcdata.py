@@ -22,8 +22,8 @@
 import json
 import os.path
 
-from gi.repository import Gtk, GObject
-from gi.repository.GdkPixbuf import Pixbuf
+#from gi.repository import Gtk, GObject
+#from gi.repository.GdkPixbuf import Pixbuf
 
 from wcconfig import JSON_ENCODING
 from wccommon import *
@@ -597,9 +597,11 @@ class WishCalc():
         4й: максимальное значение поля importance вложенных элементов
             (товаров),
         5й: суммарная стоимость помеченных чекбоксами в UI элементов;
-        6й: количество помеченных элементов;
+        6й: количество помеченных элементов (без учёта вложенности, если помечен элемент верхнего уровня);
         7й: суммарная стоимость заказанных товаров;
-        8й: количество заказанных товаров."""
+        8й: количество заказанных товаров;
+        9й: общее количество элементов на текущем и вложенных уровнях;
+        10й: общее количество помеченных элементов на текущем и вложенных уровнях."""
 
         totalNeedCash = 0
         totalCost = 0 # общая сумма
@@ -610,10 +612,15 @@ class WishCalc():
         totalInCartSum = 0
         totalInCartCount = 0
 
+        totalItems = 0
+        totalItemsChecked = 0
+
         itr = self.store.iter_children(parentitr)
         while itr is not None:
             item = self.store.get_value(itr, self.COL_ITEM_OBJ)
             itemsel = self.store.get_value(itr, self.COL_SELECTED)
+
+            totalItems += 1
 
             # сбрасываем, дабы обновлялось!
             item.childrenImportance = 0
@@ -628,6 +635,9 @@ class WishCalc():
                 if itemsel:
                     totalSelectedSum += item.sum
                     totalSelectedCount += 1
+
+                    totalItemsChecked += 1
+
                 if item.incart:
                     totalInCartSum += item.sum
                     totalInCartCount += 1
@@ -637,9 +647,15 @@ class WishCalc():
             else:
                 # не товар, а группа товаров! для них цена -
                 # общая стоимость вложенных!
-                item.cost, subNeed, subRemain, subImportance, subSelectedSum, subSelectedCount, subInCartSum, subInCartCount = self.__recalculate_items(itr,
-                    totalCash, refillCash, totalRemain)
+                item.cost, subNeed, subRemain, subImportance, subSelectedSum,\
+                    subSelectedCount, subInCartSum, subInCartCount,\
+                    subTotalItems, subTotalItemsChecked = self.__recalculate_items(itr,
+                        totalCash, refillCash, totalRemain)
                 item.calculate_sum()
+
+                totalItems += subTotalItems
+                # для этого счётчика учитывается и сам элемент, и вложенные!
+                totalItemsChecked += subTotalItemsChecked
 
                 item.childrenSelected = subSelectedCount > 0
                 item.childrenInCart = subInCartCount > 0
@@ -649,6 +665,8 @@ class WishCalc():
                 if itemsel:
                     totalSelectedSum += item.sum
                     totalSelectedCount += 1
+                    # для этого счётчика учитывается и сам элемент, и вложенные!
+                    totalItemsChecked += 1
                 elif subSelectedSum:
                     totalSelectedSum += subSelectedSum
                     totalSelectedCount += subSelectedCount
@@ -713,7 +731,8 @@ class WishCalc():
 
         return (totalCost, totalNeed, totalRemain, maxImportance,
             totalSelectedSum, totalSelectedCount,
-            totalInCartSum, totalInCartCount)
+            totalInCartSum, totalInCartCount,
+            totalItems, totalItemsChecked)
 
     def recalculate(self):
         """Перерасчет.
@@ -721,12 +740,18 @@ class WishCalc():
         расчитываются значения полей item.needCash и item.needMonths
         на основе полей self.totalCash, self.refillCash и значений
         полей элементов).
-        По завершению обновляется значение self.totalRemain."""
+        По завершению обновляется значение self.totalRemain.
+        Возвращает кортеж из двух элементов:
+        1й: общее количество элементов в дереве,
+        2й: количество помеченных элементов."""
 
         __totalCost, __totalNeed, self.totalRemain, __importance, \
-        self.totalSelectedSum, self.totalSelectedCount , \
-        self.totalInCartSum, self.totalInCartCount = self.__recalculate_items(None,
-            self.totalCash, self.refillCash, self.totalCash)
+            self.totalSelectedSum, self.totalSelectedCount, \
+            self.totalInCartSum, self.totalInCartCount,\
+            totalItems, totalItemsChecked = self.__recalculate_items(None,
+                self.totalCash, self.refillCash, self.totalCash)
+
+        return (totalItems, totalItemsChecked)
 
     @staticmethod
     def need_months(needcash, refillcash):

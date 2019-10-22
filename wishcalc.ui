@@ -7,10 +7,28 @@
     <property name="step_increment">1</property>
     <property name="page_increment">10</property>
   </object>
+  <object class="GtkCheckButton" id="cbSelectAll">
+    <property name="visible">True</property>
+    <property name="can_focus">True</property>
+    <property name="receives_default">False</property>
+    <property name="draw_indicator">True</property>
+  </object>
   <object class="GtkFileFilter" id="filefilterJSON">
     <mime-types>
       <mime-type>application/json</mime-type>
     </mime-types>
+  </object>
+  <object class="GtkImage" id="imgCart">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-missing-image</property>
+    <property name="icon_size">1</property>
+  </object>
+  <object class="GtkImage" id="imgImportance">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-missing-image</property>
+    <property name="icon_size">1</property>
   </object>
   <object class="GtkImage" id="imgbtnRefillCash">
     <property name="visible">True</property>
@@ -652,7 +670,7 @@
                     <property name="reorderable">True</property>
                     <property name="enable_grid_lines">both</property>
                     <property name="enable_tree_lines">True</property>
-                    <signal name="button-press-event" handler="on_wishlistview_button_press_event" swapped="no"/>
+                    <signal name="button-press-event" handler="wl_button_press_event" swapped="no"/>
                     <signal name="drag-end" handler="on_wishlistview_drag_end" swapped="no"/>
                     <signal name="popup-menu" handler="on_wishlistview_popup_menu" swapped="no"/>
                     <signal name="row-activated" handler="wl_row_activated" swapped="no"/>
@@ -663,7 +681,9 @@
                     </child>
                     <child>
                       <object class="GtkTreeViewColumn" id="colItemSelect">
-                        <property name="title" translatable="yes">Товар</property>
+                        <property name="clickable">True</property>
+                        <property name="widget">cbSelectAll</property>
+                        <signal name="clicked" handler="on_colItemSelect_clicked" swapped="no"/>
                         <child>
                           <object class="GtkCellRendererToggle" id="crSelectedCB">
                             <signal name="toggled" handler="wl_item_selected_toggled" swapped="no"/>
@@ -673,14 +693,24 @@
                             <attribute name="inconsistent">12</attribute>
                           </attributes>
                         </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkTreeViewColumn" id="colItemInCart">
+                        <property name="widget">imgCart</property>
                         <child>
                           <object class="GtkCellRendererPixbuf" id="crInCart"/>
                           <attributes>
                             <attribute name="pixbuf">11</attribute>
                           </attributes>
                         </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkTreeViewColumn" id="colItemImportance">
+                        <property name="widget">imgImportance</property>
                         <child>
-                          <object class="GtkCellRendererPixbuf" id="crColor"/>
+                          <object class="GtkCellRendererPixbuf" id="crItemImportance"/>
                           <attributes>
                             <attribute name="pixbuf">9</attribute>
                           </attributes>
@@ -987,49 +1017,6 @@
                     <property name="expand">False</property>
                     <property name="fill">True</property>
                     <property name="position">1</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkToolbar">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="toolbar_style">icons</property>
-                    <property name="show_arrow">False</property>
-                    <property name="icon_size">2</property>
-                    <child>
-                      <object class="GtkToolButton" id="btnSelectAll">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Выделить все товары</property>
-                        <property name="use_underline">True</property>
-                        <property name="stock_id">gtk-select-all</property>
-                        <signal name="clicked" handler="item_select_all" swapped="no"/>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="homogeneous">True</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkToolButton" id="btnUnselectAll">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Снять выделение со всех товаров</property>
-                        <property name="use_underline">True</property>
-                        <property name="stock_id">gtk-clear</property>
-                        <signal name="clicked" handler="item_unselect_all" swapped="no"/>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="homogeneous">True</property>
-                      </packing>
-                    </child>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="pack_type">end</property>
-                    <property name="position">2</property>
                   </packing>
                 </child>
               </object>
