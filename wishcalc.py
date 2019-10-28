@@ -160,7 +160,10 @@ class MainWnd():
         # меню "товарных" команд - для вызова контекстного меню на списке товаров
         self.mnuItem = uibldr.get_object('mnuItem').get_submenu()
 
-        # меню "важности" товара
+        # подменю "заказан/оплачен"
+        self.mnuItemToggleInCartPaid = uibldr.get_object('mnuItemToggleInCartPaid').get_submenu()
+
+        # подменю "важности" товара
         self.mnuItemImportance = uibldr.get_object('mnuItemImportance')
         self.submnuItemImportance = Gtk.Menu()
         self.submnuItemImportance.set_reserve_toggle_size(False)
@@ -315,8 +318,12 @@ class MainWnd():
             if ep is not None:
                 # если мышь на столбце с иконками - вместо общего контекстного
                 # меню вызываем менюху "важности" товара
-                if ep[1] == self.wlv_colItemImportance:
+                col = ep[1]
+
+                if col == self.wlv_colItemImportance:
                     menu = self.submnuItemImportance
+                elif col == self.wlv_colItemInCart:
+                    menu = self.mnuItemToggleInCartPaid
 
                 self.wishlistviewsel.select_path(ep[0])
 
@@ -325,7 +332,7 @@ class MainWnd():
 
             return True
 
-    def on_wishlistview_popup_menu(self, widget):
+    def wl_popup_menu(self, widget):
         # вызов popup menu клавиатурой
         self.wishlist_pop_up_menu(None)
 
@@ -345,7 +352,7 @@ class MainWnd():
         if self.mnuItemImportanceVisible == 0:
             self.wishlist_pop_up_menu(None, self.submnuItemImportance)
 
-    def on_wishlistview_drag_end(self, wgt, ctx):
+    def wl_drag_end(self, wgt, ctx):
         self.refresh_wishlistview()
 
     def wishlist_is_loaded(self):
@@ -736,7 +743,10 @@ class MainWnd():
             self.refresh_wishlistview(item)
 
     def wl_row_activated(self, treeview, path, col):
-        self.__do_edit_item(False)
+        if col == self.wlv_colItemInCart:
+            self.item_toggle_incart(treeview)
+        else:
+            self.__do_edit_item(False)
 
     def wl_item_selected_toggled(self, cr, path):
         # тыкнут чекбокс выбора элемента дерева

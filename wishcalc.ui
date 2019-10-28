@@ -211,23 +211,37 @@
                       </object>
                     </child>
                     <child>
-                      <object class="GtkMenuItem" id="mnuItemToggleInCart">
+                      <object class="GtkMenuItem" id="mnuItemToggleInCartPaid">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Пометить товар как (не)заказанный</property>
+                        <property name="label" translatable="yes">Пометить товар...</property>
                         <property name="use_underline">True</property>
-                        <signal name="activate" handler="item_toggle_incart" swapped="no"/>
-                        <accelerator key="t" signal="activate" modifiers="GDK_CONTROL_MASK"/>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="mnuItemTogglePaid">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Пометить товар как (не)оплаченный</property>
-                        <property name="use_underline">True</property>
-                        <signal name="activate" handler="item_toggle_paid" swapped="no"/>
-                        <accelerator key="p" signal="activate" modifiers="GDK_CONTROL_MASK"/>
+                        <child type="submenu">
+                          <object class="GtkMenu">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <child>
+                              <object class="GtkMenuItem" id="mnuItemToggleInCart">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="label" translatable="yes">Пометить товар как (не)заказанный</property>
+                                <property name="use_underline">True</property>
+                                <signal name="activate" handler="item_toggle_incart" swapped="no"/>
+                                <accelerator key="t" signal="activate" modifiers="GDK_CONTROL_MASK"/>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkMenuItem" id="mnuItemTogglePaid">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="label" translatable="yes">Пометить товар как (не)оплаченный</property>
+                                <property name="use_underline">True</property>
+                                <signal name="activate" handler="item_toggle_paid" swapped="no"/>
+                                <accelerator key="p" signal="activate" modifiers="GDK_CONTROL_MASK"/>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
                       </object>
                     </child>
                     <child>
@@ -671,8 +685,8 @@
                     <property name="enable_grid_lines">both</property>
                     <property name="enable_tree_lines">True</property>
                     <signal name="button-press-event" handler="wl_button_press_event" swapped="no"/>
-                    <signal name="drag-end" handler="on_wishlistview_drag_end" swapped="no"/>
-                    <signal name="popup-menu" handler="on_wishlistview_popup_menu" swapped="no"/>
+                    <signal name="drag-end" handler="wl_drag_end" swapped="no"/>
+                    <signal name="popup-menu" handler="wl_popup_menu" swapped="no"/>
                     <signal name="row-activated" handler="wl_row_activated" swapped="no"/>
                     <child internal-child="selection">
                       <object class="GtkTreeSelection" id="wishlistviewsel">
