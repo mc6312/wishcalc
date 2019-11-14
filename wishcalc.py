@@ -40,7 +40,7 @@ from wcitemed import *
 
 
 class MainWnd():
-    PERCENT_RANGE = 4
+    PERCENT_RANGE = 5
 
     CLIPBOARD_DATA = 'wishcalc2_clipboard_data'
 
