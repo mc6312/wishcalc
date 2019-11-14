@@ -44,19 +44,19 @@ class MainWnd():
 
     CLIPBOARD_DATA = 'wishcalc2_clipboard_data'
 
-    def destroy(self, widget):
+    def wnd_destroy(self, widget):
         Gtk.main_quit()
 
     def before_exit(self):
         if self.wishCalc is not None:
             if self.wishCalc.filename:
-                self.save_wishlist()
+                self.wishlist_save()
             elif self.wishCalc.store.iter_n_children(None) > 0:
                 self.file_save_as(None)
 
         self.cfg.save()
 
-    def wndMain_delete_event(self, wnd, event):
+    def wnd_delete_event(self, wnd, event):
         self.before_exit()
 
     def wnd_configure_event(self, wnd, event):
@@ -264,7 +264,7 @@ class MainWnd():
         # первоначальное заполнение списка
         #
         if wlfname is not None:
-            if not self.load_wishlist(wlfname):
+            if not self.wishlist_load(wlfname):
                 exit(1)
         else:
             self.wishCalc = WishCalc(None)
@@ -357,7 +357,7 @@ class MainWnd():
 
     def wishlist_is_loaded(self):
         """Этот метод должен вызываться после успешной загрузки
-        файла (т.е. если load_wishlist() не рухнул с исключением)."""
+        файла (т.е. если wishlist_load() не рухнул с исключением)."""
 
         # обязательно заменяем TreeStore загруженной!
         self.wishlistview.set_model(self.wishCalc.store)
@@ -374,13 +374,13 @@ class MainWnd():
 
     def file_exit(self, widget):
         self.before_exit()
-        self.destroy(widget)
+        self.wnd_destroy(widget)
 
     def file_save(self, mnu):
         """Сохранение файла"""
 
         if self.wishCalc.filename:
-            self.save_wishlist()
+            self.wishlist_save()
         else:
             self.file_save_as(mnu)
 
@@ -398,7 +398,7 @@ class MainWnd():
 
         if r == Gtk.ResponseType.OK:
             self.wishCalc.filename = self.dlgFileSaveAs.get_filename()
-            if self.save_wishlist():
+            if self.wishlist_save():
                 self.refresh_window_title()
 
     def file_open(self, mnu):
@@ -409,9 +409,9 @@ class MainWnd():
             if self.wishCalc.filename and os.path.samefile(fname, self.wishCalc.filename):
                 return
 
-            self.save_wishlist()
+            self.wishlist_save()
 
-            if self.load_wishlist(fname):
+            if self.wishlist_load(fname):
                 self.wishlist_is_loaded()
 
     def file_edit_comment(self, mnu):
@@ -1119,7 +1119,7 @@ class MainWnd():
     def refresh_remains_view(self):
         self.remainsentry.set_text(str(self.wishCalc.totalRemain) if self.wishCalc.totalRemain > 0 else 'нет')
 
-    def save_wishlist(self):
+    def wishlist_save(self):
         """Сохранение списка.
         Возвращает булевское значение (True в случае успеха)."""
 
@@ -1131,7 +1131,7 @@ class MainWnd():
             msg_dialog(self.window, TITLE, 'Ошибка сохранения файла "%s":\n%s' % (self.wishCalc.filename, str(ex)))
             return False
 
-    def load_wishlist(self, filename):
+    def wishlist_load(self, filename):
         """Загрузка списка.
         Возвращает булевское значение (успех/отказ)."""
 
