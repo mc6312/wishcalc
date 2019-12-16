@@ -135,6 +135,8 @@ class MainWnd():
         uibldr.get_object('imgCart').set_from_pixbuf(self.iconNMincart)
         uibldr.get_object('imgImportance').set_from_pixbuf(self.importanceIcons[0])
 
+        uibldr.get_object('imgItemPasteInto').set_from_pixbuf(resldr.load_pixbuf('images/paste-into.svg', nmiconsize, nmiconsize))
+
         #
         # наличность и остаток
         #
@@ -200,7 +202,7 @@ class MainWnd():
         self.widgetsItemURL = get_ui_widgets(uibldr,
             ('mnuItemOpenURL', 'btnItemOpenURL', 'mnuItemCopyURL'))
         self.widgetsItemCopyPaste = get_ui_widgets(uibldr,
-            ('mnuItemCopy', 'btnItemCopy'))
+            ('mnuItemCopy', 'btnItemCopy', 'mnuItemPasteInto', 'btnItemPasteInto'))
             # эти - всегда будут доступны, т.к. возможна вставка при невыбранном элементе
             #, 'mnuItemPaste', 'btnItemPaste'))
 
@@ -939,59 +941,80 @@ class MainWnd():
             ensure_ascii=False, indent='  '),
             -1)
 
-    def item_paste(self, btn):
-        def __paste_item():
-            tmps = self.clipboard.wait_for_text()
-            if tmps is None:
-                # нету там нифига - молча ничего не делаем
-                return
+    def __item_paste(self, intoselected):
+        """Вставка товара из буфера обмена.
+        Eсли в TreeView есть выбранный элемент:
+            intoselected == True:
+                товар вставляется как дочерний элемент к выбранному;
+            intoselected == False:
+                товар вставляется на том же уровне дерева после выбранного.
+        Если выбранного элемента нет, товар вставляется в конец списка
+        на верхнем уровне дерева."""
 
-            try:
-                tmpd = json.loads(tmps)
-            except json.JSONDecodeError:
-                # поломатый JSON - опять молча ничего не делаем
-                return
-                #return 'неподдерживаемый формат содержимого буфера обмена'
+        #
+        # пытаемся тащить данные из буфера обмена
+        #
 
-            if self.CLIPBOARD_DATA not in tmpd:
-                # не наши данные - тоже молча ничего не делаем
-                return
-                #return 'буфер обмена не содержит данных, поддерживаемых %s' % TITLE
+        tmps = self.clipboard.wait_for_text()
+        if tmps is None:
+            # нету там нифига - молча ничего не делаем
+            return
 
-            itemdict = tmpd[self.CLIPBOARD_DATA]
+        try:
+            tmpd = json.loads(tmps)
+        except json.JSONDecodeError:
+            # поломатый JSON - опять молча ничего не делаем
+            return
+            #return 'неподдерживаемый формат содержимого буфера обмена'
 
-            # таки пытаемся уже чего-то вставить
-            item = WishCalc.Item()
-            try:
-                item.set_fields_dict(itemdict)
+        if self.CLIPBOARD_DATA not in tmpd:
+            # не наши данные - тоже молча ничего не делаем
+            return
+            #return 'буфер обмена не содержит данных, поддерживаемых %s' % TITLE
 
-                itrsel = self.get_selected_item_iter()
-                if itrsel is None:
-                    # ничего не выбрано - вставляем элемент в конец списка
-                    parent = None
-                else:
-                    # иначе - после выбранного элемента на его уровне
-                    parent = self.wishCalc.store.iter_parent(itrsel)
+        itemdict = tmpd[self.CLIPBOARD_DATA]
 
-                inserteditr = self.wishCalc.store.insert_after(parent, itrsel,
-                    self.wishCalc.make_store_row(item))
+        # таки пытаемся уже чего-то вставить
+        item = WishCalc.Item()
+        try:
+            item.set_fields_dict(itemdict)
 
-                # рекурсивно добавляем подэлементы, если они есть
-                if WishCalc.Item.ITEMS in itemdict:
-                    self.wishCalc.load_subitems(inserteditr,
-                        itemdict[WishCalc.Item.ITEMS], [])
+            itrsel = self.get_selected_item_iter()
+            if itrsel is None:
+                # ничего не выбрано - вставляем элемент в конец списка
+                parentitr = None
+            elif intoselected:
+                parentitr = itrsel
+                itrsel = None
+            else:
+                # иначе - после выбранного элемента на его уровне
+                parentitr = self.wishCalc.store.iter_parent(itrsel)
 
-            except Exception as ex:
-                # пока - так
-                return str(ex)
+            inserteditr = self.wishCalc.store.insert_after(parentitr, itrsel,
+                self.wishCalc.make_store_row(item))
 
-            self.refresh_wishlistview(item)
+            # рекурсивно добавляем подэлементы, если они есть
+            if WishCalc.Item.ITEMS in itemdict:
+                self.wishCalc.load_subitems(inserteditr,
+                    itemdict[WishCalc.Item.ITEMS], [])
 
-        es = __paste_item()
-
-        if es:
+        except Exception as ex:
+            # пока - так
             msg_dialog(self.window, 'Вставка из буфера обмена',
-                'Ошибка: %s' % es)
+                'Ошибка: %s' % str(ex))
+            return
+
+        self.refresh_wishlistview(item)
+
+    def item_paste(self, btn):
+        """Вставка товара из буфера обмена."""
+
+        self.__item_paste(None)
+
+    def item_paste_into_selected(self, btn):
+        """Вставка из буфера обмена дочерних элементов в выбранный"""
+
+        self.__item_paste(self.get_selected_item_iter())
 
     def item_open_url(self, btn):
         itr = self.get_selected_item_iter()
