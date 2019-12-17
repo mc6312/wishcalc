@@ -21,7 +21,7 @@ app:
 	chmod 755 $(basename)
 
 archive:
-	$(pack) $(srcarcname) *.py *. Makefile *.geany *.ui *.svg $(docs)
+	$(pack) $(srcarcname) *.py *. Makefile *.geany *.ui *.svg images/* $(docs)
 distrib:
 	make app
 	$(eval distname = $(basename)-$(version)$(arcx))
@@ -41,4 +41,5 @@ docview:
 	@echo "</body></html>" >>$(docname)
 	x-www-browser $(docname)
 	#rm $(docname)
-
+show-branch:
+	@echo "$(branch)"

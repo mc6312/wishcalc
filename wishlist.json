@@ -28,6 +28,7 @@
           "cost": 238,
           "quantity": 3,
           "importance": 3,
+          "incart": true,
           "items": [
             {
               "name": "Вложенная в фигню номер 1 подфигня",
