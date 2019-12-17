@@ -771,7 +771,10 @@ class MainWnd():
         self.refresh_selected_sum_view()
 
     def refresh_incart_view(self):
-        self.incartbox.set_sensitive(self.wishCalc.totalInCartCount > 0)
+        v = self.wishCalc.totalInCartCount > 0
+
+        self.incartbox.set_sensitive(v)
+        self.incartbox.set_visible(v)
 
         self.incartcountentry.set_text(str(self.wishCalc.totalInCartCount))
         self.incartsumentry.set_text(str(self.wishCalc.totalInCartSum))
@@ -832,8 +835,9 @@ class MainWnd():
         self.selectedmonthsentry.set_text(needmonths)
 
         self.selectedsumbox.set_sensitive(vsel)
+        self.selectedsumbox.set_visible(vsel)
 
-        self.setup_widgets_sensitive() #!!!
+        #self.setup_widgets_sensitive() #!!!
 
     def get_selected_item_iter(self):
         """Возвращает Gtk.TreeIter если в TreeView выбрана строка,

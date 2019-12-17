@@ -22,7 +22,6 @@
       "cost": 747,
       "quantity": 1,
       "importance": 2,
-      "incart": true,
       "items": [
         {
           "name": "Ненужная фигня номер 1",
@@ -48,15 +47,13 @@
       "name": "Какая-то дорогая фигня",
       "cost": 23800,
       "quantity": 1,
-      "importance": 2,
-      "incart": true
+      "importance": 2
     },
     {
       "name": "Нечто",
       "cost": 2300,
       "quantity": 1,
-      "importance": 2,
-      "incart": true
+      "importance": 2
     },
     {
       "name": "Бессмысленно дорогой хлам",
