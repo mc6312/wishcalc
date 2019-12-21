@@ -927,13 +927,13 @@ class MainWnd():
             self.item_select_by_iter(random_choice(alliters), True)
 
     def item_copy(self, btn):
+        """кладём выбранный элемент с подэлементами в clipboard в виде JSON
+        пока вот так, ручками и костыльно"""
+
         itrsel = self.get_selected_item_iter()
 
         if itrsel is None:
             return
-
-        # кладём выбранный элемент с подэлементами в clipboard в виде JSON
-        # пока вот так, ручками и костыльно
 
         itemdict = self.wishCalc.get_item(itrsel).get_fields_dict()
 
@@ -944,6 +944,32 @@ class MainWnd():
         self.clipboard.set_text(json.dumps({self.CLIPBOARD_DATA:itemdict},
             ensure_ascii=False, indent='  '),
             -1)
+
+    def item_copy_as_text(self, wgt):
+        """Копируем имена выбранного товара и вложенных в него,
+        в clipboard в виде текста, разделённого переносами строк."""
+
+        itrsel = self.get_selected_item_iter()
+
+        if itrsel is None:
+            return
+
+        item = self.wishCalc.get_item(itrsel)
+        names = [item.name]
+
+        def __gather_subitem_names(fromitr):
+            itr = self.wishCalc.store.iter_children(fromitr)
+
+            while itr is not None:
+                names.append(self.wishCalc.get_item(itr).name)
+
+                __gather_subitem_names(itr)
+
+                itr = self.wishCalc.store.iter_next(itr)
+
+        __gather_subitem_names(itrsel)
+
+        self.clipboard.set_text('\n'.join(names), -1)
 
     def __item_paste(self, intoselected):
         """Вставка товара из буфера обмена.
