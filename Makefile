@@ -10,7 +10,7 @@ title_version = $(shell python3 -c 'from $(srcversion) import TITLE_VERSION; pri
 zipname = $(basename).zip
 arcname = $(basename)$(arcx)
 srcarcname = $(basename)-$(branch)-src$(arcx)
-mainsrcs = wishcalc.py wcconfig.py wccommon.py wcitemed.py wcdata.py gtktools.py
+mainsrcs = wishcalc.py wcconfig.py wccommon.py wcitemed.py wcdata.py wccalculator.py gtktools.py
 srcs = __main__.py $(mainsrcs) wishcalc*.ui images/*
 backupdir = ~/shareddocs/pgm/python/
 
