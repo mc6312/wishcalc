@@ -3,7 +3,7 @@
 
 """wishcalc.py
 
-    Copyright 2017, 2018, 2019 MC-6312 <mc6312@gmail.com>
+    Copyright 2017-2020 MC-6312 <mc6312@gmail.com>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -37,6 +37,7 @@ from wcdata import *
 from wcconfig import *
 from wccommon import *
 from wcitemed import *
+from wccalculator import *
 
 
 class MainWnd():
@@ -143,15 +144,20 @@ class MainWnd():
         self.cashentry, self.refillentry, self.remainsentry = get_ui_widgets(uibldr,
             ('cashentry', 'refillentry', 'remainsentry'))
 
+        self.cashcalc = Calculator(resldr, self.cashentry, True)
+        self.refillcalc = Calculator(resldr, self.refillentry, True)
+
         # сумма выбранных в дереве
-        self.selectedsumbox, self.selectedcountentry, self.selectedsumentry, self.selectedneedsentry,\
-        self.selectedmonthsentry = get_ui_widgets(uibldr,
-            ('selectedsumbox', 'selectedcountentry', 'selectedsumentry', 'selectedneedsentry',
-            'selectedmonthsentry'))
+        self.selectedsumbox, self.selectedcounttxt, self.selectedsumtxt, \
+        self.needsumbox, self.selectedneedstxt, self.selectedneedsicon, \
+        self.selectedmonthstxt = get_ui_widgets(uibldr,
+            ('selectedsumbox', 'selectedcounttxt', 'selectedsumtxt',
+             'needsumbox', 'selectedneedstxt', 'selectedneedsicon',
+             'selectedmonthstxt'))
 
         # сумма заказанных товаров
-        self.incartbox, self.incartcountentry, self.incartsumentry = get_ui_widgets(uibldr,
-            ('incartbox', 'incartcountentry', 'incartsumentry'))
+        self.incartbox, self.incartcounttxt, self.incartsumtxt = get_ui_widgets(uibldr,
+            ('incartbox', 'incartcounttxt', 'incartsumtxt'))
 
         #
         # редактор товара
@@ -228,7 +234,10 @@ class MainWnd():
         # ыбаутбокс
         #
         self.dlgAbout = uibldr.get_object('dlgAbout')
-        self.dlgAbout.set_logo(resldr.load_pixbuf('images/wishcalc_logo.svg', 128, 128))
+
+        logosize = Gtk.IconSize.lookup(Gtk.IconSize.DIALOG)[1] * 4
+
+        self.dlgAbout.set_logo(resldr.load_pixbuf('images/wishcalc_logo.svg', logosize, logosize))
         self.dlgAbout.set_program_name(TITLE)
         self.dlgAbout.set_comments(SUB_TITLE)
         self.dlgAbout.set_version('v%s' % VERSION)
@@ -776,14 +785,14 @@ class MainWnd():
         self.incartbox.set_sensitive(v)
         self.incartbox.set_visible(v)
 
-        self.incartcountentry.set_text(str(self.wishCalc.totalInCartCount))
-        self.incartsumentry.set_text(str(self.wishCalc.totalInCartSum))
+        self.incartcounttxt.set_text(str(self.wishCalc.totalInCartCount))
+        self.incartsumtxt.set_text(str(self.wishCalc.totalInCartSum))
 
     def refresh_selected_sum_view(self):
         self.wishCalc.recalculate()
 
         if self.wishCalc.totalSelectedCount:
-            vsel = True
+            sumboxvisible = True
 
             selcount = str(self.wishCalc.totalSelectedCount)
             selsums = str(self.wishCalc.totalSelectedSum)
@@ -793,7 +802,10 @@ class MainWnd():
                 needsicon = self.iconNMok
                 needsinfo = needs
                 needmonths = ''
+                needsumboxvisible = False
             else:
+                needsumboxvisible = True
+
                 if self.wishCalc.totalSelectedSum == 0:
                     needs = ''
                     needsicon = self.iconNMempty
@@ -814,7 +826,8 @@ class MainWnd():
                         needsicon)
 
         else:
-            vsel = False
+            sumboxvisible = False
+            needsumboxvisible = False
 
             selsums = ''
             selcount = 'нет'
@@ -823,19 +836,20 @@ class MainWnd():
             needsinfo = ''
             needmonths = ''
 
-        self.selectedsumentry.set_text(selsums)
-        self.selectedcountentry.set_text(selcount)
+        self.selectedsumtxt.set_text(selsums)
+        self.selectedcounttxt.set_text(selcount)
 
-        self.selectedneedsentry.set_text(needs)
-        self.selectedneedsentry.set_tooltip_markup(needsinfo)
+        self.selectedneedstxt.set_text(needs)
+        self.selectedneedstxt.set_tooltip_markup(needsinfo)
 
-        self.selectedneedsentry.set_icon_from_pixbuf(Gtk.EntryIconPosition.PRIMARY, needsicon)
-        self.selectedneedsentry.set_icon_tooltip_markup(Gtk.EntryIconPosition.PRIMARY, needsinfo)
+        self.selectedneedsicon.set_from_pixbuf(needsicon)
+        self.selectedneedsicon.set_tooltip_markup(needsinfo)
 
-        self.selectedmonthsentry.set_text(needmonths)
+        self.selectedmonthstxt.set_text(needmonths)
 
-        self.selectedsumbox.set_sensitive(vsel)
-        self.selectedsumbox.set_visible(vsel)
+        self.selectedsumbox.set_visible(sumboxvisible)
+
+        self.needsumbox.set_visible(sumboxvisible & needsumboxvisible)
 
         #self.setup_widgets_sensitive() #!!!
 

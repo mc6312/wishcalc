@@ -28,6 +28,7 @@ import webbrowser
 
 from wccommon import *
 from wcdata import *
+from wccalculator import *
 
 
 class ItemEditorDlg():
@@ -58,6 +59,8 @@ class ItemEditorDlg():
             ('costlabel', 'itemcostentry', 'quantitylabel'))
 
         self.itemcostentry = uibldr.get_object('itemcostentry')
+        self.calc = Calculator(resldr, self.itemcostentry, True)
+
         self.itemquantityentry = uibldr.get_object('itemquantityentry')
 
         self.itemincartchk = uibldr.get_object('itemincartchk')
@@ -263,8 +266,16 @@ if __name__ == '__main__':
     from wcconfig import *
 
     cfg = Config()
-    importanceIcons = ImportanceIcons(Gtk.IconSize.MENU)
+
     resldr = get_resource_loader()
+
+    nmiconsizeix = Gtk.IconSize.MENU
+    nmiconsize = Gtk.IconSize.lookup(nmiconsizeix)[1]
+
+    importanceIcons = []
+    for iximpicon in range(IMPORTANCE_LEVELS):
+        importanceIcons.append(resldr.load_pixbuf('images/impicon%.2d.svg' % iximpicon, nmiconsize, nmiconsize))
+
     itemEditor = ItemEditorDlg(None,
         resldr,
         cfg.itemEditorWindow,

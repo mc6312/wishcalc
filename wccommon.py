@@ -22,10 +22,10 @@
 TITLE = 'WishCalc'
 SUB_TITLE = 'Калькулятор загребущего нищеброда'
 
-VERSION = '2.5.11'
+VERSION = '2.5.12'
 
 TITLE_VERSION = '%s v%s' % (TITLE, VERSION)
-COPYRIGHT = '(c) 2017-2019 MC-6312'
+COPYRIGHT = '(c) 2017-2020 MC-6312'
 URL = 'https://github.com/mc6312/wishcalc'
 
 
