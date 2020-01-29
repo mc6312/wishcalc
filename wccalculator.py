@@ -54,14 +54,14 @@ class Calculator():
         # кривой костыль для борьбы с дырами безопасности в eval()
 
         for c in expr:
-            if c not in '0123456789.+-()':
+            if c not in '0123456789.+-*/()':
                 return False
 
         return True
 
     def show_error(self, iserror):
         self.calcentry.set_icon_from_icon_name(self.ERROR_ICON_POS, self.ERROR_ICON_NAME if iserror else None)
-        self.entry.set_icon_sensitive(self.entryiconpos, iserror)
+        self.calcentry.set_icon_sensitive(self.ERROR_ICON_POS, iserror)
 
     def calculate(self):
         expr = self.calcentry.get_text().strip()
@@ -71,7 +71,7 @@ class Calculator():
                 self.show_error(True)
             else:
                 try:
-                    r = eval(expr)
+                    r = int(round(eval(expr)))
 
                     self.entry.set_text(str(r))
                     self.popover.hide()
