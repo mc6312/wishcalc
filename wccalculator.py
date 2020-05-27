@@ -44,6 +44,7 @@ class Calculator():
         self.entryiconpos = Gtk.EntryIconPosition.PRIMARY if primaryicon else Gtk.EntryIconPosition.SECONDARY
         self.entry.set_icon_from_icon_name(self.entryiconpos, self.CALC_ICON_NAME)
         self.entry.set_icon_sensitive(self.entryiconpos, True)
+        self.entry.set_icon_activatable(self.entryiconpos, True)
 
         self.entry.connect('icon-release', self.entry_icon_release)
         self.entry.connect('key-release-event', self.entry_key_release_event)

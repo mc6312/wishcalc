@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.22.1 -->
+<!-- Generated with glade 3.22.2 -->
 <interface>
   <requires lib="gtk+" version="3.20"/>
   <object class="GtkAdjustment" id="adjitemquantity">
@@ -149,7 +149,7 @@
                   <object class="GtkLabel" id="quantitylabel">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="margin_left">4</property>
+                    <property name="margin_left">8</property>
                     <property name="label" translatable="yes">Количество:</property>
                     <property name="xalign">0</property>
                   </object>
@@ -181,7 +181,7 @@
                   <object class="GtkLabel">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="margin_left">4</property>
+                    <property name="margin_left">8</property>
                     <property name="label" translatable="yes">Важность:</property>
                     <property name="xalign">0</property>
                   </object>
