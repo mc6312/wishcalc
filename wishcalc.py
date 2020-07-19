@@ -95,6 +95,11 @@ class MainWnd():
         self.window.set_icon(icon)
 
         #
+        # главное меню
+        #
+        #mnuRootImage = uibldr.get_object('mnuRootImage')
+
+        #
         # список желаемого
         #
 

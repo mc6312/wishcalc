@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.22.1 -->
+<!-- Generated with glade 3.22.2 -->
 <interface>
   <requires lib="gtk+" version="3.20"/>
   <object class="GtkAdjustment" id="adjItemQuantity">
@@ -40,6 +40,389 @@
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="stock">gtk-add</property>
+  </object>
+  <object class="GtkMenu" id="mnuMain">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <child>
+      <object class="GtkMenuItem" id="mnuFile">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">Файл</property>
+        <property name="use_underline">True</property>
+        <child type="submenu">
+          <object class="GtkMenu">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <child>
+              <object class="GtkMenuItem" id="mnuFileOpen">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Открыть</property>
+                <property name="use_underline">True</property>
+                <signal name="activate" handler="file_open" swapped="no"/>
+                <accelerator key="o" signal="activate" modifiers="GDK_CONTROL_MASK"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuItem" id="mnuFileSave">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Сохранить</property>
+                <property name="use_underline">True</property>
+                <signal name="activate" handler="file_save" swapped="no"/>
+                <accelerator key="s" signal="activate" modifiers="GDK_CONTROL_MASK"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuItem" id="mnuFileSaveAs">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Сохранить как...</property>
+                <property name="use_underline">True</property>
+                <signal name="activate" handler="file_save_as" swapped="no"/>
+                <accelerator key="s" signal="activate" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkSeparatorMenuItem">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuItem" id="mnuFileEditComment">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Изменить описание копилки</property>
+                <property name="use_underline">True</property>
+                <signal name="activate" handler="file_edit_comment" swapped="no"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuItem" id="mnuFileAbout">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">О программе...</property>
+                <property name="use_underline">True</property>
+                <signal name="activate" handler="about_program" swapped="no"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkSeparatorMenuItem">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuItem" id="mnuExit">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Выход</property>
+                <property name="use_underline">True</property>
+                <signal name="activate" handler="file_exit" swapped="no"/>
+                <accelerator key="q" signal="activate" modifiers="GDK_CONTROL_MASK"/>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="mnuItem">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">Товар</property>
+        <property name="use_underline">True</property>
+        <child type="submenu">
+          <object class="GtkMenu">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <child>
+              <object class="GtkMenuItem" id="mnuItemAdd">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Новый товар</property>
+                <property name="use_underline">True</property>
+                <signal name="activate" handler="item_add" swapped="no"/>
+                <accelerator key="n" signal="activate" modifiers="GDK_CONTROL_MASK"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuItem" id="mnuItemAddSubItem">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Добавить новый товар к выбранному</property>
+                <property name="use_underline">True</property>
+                <signal name="activate" handler="item_add_subitem" swapped="no"/>
+                <accelerator key="n" signal="activate" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuItem" id="mnuItemEdit">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Изменить товар</property>
+                <property name="use_underline">True</property>
+                <signal name="activate" handler="item_edit" swapped="no"/>
+                <accelerator key="e" signal="activate" modifiers="GDK_CONTROL_MASK"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuItem" id="mnuItemToggleInCartPaid">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Пометить товар...</property>
+                <property name="use_underline">True</property>
+                <child type="submenu">
+                  <object class="GtkMenu">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <child>
+                      <object class="GtkMenuItem" id="mnuItemToggleInCart">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">Пометить товар как (не)заказанный</property>
+                        <property name="use_underline">True</property>
+                        <signal name="activate" handler="item_toggle_incart" swapped="no"/>
+                        <accelerator key="t" signal="activate" modifiers="GDK_CONTROL_MASK"/>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkMenuItem" id="mnuItemTogglePaid">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">Пометить товар как (не)оплаченный</property>
+                        <property name="use_underline">True</property>
+                        <signal name="activate" handler="item_toggle_paid" swapped="no"/>
+                        <accelerator key="p" signal="activate" modifiers="GDK_CONTROL_MASK"/>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuItem" id="mnuItemImportance">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Важность...</property>
+                <property name="use_underline">True</property>
+                <signal name="activate" handler="item_choose_importance" swapped="no"/>
+                <signal name="deselect" handler="on_mnuItemImportance_deselect" swapped="no"/>
+                <signal name="select" handler="on_mnuItemImportance_select" swapped="no"/>
+                <accelerator key="i" signal="activate" modifiers="GDK_CONTROL_MASK"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuItem" id="mnuItemPurchased">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Убрать купленный товар из списка</property>
+                <property name="use_underline">True</property>
+                <signal name="activate" handler="item_purchased" swapped="no"/>
+                <accelerator key="p" signal="activate" modifiers="GDK_CONTROL_MASK"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkSeparatorMenuItem">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuItem" id="mnuItemCopy">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Копировать</property>
+                <property name="use_underline">True</property>
+                <signal name="activate" handler="item_copy" swapped="no"/>
+                <accelerator key="c" signal="activate" modifiers="GDK_CONTROL_MASK"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuItem" id="mnuItemPaste">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Вставить</property>
+                <property name="use_underline">True</property>
+                <signal name="activate" handler="item_paste" swapped="no"/>
+                <accelerator key="v" signal="activate" modifiers="GDK_CONTROL_MASK"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuItem" id="mnuItemPasteInto">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Вставить в выбранный</property>
+                <property name="use_underline">True</property>
+                <signal name="activate" handler="item_paste_into_selected" swapped="no"/>
+                <accelerator key="v" signal="activate" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuItem" id="mnuItemOpenURL">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Открыть сайт с описанием товара</property>
+                <property name="use_underline">True</property>
+                <signal name="activate" handler="item_open_url" swapped="no"/>
+                <accelerator key="o" signal="activate" modifiers="GDK_CONTROL_MASK"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuItem" id="mnuItemCopyURL">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Копировать адрес сайта с описанием товара</property>
+                <property name="use_underline">True</property>
+                <signal name="activate" handler="item_copy_url" swapped="no"/>
+                <accelerator key="c" signal="activate" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuItem" id="mnuItemCopyAsText">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="tooltip_text" translatable="yes">Копировать в буфер обмена название выбранного товара (и вложенных) в виде текста</property>
+                <property name="label" translatable="yes">Копировать название товара</property>
+                <property name="use_underline">True</property>
+                <signal name="activate" handler="item_copy_as_text" swapped="no"/>
+                <accelerator key="Insert" signal="activate" modifiers="GDK_CONTROL_MASK"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkSeparatorMenuItem">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuItem" id="mnuItemMoveToTop">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Переместить товар в начало списка</property>
+                <property name="use_underline">True</property>
+                <signal name="activate" handler="item_to_top" swapped="no"/>
+                <accelerator key="Home" signal="activate" modifiers="GDK_CONTROL_MASK"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuItem" id="mnuItemMoveUp">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Переместить товар вверх</property>
+                <property name="use_underline">True</property>
+                <signal name="activate" handler="item_up" swapped="no"/>
+                <accelerator key="Up" signal="activate" modifiers="GDK_CONTROL_MASK"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuItem" id="mnuItemMoveDown">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Переместить товар вниз</property>
+                <property name="use_underline">True</property>
+                <signal name="activate" handler="item_down" swapped="no"/>
+                <accelerator key="Down" signal="activate" modifiers="GDK_CONTROL_MASK"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuItem" id="mnuItemMoveToBottom">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Переместить товар в конец списка</property>
+                <property name="use_underline">True</property>
+                <signal name="activate" handler="item_to_bottom" swapped="no"/>
+                <accelerator key="End" signal="activate" modifiers="GDK_CONTROL_MASK"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkSeparatorMenuItem">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuItem" id="mnuItemSelectAll">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Выделить все товары</property>
+                <property name="use_underline">True</property>
+                <signal name="activate" handler="item_select_all" swapped="no"/>
+                <accelerator key="a" signal="activate" modifiers="GDK_CONTROL_MASK"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuItem" id="mnuItemUnselectAll">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Снять выделение со всех товаров</property>
+                <property name="use_underline">True</property>
+                <signal name="activate" handler="item_unselect_all" swapped="no"/>
+                <accelerator key="a" signal="activate" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuItem" id="mnuItemExpandAll">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Развернуть все</property>
+                <property name="use_underline">True</property>
+                <signal name="activate" handler="item_expand_all" swapped="no"/>
+                <accelerator key="x" signal="activate" modifiers="GDK_MOD1_MASK"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuItem" id="mnuItemCollapseAll">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Свернуть все</property>
+                <property name="use_underline">True</property>
+                <signal name="activate" handler="item_collapse_all" swapped="no"/>
+                <accelerator key="c" signal="activate" modifiers="GDK_MOD1_MASK"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuItem" id="mnuItemRandomChoice">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Случайный выбор</property>
+                <property name="use_underline">True</property>
+                <signal name="activate" handler="item_random_choice" swapped="no"/>
+                <accelerator key="r" signal="activate" modifiers="GDK_MOD1_MASK"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkSeparatorMenuItem">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuItem" id="mnuItemRemove">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Удалить товар из списка</property>
+                <property name="use_underline">True</property>
+                <signal name="activate" handler="item_delete" swapped="no"/>
+                <accelerator key="Delete" signal="activate" modifiers="GDK_CONTROL_MASK"/>
+              </object>
+            </child>
+            <child>
+              <object class="GtkMenuItem" id="mnuRefillCash">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="tooltip_text" translatable="yes">Добавить к наличной сумме планируемое пополнение</property>
+                <property name="label" translatable="yes">Пополнить наличную сумму</property>
+                <property name="use_underline">True</property>
+                <signal name="activate" handler="do_refill_cash" swapped="no"/>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+    </child>
   </object>
   <object class="GtkTreeStore" id="wishlist">
     <columns>
@@ -89,392 +472,16 @@
         <property name="spacing">4</property>
         <property name="show_close_button">True</property>
         <child>
-          <object class="GtkMenuBar" id="menu">
+          <object class="GtkMenuButton">
             <property name="visible">True</property>
-            <property name="can_focus">False</property>
+            <property name="can_focus">True</property>
+            <property name="focus_on_click">False</property>
+            <property name="receives_default">True</property>
+            <property name="popup">mnuMain</property>
             <child>
-              <object class="GtkMenuItem" id="mnuFile">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="label" translatable="yes">Файл</property>
-                <property name="use_underline">True</property>
-                <child type="submenu">
-                  <object class="GtkMenu">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <child>
-                      <object class="GtkMenuItem" id="mnuFileOpen">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Открыть</property>
-                        <property name="use_underline">True</property>
-                        <signal name="activate" handler="file_open" swapped="no"/>
-                        <accelerator key="o" signal="activate" modifiers="GDK_CONTROL_MASK"/>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="mnuFileSave">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Сохранить</property>
-                        <property name="use_underline">True</property>
-                        <signal name="activate" handler="file_save" swapped="no"/>
-                        <accelerator key="s" signal="activate" modifiers="GDK_CONTROL_MASK"/>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="mnuFileSaveAs">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Сохранить как...</property>
-                        <property name="use_underline">True</property>
-                        <signal name="activate" handler="file_save_as" swapped="no"/>
-                        <accelerator key="s" signal="activate" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkSeparatorMenuItem">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="mnuFileEditComment">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Изменить описание копилки</property>
-                        <property name="use_underline">True</property>
-                        <signal name="activate" handler="file_edit_comment" swapped="no"/>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="mnuFileAbout">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">О программе...</property>
-                        <property name="use_underline">True</property>
-                        <signal name="activate" handler="about_program" swapped="no"/>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkSeparatorMenuItem">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="mnuExit">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Выход</property>
-                        <property name="use_underline">True</property>
-                        <signal name="activate" handler="file_exit" swapped="no"/>
-                        <accelerator key="q" signal="activate" modifiers="GDK_CONTROL_MASK"/>
-                      </object>
-                    </child>
-                  </object>
-                </child>
-              </object>
-            </child>
-            <child>
-              <object class="GtkMenuItem" id="mnuItem">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="label" translatable="yes">Товар</property>
-                <property name="use_underline">True</property>
-                <child type="submenu">
-                  <object class="GtkMenu">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <child>
-                      <object class="GtkMenuItem" id="mnuItemAdd">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Новый товар</property>
-                        <property name="use_underline">True</property>
-                        <signal name="activate" handler="item_add" swapped="no"/>
-                        <accelerator key="n" signal="activate" modifiers="GDK_CONTROL_MASK"/>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="mnuItemAddSubItem">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Добавить новый товар к выбранному</property>
-                        <property name="use_underline">True</property>
-                        <signal name="activate" handler="item_add_subitem" swapped="no"/>
-                        <accelerator key="n" signal="activate" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="mnuItemEdit">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Изменить товар</property>
-                        <property name="use_underline">True</property>
-                        <signal name="activate" handler="item_edit" swapped="no"/>
-                        <accelerator key="e" signal="activate" modifiers="GDK_CONTROL_MASK"/>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="mnuItemToggleInCartPaid">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Пометить товар...</property>
-                        <property name="use_underline">True</property>
-                        <child type="submenu">
-                          <object class="GtkMenu">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <child>
-                              <object class="GtkMenuItem" id="mnuItemToggleInCart">
-                                <property name="visible">True</property>
-                                <property name="can_focus">False</property>
-                                <property name="label" translatable="yes">Пометить товар как (не)заказанный</property>
-                                <property name="use_underline">True</property>
-                                <signal name="activate" handler="item_toggle_incart" swapped="no"/>
-                                <accelerator key="t" signal="activate" modifiers="GDK_CONTROL_MASK"/>
-                              </object>
-                            </child>
-                            <child>
-                              <object class="GtkMenuItem" id="mnuItemTogglePaid">
-                                <property name="visible">True</property>
-                                <property name="can_focus">False</property>
-                                <property name="label" translatable="yes">Пометить товар как (не)оплаченный</property>
-                                <property name="use_underline">True</property>
-                                <signal name="activate" handler="item_toggle_paid" swapped="no"/>
-                                <accelerator key="p" signal="activate" modifiers="GDK_CONTROL_MASK"/>
-                              </object>
-                            </child>
-                          </object>
-                        </child>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="mnuItemImportance">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Важность...</property>
-                        <property name="use_underline">True</property>
-                        <signal name="activate" handler="item_choose_importance" swapped="no"/>
-                        <signal name="deselect" handler="on_mnuItemImportance_deselect" swapped="no"/>
-                        <signal name="select" handler="on_mnuItemImportance_select" swapped="no"/>
-                        <accelerator key="i" signal="activate" modifiers="GDK_CONTROL_MASK"/>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="mnuItemPurchased">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Убрать купленный товар из списка</property>
-                        <property name="use_underline">True</property>
-                        <signal name="activate" handler="item_purchased" swapped="no"/>
-                        <accelerator key="p" signal="activate" modifiers="GDK_CONTROL_MASK"/>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkSeparatorMenuItem">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="mnuItemCopy">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Копировать</property>
-                        <property name="use_underline">True</property>
-                        <signal name="activate" handler="item_copy" swapped="no"/>
-                        <accelerator key="c" signal="activate" modifiers="GDK_CONTROL_MASK"/>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="mnuItemPaste">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Вставить</property>
-                        <property name="use_underline">True</property>
-                        <signal name="activate" handler="item_paste" swapped="no"/>
-                        <accelerator key="v" signal="activate" modifiers="GDK_CONTROL_MASK"/>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="mnuItemPasteInto">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Вставить в выбранный</property>
-                        <property name="use_underline">True</property>
-                        <signal name="activate" handler="item_paste_into_selected" swapped="no"/>
-                        <accelerator key="v" signal="activate" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="mnuItemOpenURL">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Открыть сайт с описанием товара</property>
-                        <property name="use_underline">True</property>
-                        <signal name="activate" handler="item_open_url" swapped="no"/>
-                        <accelerator key="o" signal="activate" modifiers="GDK_CONTROL_MASK"/>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="mnuItemCopyURL">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Копировать адрес сайта с описанием товара</property>
-                        <property name="use_underline">True</property>
-                        <signal name="activate" handler="item_copy_url" swapped="no"/>
-                        <accelerator key="c" signal="activate" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="mnuItemCopyAsText">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Копировать в буфер обмена название выбранного товара (и вложенных) в виде текста</property>
-                        <property name="label" translatable="yes">Копировать название товара</property>
-                        <property name="use_underline">True</property>
-                        <signal name="activate" handler="item_copy_as_text" swapped="no"/>
-                        <accelerator key="Insert" signal="activate" modifiers="GDK_CONTROL_MASK"/>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkSeparatorMenuItem">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="mnuItemMoveToTop">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Переместить товар в начало списка</property>
-                        <property name="use_underline">True</property>
-                        <signal name="activate" handler="item_to_top" swapped="no"/>
-                        <accelerator key="Home" signal="activate" modifiers="GDK_CONTROL_MASK"/>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="mnuItemMoveUp">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Переместить товар вверх</property>
-                        <property name="use_underline">True</property>
-                        <signal name="activate" handler="item_up" swapped="no"/>
-                        <accelerator key="Up" signal="activate" modifiers="GDK_CONTROL_MASK"/>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="mnuItemMoveDown">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Переместить товар вниз</property>
-                        <property name="use_underline">True</property>
-                        <signal name="activate" handler="item_down" swapped="no"/>
-                        <accelerator key="Down" signal="activate" modifiers="GDK_CONTROL_MASK"/>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="mnuItemMoveToBottom">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Переместить товар в конец списка</property>
-                        <property name="use_underline">True</property>
-                        <signal name="activate" handler="item_to_bottom" swapped="no"/>
-                        <accelerator key="End" signal="activate" modifiers="GDK_CONTROL_MASK"/>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkSeparatorMenuItem">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="mnuItemSelectAll">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Выделить все товары</property>
-                        <property name="use_underline">True</property>
-                        <signal name="activate" handler="item_select_all" swapped="no"/>
-                        <accelerator key="a" signal="activate" modifiers="GDK_CONTROL_MASK"/>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="mnuItemUnselectAll">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Снять выделение со всех товаров</property>
-                        <property name="use_underline">True</property>
-                        <signal name="activate" handler="item_unselect_all" swapped="no"/>
-                        <accelerator key="a" signal="activate" modifiers="GDK_SHIFT_MASK | GDK_CONTROL_MASK"/>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="mnuItemExpandAll">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Развернуть все</property>
-                        <property name="use_underline">True</property>
-                        <signal name="activate" handler="item_expand_all" swapped="no"/>
-                        <accelerator key="x" signal="activate" modifiers="GDK_MOD1_MASK"/>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="mnuItemCollapseAll">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Свернуть все</property>
-                        <property name="use_underline">True</property>
-                        <signal name="activate" handler="item_collapse_all" swapped="no"/>
-                        <accelerator key="c" signal="activate" modifiers="GDK_MOD1_MASK"/>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="mnuItemRandomChoice">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Случайный выбор</property>
-                        <property name="use_underline">True</property>
-                        <signal name="activate" handler="item_random_choice" swapped="no"/>
-                        <accelerator key="r" signal="activate" modifiers="GDK_MOD1_MASK"/>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkSeparatorMenuItem">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="mnuItemRemove">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Удалить товар из списка</property>
-                        <property name="use_underline">True</property>
-                        <signal name="activate" handler="item_delete" swapped="no"/>
-                        <accelerator key="Delete" signal="activate" modifiers="GDK_CONTROL_MASK"/>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkMenuItem" id="mnuRefillCash">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Добавить к наличной сумме планируемое пополнение</property>
-                        <property name="label" translatable="yes">Пополнить наличную сумму</property>
-                        <property name="use_underline">True</property>
-                        <signal name="activate" handler="do_refill_cash" swapped="no"/>
-                      </object>
-                    </child>
-                  </object>
-                </child>
-              </object>
+              <placeholder/>
             </child>
           </object>
-          <packing>
-            <property name="position">1</property>
-          </packing>
         </child>
         <child>
           <object class="GtkSeparator">
@@ -483,6 +490,229 @@
           </object>
           <packing>
             <property name="position">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkToolbar">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="toolbar_style">icons</property>
+            <property name="show_arrow">False</property>
+            <property name="icon_size">2</property>
+            <child>
+              <object class="GtkToolButton" id="btnItemAdd">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="tooltip_text" translatable="yes">Новый товар</property>
+                <property name="use_underline">True</property>
+                <property name="stock_id">gtk-new</property>
+                <signal name="clicked" handler="item_add" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="btnItemAddSubItem">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="tooltip_text" translatable="yes">Добавить новый товар к выбранному</property>
+                <property name="use_underline">True</property>
+                <property name="stock_id">gtk-add</property>
+                <signal name="clicked" handler="item_add_subitem" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="btnItemEdit">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="tooltip_text" translatable="yes">Изменить товар</property>
+                <property name="use_underline">True</property>
+                <property name="stock_id">gtk-edit</property>
+                <signal name="clicked" handler="item_edit" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="btnItemPurchased">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="tooltip_text" translatable="yes">Удалить купленный товар из списка,
+вычтя цену из наличных средств</property>
+                <property name="use_underline">True</property>
+                <property name="stock_id">gtk-remove</property>
+                <signal name="clicked" handler="item_purchased" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="btnItemCopy">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="tooltip_text" translatable="yes">Копировать товар в буфер обмена</property>
+                <property name="use_underline">True</property>
+                <property name="stock_id">gtk-copy</property>
+                <signal name="clicked" handler="item_copy" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="btnItemPaste">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="tooltip_text" translatable="yes">Вставить товар из буфера обмена</property>
+                <property name="use_underline">True</property>
+                <property name="stock_id">gtk-paste</property>
+                <signal name="clicked" handler="item_paste" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="btnItemPasteInto">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="use_underline">True</property>
+                <property name="icon_widget">imgItemPasteInto</property>
+                <signal name="clicked" handler="item_paste_into_selected" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="btnItemOpenURL">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="tooltip_text" translatable="yes">Открыть сайт с описанием товара</property>
+                <property name="use_underline">True</property>
+                <property name="icon_name">applications-internet</property>
+                <signal name="clicked" handler="item_open_url" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkSeparatorToolItem">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="btnItemMoveToTop">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="tooltip_text" translatable="yes">Переместить товар в начало списка</property>
+                <property name="use_underline">True</property>
+                <property name="stock_id">gtk-goto-top</property>
+                <signal name="clicked" handler="item_to_top" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="btnItemMoveUp">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="tooltip_text" translatable="yes">Переместить товар вверх по списку</property>
+                <property name="use_underline">True</property>
+                <property name="stock_id">gtk-go-up</property>
+                <signal name="clicked" handler="item_up" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="btnItemMoveDown">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="tooltip_text" translatable="yes">Переместить товар вниз по списку</property>
+                <property name="use_underline">True</property>
+                <property name="stock_id">gtk-go-down</property>
+                <signal name="clicked" handler="item_down" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="btnItemMoveToBottom">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="tooltip_text" translatable="yes">Переместить товар в конец списка</property>
+                <property name="use_underline">True</property>
+                <property name="stock_id">gtk-goto-bottom</property>
+                <signal name="clicked" handler="item_to_bottom" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkSeparatorToolItem">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="btnItemRemove">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="tooltip_text" translatable="yes">Удалить товар из списка</property>
+                <property name="use_underline">True</property>
+                <property name="icon_name">user-trash</property>
+                <signal name="clicked" handler="item_delete" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="position">2</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkSeparator">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+          </object>
+          <packing>
+            <property name="position">3</property>
           </packing>
         </child>
       </object>
@@ -494,431 +724,167 @@
         <property name="orientation">vertical</property>
         <property name="spacing">4</property>
         <child>
-          <object class="GtkBox" id="wlhbox">
+          <object class="GtkScrolledWindow" id="scrolledwindow">
             <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <property name="spacing">4</property>
+            <property name="can_focus">True</property>
+            <property name="hscrollbar_policy">never</property>
+            <property name="shadow_type">in</property>
             <child>
-              <object class="GtkBox">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="orientation">vertical</property>
-                <child>
-                  <object class="GtkToolbar">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="orientation">vertical</property>
-                    <property name="toolbar_style">icons</property>
-                    <property name="show_arrow">False</property>
-                    <property name="icon_size">2</property>
-                    <child>
-                      <object class="GtkToolButton" id="btnItemAdd">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Новый товар</property>
-                        <property name="use_underline">True</property>
-                        <property name="stock_id">gtk-new</property>
-                        <signal name="clicked" handler="item_add" swapped="no"/>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="homogeneous">True</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkToolButton" id="btnItemAddSubItem">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Добавить новый товар к выбранному</property>
-                        <property name="use_underline">True</property>
-                        <property name="stock_id">gtk-add</property>
-                        <signal name="clicked" handler="item_add_subitem" swapped="no"/>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="homogeneous">True</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkToolButton" id="btnItemEdit">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Изменить товар</property>
-                        <property name="use_underline">True</property>
-                        <property name="stock_id">gtk-edit</property>
-                        <signal name="clicked" handler="item_edit" swapped="no"/>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="homogeneous">True</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkToolButton" id="btnItemPurchased">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Удалить купленный товар из списка,
-вычтя цену из наличных средств</property>
-                        <property name="use_underline">True</property>
-                        <property name="stock_id">gtk-remove</property>
-                        <signal name="clicked" handler="item_purchased" swapped="no"/>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="homogeneous">True</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkToolButton" id="btnItemCopy">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Копировать товар в буфер обмена</property>
-                        <property name="use_underline">True</property>
-                        <property name="stock_id">gtk-copy</property>
-                        <signal name="clicked" handler="item_copy" swapped="no"/>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="homogeneous">True</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkToolButton" id="btnItemPaste">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Вставить товар из буфера обмена</property>
-                        <property name="use_underline">True</property>
-                        <property name="stock_id">gtk-paste</property>
-                        <signal name="clicked" handler="item_paste" swapped="no"/>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="homogeneous">True</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkToolButton" id="btnItemPasteInto">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="use_underline">True</property>
-                        <property name="icon_widget">imgItemPasteInto</property>
-                        <signal name="clicked" handler="item_paste_into_selected" swapped="no"/>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="homogeneous">True</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkToolButton" id="btnItemOpenURL">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Открыть сайт с описанием товара</property>
-                        <property name="use_underline">True</property>
-                        <property name="icon_name">applications-internet</property>
-                        <signal name="clicked" handler="item_open_url" swapped="no"/>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="homogeneous">True</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkSeparatorToolItem">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="homogeneous">True</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkToolButton" id="btnItemMoveToTop">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Переместить товар в начало списка</property>
-                        <property name="use_underline">True</property>
-                        <property name="stock_id">gtk-goto-top</property>
-                        <signal name="clicked" handler="item_to_top" swapped="no"/>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="homogeneous">True</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkToolButton" id="btnItemMoveUp">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Переместить товар вверх по списку</property>
-                        <property name="use_underline">True</property>
-                        <property name="stock_id">gtk-go-up</property>
-                        <signal name="clicked" handler="item_up" swapped="no"/>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="homogeneous">True</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkToolButton" id="btnItemMoveDown">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Переместить товар вниз по списку</property>
-                        <property name="use_underline">True</property>
-                        <property name="stock_id">gtk-go-down</property>
-                        <signal name="clicked" handler="item_down" swapped="no"/>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="homogeneous">True</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkToolButton" id="btnItemMoveToBottom">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Переместить товар в конец списка</property>
-                        <property name="use_underline">True</property>
-                        <property name="stock_id">gtk-goto-bottom</property>
-                        <signal name="clicked" handler="item_to_bottom" swapped="no"/>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="homogeneous">True</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkSeparatorToolItem">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="homogeneous">True</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkSeparatorToolItem">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="draw">False</property>
-                      </object>
-                      <packing>
-                        <property name="expand">True</property>
-                        <property name="homogeneous">True</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkToolButton" id="btnItemRemove">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Удалить товар из списка</property>
-                        <property name="use_underline">True</property>
-                        <property name="icon_name">user-trash</property>
-                        <signal name="clicked" handler="item_delete" swapped="no"/>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="homogeneous">True</property>
-                      </packing>
-                    </child>
-                  </object>
-                  <packing>
-                    <property name="expand">True</property>
-                    <property name="fill">True</property>
-                    <property name="position">0</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkSeparator">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="pack_type">end</property>
-                    <property name="position">1</property>
-                  </packing>
-                </child>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">0</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkScrolledWindow" id="scrolledwindow">
+              <object class="GtkTreeView" id="wishlistview">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
-                <property name="hscrollbar_policy">never</property>
-                <property name="shadow_type">in</property>
+                <property name="model">wishlist</property>
+                <property name="expander_column">colItemName</property>
+                <property name="reorderable">True</property>
+                <property name="enable_grid_lines">both</property>
+                <property name="enable_tree_lines">True</property>
+                <signal name="button-press-event" handler="wl_button_press_event" swapped="no"/>
+                <signal name="drag-end" handler="wl_drag_end" swapped="no"/>
+                <signal name="popup-menu" handler="wl_popup_menu" swapped="no"/>
+                <signal name="row-activated" handler="wl_row_activated" swapped="no"/>
+                <child internal-child="selection">
+                  <object class="GtkTreeSelection" id="wishlistviewsel">
+                    <signal name="changed" handler="wishlistviewsel_changed" swapped="no"/>
+                  </object>
+                </child>
                 <child>
-                  <object class="GtkTreeView" id="wishlistview">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="model">wishlist</property>
-                    <property name="expander_column">colItemName</property>
-                    <property name="reorderable">True</property>
-                    <property name="enable_grid_lines">both</property>
-                    <property name="enable_tree_lines">True</property>
-                    <signal name="button-press-event" handler="wl_button_press_event" swapped="no"/>
-                    <signal name="drag-end" handler="wl_drag_end" swapped="no"/>
-                    <signal name="popup-menu" handler="wl_popup_menu" swapped="no"/>
-                    <signal name="row-activated" handler="wl_row_activated" swapped="no"/>
-                    <child internal-child="selection">
-                      <object class="GtkTreeSelection" id="wishlistviewsel">
-                        <signal name="changed" handler="wishlistviewsel_changed" swapped="no"/>
-                      </object>
-                    </child>
+                  <object class="GtkTreeViewColumn" id="colItemSelect">
+                    <property name="clickable">True</property>
+                    <property name="widget">cbSelectAll</property>
+                    <signal name="clicked" handler="on_colItemSelect_clicked" swapped="no"/>
                     <child>
-                      <object class="GtkTreeViewColumn" id="colItemSelect">
-                        <property name="clickable">True</property>
-                        <property name="widget">cbSelectAll</property>
-                        <signal name="clicked" handler="on_colItemSelect_clicked" swapped="no"/>
-                        <child>
-                          <object class="GtkCellRendererToggle" id="crSelectedCB">
-                            <signal name="toggled" handler="wl_item_selected_toggled" swapped="no"/>
-                          </object>
-                          <attributes>
-                            <attribute name="active">10</attribute>
-                            <attribute name="inconsistent">12</attribute>
-                          </attributes>
-                        </child>
+                      <object class="GtkCellRendererToggle" id="crSelectedCB">
+                        <signal name="toggled" handler="wl_item_selected_toggled" swapped="no"/>
                       </object>
+                      <attributes>
+                        <attribute name="active">10</attribute>
+                        <attribute name="inconsistent">12</attribute>
+                      </attributes>
                     </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkTreeViewColumn" id="colItemInCart">
+                    <property name="widget">imgCart</property>
                     <child>
-                      <object class="GtkTreeViewColumn" id="colItemInCart">
-                        <property name="widget">imgCart</property>
-                        <child>
-                          <object class="GtkCellRendererPixbuf" id="crInCart"/>
-                          <attributes>
-                            <attribute name="pixbuf">11</attribute>
-                          </attributes>
-                        </child>
+                      <object class="GtkCellRendererPixbuf" id="crInCart"/>
+                      <attributes>
+                        <attribute name="pixbuf">11</attribute>
+                      </attributes>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkTreeViewColumn" id="colItemImportance">
+                    <property name="widget">imgImportance</property>
+                    <child>
+                      <object class="GtkCellRendererPixbuf" id="crItemImportance"/>
+                      <attributes>
+                        <attribute name="pixbuf">9</attribute>
+                      </attributes>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkTreeViewColumn" id="colItemName">
+                    <property name="spacing">4</property>
+                    <property name="sizing">autosize</property>
+                    <property name="title" translatable="yes">Название</property>
+                    <property name="expand">True</property>
+                    <child>
+                      <object class="GtkCellRendererText" id="crName"/>
+                      <attributes>
+                        <attribute name="markup">1</attribute>
+                      </attributes>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkTreeViewColumn" id="colItemCost">
+                    <property name="title" translatable="yes">Цена</property>
+                    <property name="alignment">0.5</property>
+                    <child>
+                      <object class="GtkCellRendererText" id="crCost">
+                        <property name="xalign">1</property>
+                        <property name="alignment">right</property>
                       </object>
+                      <attributes>
+                        <attribute name="text">2</attribute>
+                      </attributes>
                     </child>
-                    <child>
-                      <object class="GtkTreeViewColumn" id="colItemImportance">
-                        <property name="widget">imgImportance</property>
-                        <child>
-                          <object class="GtkCellRendererPixbuf" id="crItemImportance"/>
-                          <attributes>
-                            <attribute name="pixbuf">9</attribute>
-                          </attributes>
-                        </child>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkTreeViewColumn" id="colItemName">
-                        <property name="spacing">4</property>
-                        <property name="sizing">autosize</property>
-                        <property name="title" translatable="yes">Название</property>
-                        <property name="expand">True</property>
-                        <child>
-                          <object class="GtkCellRendererText" id="crName"/>
-                          <attributes>
-                            <attribute name="markup">1</attribute>
-                          </attributes>
-                        </child>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkTreeViewColumn" id="colItemCost">
-                        <property name="title" translatable="yes">Цена</property>
-                        <property name="alignment">0.5</property>
-                        <child>
-                          <object class="GtkCellRendererText" id="crCost">
-                            <property name="xalign">1</property>
-                            <property name="alignment">right</property>
-                          </object>
-                          <attributes>
-                            <attribute name="text">2</attribute>
-                          </attributes>
-                        </child>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkTreeViewColumn" id="colItemQuantity">
-                        <property name="title" translatable="yes">Кол-
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkTreeViewColumn" id="colItemQuantity">
+                    <property name="title" translatable="yes">Кол-
 во</property>
-                        <property name="alignment">1</property>
-                        <child>
-                          <object class="GtkCellRendererText" id="crQuantity">
-                            <property name="xalign">1</property>
-                            <property name="alignment">right</property>
-                          </object>
-                          <attributes>
-                            <attribute name="text">7</attribute>
-                          </attributes>
-                        </child>
+                    <property name="alignment">1</property>
+                    <child>
+                      <object class="GtkCellRendererText" id="crQuantity">
+                        <property name="xalign">1</property>
+                        <property name="alignment">right</property>
                       </object>
+                      <attributes>
+                        <attribute name="text">7</attribute>
+                      </attributes>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkTreeViewColumn" id="colItemSum">
+                    <property name="title" translatable="yes">Сумма</property>
+                    <property name="alignment">1</property>
+                    <child>
+                      <object class="GtkCellRendererText" id="crSum">
+                        <property name="xalign">1</property>
+                        <property name="alignment">right</property>
+                      </object>
+                      <attributes>
+                        <attribute name="text">8</attribute>
+                      </attributes>
+                    </child>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkTreeViewColumn" id="colItemNeedCash">
+                    <property name="spacing">4</property>
+                    <property name="title" translatable="yes">Не хватает</property>
+                    <property name="alignment">0.5</property>
+                    <child>
+                      <object class="GtkCellRendererPixbuf" id="crNeededIcon"/>
+                      <attributes>
+                        <attribute name="pixbuf">4</attribute>
+                      </attributes>
                     </child>
                     <child>
-                      <object class="GtkTreeViewColumn" id="colItemSum">
-                        <property name="title" translatable="yes">Сумма</property>
-                        <property name="alignment">1</property>
-                        <child>
-                          <object class="GtkCellRendererText" id="crSum">
-                            <property name="xalign">1</property>
-                            <property name="alignment">right</property>
-                          </object>
-                          <attributes>
-                            <attribute name="text">8</attribute>
-                          </attributes>
-                        </child>
+                      <object class="GtkCellRendererText" id="crNeeded">
+                        <property name="xalign">0</property>
                       </object>
+                      <attributes>
+                        <attribute name="text">3</attribute>
+                      </attributes>
                     </child>
-                    <child>
-                      <object class="GtkTreeViewColumn" id="colItemNeedCash">
-                        <property name="spacing">4</property>
-                        <property name="title" translatable="yes">Не хватает</property>
-                        <property name="alignment">0.5</property>
-                        <child>
-                          <object class="GtkCellRendererPixbuf" id="crNeededIcon"/>
-                          <attributes>
-                            <attribute name="pixbuf">4</attribute>
-                          </attributes>
-                        </child>
-                        <child>
-                          <object class="GtkCellRendererText" id="crNeeded">
-                            <property name="xalign">0</property>
-                          </object>
-                          <attributes>
-                            <attribute name="text">3</attribute>
-                          </attributes>
-                        </child>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="GtkTreeViewColumn" id="colItemNeedMonths">
-                        <property name="spacing">4</property>
-                        <property name="title" translatable="yes">Копить
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkTreeViewColumn" id="colItemNeedMonths">
+                    <property name="spacing">4</property>
+                    <property name="title" translatable="yes">Копить
 (мес.)</property>
-                        <property name="alignment">1</property>
-                        <child>
-                          <object class="GtkCellRendererText" id="crNeedMonths">
-                            <property name="xalign">1</property>
-                            <property name="alignment">right</property>
-                            <property name="single_paragraph_mode">True</property>
-                          </object>
-                          <attributes>
-                            <attribute name="text">5</attribute>
-                          </attributes>
-                        </child>
+                    <property name="alignment">1</property>
+                    <child>
+                      <object class="GtkCellRendererText" id="crNeedMonths">
+                        <property name="xalign">1</property>
+                        <property name="alignment">right</property>
+                        <property name="single_paragraph_mode">True</property>
                       </object>
+                      <attributes>
+                        <attribute name="text">5</attribute>
+                      </attributes>
                     </child>
                   </object>
                 </child>
               </object>
-              <packing>
-                <property name="expand">True</property>
-                <property name="fill">True</property>
-                <property name="position">1</property>
-              </packing>
             </child>
           </object>
           <packing>
@@ -1387,7 +1353,7 @@
     <property name="transient_for">wndMain</property>
     <property name="create_folders">False</property>
     <property name="filter">filefilterJSON</property>
-    <child>
+    <child type="titlebar">
       <placeholder/>
     </child>
     <child internal-child="vbox">
@@ -1452,7 +1418,7 @@
     <property name="action">save</property>
     <property name="do_overwrite_confirmation">True</property>
     <property name="filter">filefilterJSON</property>
-    <child>
+    <child type="titlebar">
       <placeholder/>
     </child>
     <child internal-child="vbox">
