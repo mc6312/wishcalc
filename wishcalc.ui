@@ -30,12 +30,6 @@
     <property name="stock">gtk-missing-image</property>
     <property name="icon_size">1</property>
   </object>
-  <object class="GtkImage" id="imgItemPasteInto">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="tooltip_text" translatable="yes">Вставить товар из буфера обмена в выбранный товар</property>
-    <property name="stock">gtk-missing-image</property>
-  </object>
   <object class="GtkImage" id="imgbtnRefillCash">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -478,241 +472,334 @@
             <property name="focus_on_click">False</property>
             <property name="receives_default">True</property>
             <property name="popup">mnuMain</property>
+            <property name="use_popover">False</property>
             <child>
-              <placeholder/>
+              <object class="GtkImage">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="icon_name">open-menu-symbolic</property>
+              </object>
             </child>
           </object>
         </child>
         <child>
-          <object class="GtkSeparator">
+          <object class="GtkBox" id="boxEditBtns">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
+            <child>
+              <object class="GtkButton" id="btnItemAdd">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="receives_default">False</property>
+                <property name="tooltip_text" translatable="yes">Новый товар</property>
+                <signal name="clicked" handler="item_add" swapped="no"/>
+                <child>
+                  <object class="GtkImage" id="imgItemAdd">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="icon_name">document-new-symbolic</property>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="btnItemAddSubItem">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="receives_default">False</property>
+                <property name="tooltip_text" translatable="yes">Добавить новый товар к выбранному</property>
+                <property name="use_underline">True</property>
+                <signal name="clicked" handler="item_add_subitem" swapped="no"/>
+                <child>
+                  <object class="GtkImage" id="imgItemAddSubItem">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="icon_name">list-add-symbolic</property>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="btnItemEdit">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="receives_default">False</property>
+                <property name="tooltip_text" translatable="yes">Изменить товар</property>
+                <property name="use_underline">True</property>
+                <signal name="clicked" handler="item_edit" swapped="no"/>
+                <child>
+                  <object class="GtkImage" id="imgItemEdit">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="icon_name">accessories-text-editor-symbolic</property>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="btnItemPurchased">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="receives_default">False</property>
+                <property name="tooltip_text" translatable="yes">Удалить купленный товар из списка,
+вычтя цену из наличных средств</property>
+                <property name="use_underline">True</property>
+                <signal name="clicked" handler="item_purchased" swapped="no"/>
+                <child>
+                  <object class="GtkImage" id="imgItemPurchased">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="icon_name">list-remove-symbolic</property>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">3</property>
+              </packing>
+            </child>
+            <style>
+              <class name="linked"/>
+            </style>
           </object>
           <packing>
             <property name="position">1</property>
           </packing>
         </child>
         <child>
-          <object class="GtkToolbar">
+          <object class="GtkBox" id="boxCopyCtls">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="toolbar_style">icons</property>
-            <property name="show_arrow">False</property>
-            <property name="icon_size">2</property>
             <child>
-              <object class="GtkToolButton" id="btnItemAdd">
+              <object class="GtkButton" id="btnItemCopy">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="tooltip_text" translatable="yes">Новый товар</property>
-                <property name="use_underline">True</property>
-                <property name="stock_id">gtk-new</property>
-                <signal name="clicked" handler="item_add" swapped="no"/>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="homogeneous">True</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkToolButton" id="btnItemAddSubItem">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="tooltip_text" translatable="yes">Добавить новый товар к выбранному</property>
-                <property name="use_underline">True</property>
-                <property name="stock_id">gtk-add</property>
-                <signal name="clicked" handler="item_add_subitem" swapped="no"/>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="homogeneous">True</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkToolButton" id="btnItemEdit">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="tooltip_text" translatable="yes">Изменить товар</property>
-                <property name="use_underline">True</property>
-                <property name="stock_id">gtk-edit</property>
-                <signal name="clicked" handler="item_edit" swapped="no"/>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="homogeneous">True</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkToolButton" id="btnItemPurchased">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="tooltip_text" translatable="yes">Удалить купленный товар из списка,
-вычтя цену из наличных средств</property>
-                <property name="use_underline">True</property>
-                <property name="stock_id">gtk-remove</property>
-                <signal name="clicked" handler="item_purchased" swapped="no"/>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="homogeneous">True</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkToolButton" id="btnItemCopy">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
+                <property name="receives_default">False</property>
                 <property name="tooltip_text" translatable="yes">Копировать товар в буфер обмена</property>
                 <property name="use_underline">True</property>
-                <property name="stock_id">gtk-copy</property>
                 <signal name="clicked" handler="item_copy" swapped="no"/>
+                <child>
+                  <object class="GtkImage" id="imgItemCopy">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="icon_name">edit-copy-symbolic</property>
+                  </object>
+                </child>
               </object>
               <packing>
                 <property name="expand">False</property>
-                <property name="homogeneous">True</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
               </packing>
             </child>
             <child>
-              <object class="GtkToolButton" id="btnItemPaste">
+              <object class="GtkButton" id="btnItemPaste">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="receives_default">False</property>
                 <property name="tooltip_text" translatable="yes">Вставить товар из буфера обмена</property>
                 <property name="use_underline">True</property>
-                <property name="stock_id">gtk-paste</property>
                 <signal name="clicked" handler="item_paste" swapped="no"/>
+                <child>
+                  <object class="GtkImage" id="imgItemPaste">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="icon_name">edit-paste-symbolic</property>
+                  </object>
+                </child>
               </object>
               <packing>
                 <property name="expand">False</property>
-                <property name="homogeneous">True</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
               </packing>
             </child>
             <child>
-              <object class="GtkToolButton" id="btnItemPasteInto">
+              <object class="GtkButton" id="btnItemPasteInto">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="receives_default">False</property>
                 <property name="use_underline">True</property>
-                <property name="icon_widget">imgItemPasteInto</property>
                 <signal name="clicked" handler="item_paste_into_selected" swapped="no"/>
+                <child>
+                  <object class="GtkImage" id="imgItemPasteInto">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="tooltip_text" translatable="yes">Вставить товар из буфера обмена в выбранный товар</property>
+                    <property name="stock">gtk-missing-image</property>
+                  </object>
+                </child>
               </object>
               <packing>
                 <property name="expand">False</property>
-                <property name="homogeneous">True</property>
+                <property name="fill">True</property>
+                <property name="position">2</property>
               </packing>
             </child>
-            <child>
-              <object class="GtkToolButton" id="btnItemOpenURL">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="tooltip_text" translatable="yes">Открыть сайт с описанием товара</property>
-                <property name="use_underline">True</property>
-                <property name="icon_name">applications-internet</property>
-                <signal name="clicked" handler="item_open_url" swapped="no"/>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="homogeneous">True</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkSeparatorToolItem">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="homogeneous">True</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkToolButton" id="btnItemMoveToTop">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="tooltip_text" translatable="yes">Переместить товар в начало списка</property>
-                <property name="use_underline">True</property>
-                <property name="stock_id">gtk-goto-top</property>
-                <signal name="clicked" handler="item_to_top" swapped="no"/>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="homogeneous">True</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkToolButton" id="btnItemMoveUp">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="tooltip_text" translatable="yes">Переместить товар вверх по списку</property>
-                <property name="use_underline">True</property>
-                <property name="stock_id">gtk-go-up</property>
-                <signal name="clicked" handler="item_up" swapped="no"/>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="homogeneous">True</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkToolButton" id="btnItemMoveDown">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="tooltip_text" translatable="yes">Переместить товар вниз по списку</property>
-                <property name="use_underline">True</property>
-                <property name="stock_id">gtk-go-down</property>
-                <signal name="clicked" handler="item_down" swapped="no"/>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="homogeneous">True</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkToolButton" id="btnItemMoveToBottom">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="tooltip_text" translatable="yes">Переместить товар в конец списка</property>
-                <property name="use_underline">True</property>
-                <property name="stock_id">gtk-goto-bottom</property>
-                <signal name="clicked" handler="item_to_bottom" swapped="no"/>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="homogeneous">True</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkSeparatorToolItem">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="homogeneous">True</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkToolButton" id="btnItemRemove">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="tooltip_text" translatable="yes">Удалить товар из списка</property>
-                <property name="use_underline">True</property>
-                <property name="icon_name">user-trash</property>
-                <signal name="clicked" handler="item_delete" swapped="no"/>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="homogeneous">True</property>
-              </packing>
-            </child>
+            <style>
+              <class name="linked"/>
+            </style>
           </object>
           <packing>
             <property name="position">2</property>
           </packing>
         </child>
         <child>
-          <object class="GtkSeparator">
+          <object class="GtkButton" id="btnItemOpenURL">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
+            <property name="receives_default">False</property>
+            <property name="tooltip_text" translatable="yes">Открыть сайт с описанием товара</property>
+            <property name="use_underline">True</property>
+            <signal name="clicked" handler="item_open_url" swapped="no"/>
+            <child>
+              <object class="GtkImage" id="imgItemOpenURL">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="icon_name">applications-internet-symbolic</property>
+              </object>
+            </child>
           </object>
           <packing>
             <property name="position">3</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="btnItemRemove">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="receives_default">False</property>
+            <property name="tooltip_text" translatable="yes">Удалить товар из списка</property>
+            <property name="use_underline">True</property>
+            <signal name="clicked" handler="item_delete" swapped="no"/>
+            <child>
+              <object class="GtkImage" id="imgItemRemove">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="icon_name">user-trash-symbolic</property>
+              </object>
+            </child>
+          </object>
+          <packing>
+            <property name="pack_type">end</property>
+            <property name="position">5</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkBox" id="boxItemMoveCtls">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <child>
+              <object class="GtkButton" id="btnItemMoveToTop">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="receives_default">False</property>
+                <property name="tooltip_text" translatable="yes">Переместить товар в начало списка</property>
+                <property name="use_underline">True</property>
+                <signal name="clicked" handler="item_to_top" swapped="no"/>
+                <child>
+                  <object class="GtkImage" id="imgItemMoveToTop">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="icon_name">go-top-symbolic</property>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">13</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="btnItemMoveUp">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="receives_default">False</property>
+                <property name="tooltip_text" translatable="yes">Переместить товар вверх по списку</property>
+                <property name="use_underline">True</property>
+                <signal name="clicked" handler="item_up" swapped="no"/>
+                <child>
+                  <object class="GtkImage" id="imgItemMoveUp">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="icon_name">go-up-symbolic</property>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">14</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="btnItemMoveDown">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="receives_default">False</property>
+                <property name="tooltip_text" translatable="yes">Переместить товар вниз по списку</property>
+                <property name="use_underline">True</property>
+                <signal name="clicked" handler="item_down" swapped="no"/>
+                <child>
+                  <object class="GtkImage" id="imgItemMoveDown">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="icon_name">go-down-symbolic</property>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">15</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="btnItemMoveToBottom">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="receives_default">False</property>
+                <property name="tooltip_text" translatable="yes">Переместить товар в конец списка</property>
+                <property name="use_underline">True</property>
+                <signal name="clicked" handler="item_to_bottom" swapped="no"/>
+                <child>
+                  <object class="GtkImage" id="imgItemMoveToBottom">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="icon_name">go-bottom-symbolic</property>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">16</property>
+              </packing>
+            </child>
+            <style>
+              <class name="linked"/>
+            </style>
+          </object>
+          <packing>
+            <property name="pack_type">end</property>
+            <property name="position">5</property>
           </packing>
         </child>
       </object>
@@ -1171,34 +1258,48 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkEntry" id="cashentry">
+                  <object class="GtkBox" id="boxCashEntry">
                     <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="activates_default">True</property>
-                    <property name="width_chars">14</property>
-                    <property name="xalign">1</property>
-                    <signal name="changed" handler="cashentry_changed" swapped="no"/>
+                    <property name="can_focus">False</property>
+                    <child>
+                      <object class="GtkEntry" id="cashentry">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="activates_default">True</property>
+                        <property name="width_chars">14</property>
+                        <property name="xalign">1</property>
+                        <signal name="changed" handler="cashentry_changed" swapped="no"/>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkButton" id="btnRefillCash">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">True</property>
+                        <property name="tooltip_text" translatable="yes">Добавить к наличной сумме планируемое пополнение</property>
+                        <property name="image">imgbtnRefillCash</property>
+                        <property name="always_show_image">True</property>
+                        <signal name="clicked" handler="do_refill_cash" swapped="no"/>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">1</property>
+                      </packing>
+                    </child>
+                    <style>
+                      <class name="linked"/>
+                    </style>
                   </object>
                   <packing>
                     <property name="expand">False</property>
                     <property name="fill">True</property>
                     <property name="position">1</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkButton" id="btnRefillCash">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="receives_default">True</property>
-                    <property name="tooltip_text" translatable="yes">Добавить к наличной сумме планируемое пополнение</property>
-                    <property name="image">imgbtnRefillCash</property>
-                    <property name="always_show_image">True</property>
-                    <signal name="clicked" handler="do_refill_cash" swapped="no"/>
-                  </object>
-                  <packing>
-                    <property name="expand">False</property>
-                    <property name="fill">True</property>
-                    <property name="position">2</property>
                   </packing>
                 </child>
                 <child>
