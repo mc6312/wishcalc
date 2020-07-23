@@ -178,7 +178,7 @@ class MainWnd():
 
         # подменю "важности" товара
         self.mnuItemImportance = uibldr.get_object('mnuItemImportance')
-        self.submnuItemImportance = Gtk.Menu()
+        self.submnuItemImportance = Gtk.Menu.new()
         self.submnuItemImportance.set_reserve_toggle_size(False)
 
         self.mnuItemImportance.set_submenu(self.submnuItemImportance)
@@ -189,6 +189,8 @@ class MainWnd():
             mitem.connect('activate', self.item_set_importance, importance)
 
             self.submnuItemImportance.append(mitem)
+
+        self.submnuItemImportance.show_all()
 
         # костыль для избавления от лишней дерготни подменю "важности":
         # когда оно уже открыто из меню уровнем выше, тут д.б. значение > 0
