@@ -627,7 +627,8 @@ class MainWnd():
                     infobuf += ['', infomonthtxt]
 
                 importance = item.importance
-                if importance == 0:
+                #if importance == 0:
+                if importance < item.childrenImportance:
                     importance = item.childrenImportance
 
                 #!

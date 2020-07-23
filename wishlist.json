@@ -21,13 +21,12 @@
       "name": "Какая-то ненужная ерунда",
       "cost": 747,
       "quantity": 1,
-      "importance": 2,
+      "importance": 1,
       "items": [
         {
           "name": "Ненужная фигня номер 1",
           "cost": 238,
           "quantity": 3,
-          "importance": 3,
           "items": [
             {
               "name": "Вложенная в фигню номер 1 подфигня",
@@ -39,7 +38,8 @@
         {
           "name": "Ненужная фигня номер 2",
           "cost": 33,
-          "quantity": 1
+          "quantity": 1,
+          "importance": 1
         }
       ]
     },
@@ -53,7 +53,7 @@
       "name": "Нечто",
       "cost": 2300,
       "quantity": 1,
-      "importance": 2
+      "importance": 4
     },
     {
       "name": "Бессмысленно дорогой хлам",
