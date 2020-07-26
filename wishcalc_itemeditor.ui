@@ -14,8 +14,10 @@
   </object>
   <object class="GtkListStore" id="itemimportancelstore">
     <columns>
-      <!-- column-name GdkPixbuf1 -->
+      <!-- column-name icon -->
       <column type="GdkPixbuf"/>
+      <!-- column-name label -->
+      <column type="gchararray"/>
     </columns>
   </object>
   <object class="GtkDialog" id="dlgItemEditor">
@@ -46,7 +48,7 @@
             <property name="can_focus">False</property>
             <property name="layout_style">end</property>
             <child>
-              <object class="GtkButton" id="button1">
+              <object class="GtkButton" id="btnCancel">
                 <property name="label">Отменить</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
@@ -66,6 +68,9 @@
                 <property name="can_default">True</property>
                 <property name="has_default">True</property>
                 <property name="receives_default">True</property>
+                <style>
+                  <class name="suggested-action"/>
+                </style>
               </object>
               <packing>
                 <property name="expand">True</property>
@@ -202,6 +207,12 @@
                       <object class="GtkCellRendererPixbuf" id="crColorIcon"/>
                       <attributes>
                         <attribute name="pixbuf">0</attribute>
+                      </attributes>
+                    </child>
+                    <child>
+                      <object class="GtkCellRendererText" id="crLabel"/>
+                      <attributes>
+                        <attribute name="text">1</attribute>
                       </attributes>
                     </child>
                   </object>
@@ -350,7 +361,7 @@
       </object>
     </child>
     <action-widgets>
-      <action-widget response="-6">button1</action-widget>
+      <action-widget response="-6">btnCancel</action-widget>
       <action-widget response="-5">btnItemSave</action-widget>
     </action-widgets>
   </object>

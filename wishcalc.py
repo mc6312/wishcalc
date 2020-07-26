@@ -122,9 +122,7 @@ class MainWnd():
 
         self.iconPercent = list(map(lambda i: resldr.load_pixbuf('images/nmicon_p%d.svg' % i, nmiconsize, nmiconsize), range(self.PERCENT_RANGE)))
 
-        self.importanceIcons = []
-        for iximpicon in range(IMPORTANCE_LEVELS):
-            self.importanceIcons.append(resldr.load_pixbuf('images/impicon%.2d.svg' % iximpicon, nmiconsize, nmiconsize))
+        self.importanceIcons = ImportanceIcons(resldr)
 
         # TreeStore используется как хранилище данных во время работы
         # в первом столбце (WishCalc.COL_ITEM_OBJ) хранится ссылка
@@ -139,7 +137,7 @@ class MainWnd():
             ('colItemSelect', 'colItemInCart', 'colItemImportance'))
 
         uibldr.get_object('imgCart').set_from_pixbuf(self.iconNMincart)
-        uibldr.get_object('imgImportance').set_from_pixbuf(self.importanceIcons[0])
+        uibldr.get_object('imgImportance').set_from_pixbuf(self.importanceIcons.icons[0].pixbuf)
 
         uibldr.get_object('imgItemPasteInto').set_from_pixbuf(resldr.load_pixbuf('images/paste-into.svg', nmiconsize, nmiconsize))
 
@@ -183,9 +181,9 @@ class MainWnd():
 
         self.mnuItemImportance.set_submenu(self.submnuItemImportance)
 
-        for importance, iicon in enumerate(self.importanceIcons):
-            mitem = Gtk.MenuItem.new()
-            mitem.add(Gtk.Image.new_from_pixbuf(iicon))
+        for importance, iicon in enumerate(self.importanceIcons.icons):
+            mitem = Gtk.MenuItem.new_with_mnemonic('_%d: %s' % (importance + 1, iicon.label))
+            mitem.add(Gtk.Image.new_from_pixbuf(iicon.pixbuf))
             mitem.connect('activate', self.item_set_importance, importance)
 
             self.submnuItemImportance.append(mitem)
@@ -245,6 +243,7 @@ class MainWnd():
         logosize = Gtk.IconSize.lookup(Gtk.IconSize.DIALOG)[1] * 4
 
         self.dlgAbout.set_logo(resldr.load_pixbuf('images/wishcalc_logo.svg', logosize, logosize))
+        #self.dlgAbout.set_title('О программе...')
         self.dlgAbout.set_program_name(TITLE)
         self.dlgAbout.set_comments(SUB_TITLE)
         self.dlgAbout.set_version('v%s' % VERSION)
@@ -674,7 +673,7 @@ class MainWnd():
                         '\n'.join(infobuf),
                         str(item.quantity),
                         str(item.sum) if item.cost else '?',
-                        self.importanceIcons[importance],
+                        self.importanceIcons.icons[importance].pixbuf,
                         inCartIcon,
                         #item.childrenSelected,
                         ))

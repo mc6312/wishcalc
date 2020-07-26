@@ -35,9 +35,15 @@ MAX_ITEM_LEVEL = 3 # максимальный уровень вложеннос�
 
 
 # кол-во уровней "важности" товара, 0 - "неизвестно/неважно"
-IMPORTANCE_LEVELS = 5
+IMPORTANCE_LEVELS = (
+    'не указана',
+    'низкая',
+    'обычная',
+    'высокая',
+    'высшая')
+
 IMPORTANCE_LEVEL_MIN = 0
-IMPORTANCE_LEVEL_MAX = 4
+IMPORTANCE_LEVEL_MAX = len(IMPORTANCE_LEVELS) - 1
 
 DEFAULT_FILENAME = 'wishlist.json'
 

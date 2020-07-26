@@ -30,6 +30,30 @@ from wccommon import *
 from wcdata import *
 from wccalculator import *
 
+from collections import namedtuple
+
+
+class ImportanceIcons():
+    """Ресурсы для отображения меню и комбобоксов "важности" товара.
+
+    Поля:
+        icons   - список экземпляров impicon."""
+
+    impicon = namedtuple('impicon', 'pixbuf label')
+
+    def __init__(self, resldr):
+        """Инициализация списка икон.
+
+        resldr - экземпляр ResourceLoader."""
+
+        nmiconsize = Gtk.IconSize.lookup(Gtk.IconSize.MENU)[1]
+
+        self.icons = []
+
+        for ixicon, label in enumerate(IMPORTANCE_LEVELS):
+            self.icons.append(self.impicon(resldr.load_pixbuf('images/impicon%.2d.svg' % ixicon, nmiconsize, nmiconsize),
+                label))
+
 
 class ItemEditorDlg():
     """Обвязка диалогового окна редактора товара.
@@ -69,8 +93,8 @@ class ItemEditorDlg():
         self.itemimportancecbox = uibldr.get_object('itemimportancecbox')
         itemimportancelstore = uibldr.get_object('itemimportancelstore')
 
-        for icon in importanceIcons:
-            itemimportancelstore.append((icon,))
+        for icon in importanceIcons.icons:
+            itemimportancelstore.append(icon)
 
         self.iteminfoentry = uibldr.get_object('iteminfoentry')
         self.iteminfoentrybuf = self.iteminfoentry.get_buffer()
@@ -269,12 +293,7 @@ if __name__ == '__main__':
 
     resldr = get_resource_loader()
 
-    nmiconsizeix = Gtk.IconSize.MENU
-    nmiconsize = Gtk.IconSize.lookup(nmiconsizeix)[1]
-
-    importanceIcons = []
-    for iximpicon in range(IMPORTANCE_LEVELS):
-        importanceIcons.append(resldr.load_pixbuf('images/impicon%.2d.svg' % iximpicon, nmiconsize, nmiconsize))
+    importanceIcons = ImportanceIcons(resldr)
 
     itemEditor = ItemEditorDlg(None,
         resldr,
