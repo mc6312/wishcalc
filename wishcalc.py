@@ -243,7 +243,7 @@ class MainWnd():
         logosize = Gtk.IconSize.lookup(Gtk.IconSize.DIALOG)[1] * 4
 
         self.dlgAbout.set_logo(resldr.load_pixbuf('images/wishcalc_logo.svg', logosize, logosize))
-        #self.dlgAbout.set_title('О программе...')
+        self.dlgAbout.set_title('О программе...')
         self.dlgAbout.set_program_name(TITLE)
         self.dlgAbout.set_comments(SUB_TITLE)
         self.dlgAbout.set_version('v%s' % VERSION)
