@@ -182,8 +182,11 @@ class MainWnd():
         self.mnuItemImportance.set_submenu(self.submnuItemImportance)
 
         for importance, iicon in enumerate(self.importanceIcons.icons):
-            mitem = Gtk.MenuItem.new_with_mnemonic('_%d: %s' % (importance + 1, iicon.label))
-            mitem.add(Gtk.Image.new_from_pixbuf(iicon.pixbuf))
+            mitem = Gtk.MenuItem.new()
+            mibox = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, WIDGET_SPACING)
+            mibox.pack_start(Gtk.Image.new_from_pixbuf(iicon.pixbuf), False, False, 0)
+            mibox.pack_start(Gtk.Label.new_with_mnemonic('_%d: %s' % (importance + 1, iicon.label)), False, False, 0)
+            mitem.add(mibox)
             mitem.connect('activate', self.item_set_importance, importance)
 
             self.submnuItemImportance.append(mitem)
@@ -243,7 +246,6 @@ class MainWnd():
         logosize = Gtk.IconSize.lookup(Gtk.IconSize.DIALOG)[1] * 4
 
         self.dlgAbout.set_logo(resldr.load_pixbuf('images/wishcalc_logo.svg', logosize, logosize))
-        self.dlgAbout.set_title('О программе...')
         self.dlgAbout.set_program_name(TITLE)
         self.dlgAbout.set_comments(SUB_TITLE)
         self.dlgAbout.set_version('v%s' % VERSION)

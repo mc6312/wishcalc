@@ -82,13 +82,13 @@
           "name": "Другая ерунда",
           "cost": 666,
           "quantity": 1,
-          "importance": 1,
+          "importance": 3,
           "items": [
             {
               "name": "Более глубоко засунутая ерунда",
               "cost": 666,
               "quantity": 1,
-              "importance": 4
+              "importance": 3
             }
           ]
         },
