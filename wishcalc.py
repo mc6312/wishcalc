@@ -1106,7 +1106,8 @@ class MainWnd():
 
         if msg_dialog(self.window, 'Удаление',
             msgwhat,
-            buttons=Gtk.ButtonsType.YES_NO) == Gtk.ResponseType.YES:
+            buttons=Gtk.ButtonsType.YES_NO,
+            destructive_response=Gtk.ResponseType.YES) == Gtk.ResponseType.YES:
 
             self.wishCalc.item_delete(itr, ispurchased)
             self.refresh_wishlistview()

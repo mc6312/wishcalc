@@ -5,7 +5,7 @@
 
     Набор обвязок и костылей к GTK, общий для типовых гуёв.
 
-    Copyright 2018 mc6312
+    Copyright 2018-2020 MC-6312 (http://github.com/mc6312)
 
     This module is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -34,6 +34,9 @@ from gi.repository.GdkPixbuf import Pixbuf
 import zipfile
 from sys import stderr, argv
 import os.path
+
+
+REVISION = 20200731
 
 
 def get_widget_base_unit():
@@ -148,7 +151,7 @@ def get_child_with_class(container, wantclass):
 
 
 def create_aligned_label(title, halign=0.0, valign=0.0):
-    label = Gtk.Label(title)
+    label = Gtk.Label.new(title)
     label.set_alignment(halign, valign)
     #label.set_justify(Gtk.Justification.LEFT)
     return label
@@ -163,11 +166,48 @@ def set_widget_style(widget, css):
     dbsc.add_provider(dbsp, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
 
-def msg_dialog(parent, title, msg, msgtype=Gtk.MessageType.ERROR, buttons=Gtk.ButtonsType.OK, widgets=None):
-    dlg = Gtk.MessageDialog(parent, 0, msgtype, buttons, msg,
-        flags=Gtk.DialogFlags.MODAL|Gtk.DialogFlags.DESTROY_WITH_PARENT)
+def msg_dialog(parentw, title, msg, msgtype=Gtk.MessageType.ERROR,
+               buttons=Gtk.ButtonsType.OK, widgets=None,
+               destructive_response=None,
+               suggested_response=None,
+               default_response=None):
+    """Стандартное диалоговое окно с сообщением.
+
+    Параметры:
+        parentw - None или экземпляр Gtk.Window (окно, относительно
+                  которого диалог д.б. модальным);
+        title   - строка - заголовок;
+        msg     - строка - текст сообщения (может содержать Pango Markup);
+        msgtype - Gtk.MessageType.*;
+        buttons - Gtk.ButtonsType.*;
+        widgets - None или список экземпляров Gtk.Widget, добавляемых
+                  в диалоговое окно;
+        destructive_response    - None или Gtk.ResponseType.* для кнопки,
+                  соответствующей деструктивному действию (напр. "YES"
+                  для диалога "Удалить ...");
+        suggested_response      - None или Gtk.ResponseType.* для кнопки,
+                  соответствующей предпочитаемому действию;
+        default_response        - None или Gtk.ResponseType.* для кнопки,
+                  соответствующей действию по умолчанию (может совпадать
+                  с destructive_response или default_response).
+
+        Функция возвращает Gtk.ResponseType.*."""
+
+    dlg = Gtk.MessageDialog(parent=parentw, message_type=msgtype, buttons=buttons,
+        modal=True)
 
     dlg.set_title(title)
+    dlg.set_markup(msg)
+
+    if default_response is not None:
+        dlg.set_default_response(default_response)
+
+    def __btn_setup(response, cssclass):
+        if response is not None:
+            dlg.get_widget_for_response(response).get_style_context().add_class(cssclass)
+
+    __btn_setup(destructive_response, 'destructive-action')
+    __btn_setup(suggested_response, 'suggested-action')
 
     if widgets is not None:
         ca = dlg.get_message_area()
@@ -352,11 +392,23 @@ class ZipFileResourceLoader(FileResourceLoader):
                 raise Exception('Не удалось загрузить файл "%s" - %s' % (filename, str(ex)))
 
 
-if __name__ == '__main__':
-    print('[test of %s]' % __file__)
-
+def __test_rl():
     rl = get_resource_loader()
 
     b = rl.load('btfm-ui.xml')
     s = str(b, 'utf-8')
     print(s)
+
+
+def __test_msgdlg():
+    print(msg_dialog(None, 'Message dialog test', 'Delete anything?', buttons=Gtk.ButtonsType.YES_NO,
+        destructive_response=Gtk.ResponseType.YES,
+        suggested_response=Gtk.ResponseType.NO))
+
+
+if __name__ == '__main__':
+    print('[test of %s]' % __file__)
+
+    #__test_rl()
+    __test_msgdlg()
+
