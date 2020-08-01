@@ -36,7 +36,7 @@ from sys import stderr, argv
 import os.path
 
 
-REVISION = 20200731
+REVISION = 20200801
 
 
 def get_widget_base_unit():
@@ -152,18 +152,20 @@ def get_child_with_class(container, wantclass):
 
 def create_aligned_label(title, halign=0.0, valign=0.0):
     label = Gtk.Label.new(title)
-    label.set_alignment(halign, valign)
-    #label.set_justify(Gtk.Justification.LEFT)
+    label.set_xalign(halign)
+    label.set_yalign(valign)
     return label
 
 
-def set_widget_style(widget, css):
-    """Задание стиля для виджета widget в формате CSS"""
+def set_widget_style(css, *widgets):
+    """Задание стиля для виджетов widgets в формате CSS"""
 
     dbsp = Gtk.CssProvider()
     dbsp.load_from_data(css) # убейте гномосексуалистов кто-нибудь!
-    dbsc = widget.get_style_context()
-    dbsc.add_provider(dbsp, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+
+    for widget in widgets:
+        dbsc = widget.get_style_context()
+        dbsc.add_provider(dbsp, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
 
 def msg_dialog(parentw, title, msg, msgtype=Gtk.MessageType.ERROR,
@@ -390,6 +392,83 @@ class ZipFileResourceLoader(FileResourceLoader):
                     return f.read()
             except Exception as ex:
                 raise Exception('Не удалось загрузить файл "%s" - %s' % (filename, str(ex)))
+
+
+class TreeViewShell():
+    """Обёртка для упрощения дёргания Gtk.TreeView"""
+
+    def __init__(self, tv):
+        """tv   - экземпляр Gtk.TreeView."""
+
+        self.view = tv
+        self.store = tv.get_model()
+        self.selection = tv.get_selection()
+
+        # см. метод select_iter
+        self.expandSelectedRow = False
+        self.expandSelectedAll = False
+
+        self.sortOrder = Gtk.SortType.ASCENDING
+        self.sortColumn = -1
+
+    @classmethod
+    def new(cls, tv):
+        # сей метод - для единообразия
+        return cls(tv)
+
+    @classmethod
+    def new_from_uibuilder(cls, builder, widgetname):
+        """Создаёт экземпляр TreeViewShell, запрашивая
+        экземпляр Gtk.TreeView у builder (экземпляра класса Gtk.Builder)
+        по имени виджета widgetname."""
+
+        return cls(builder.get_object(widgetname))
+
+    def get_selected_iter(self):
+        """Возвращает Gtk.TreeIter первого выбранного элемента (если
+        что-то выбрано) или None."""
+
+        sel = self.selection.get_selected_rows()
+
+        if sel is not None:
+            rows = sel[1]
+            if rows:
+                return self.store.get_iter(rows[0])
+
+    def select_iter(self, itr):
+        """Выбирает элемент в дереве, указанный itr (экземпляром
+        Gtk.TreeIter), при необходимости заставляет TreeView развернуть
+        соответствующий уровень дерева."""
+
+        path = self.store.get_path(itr)
+
+        if self.expandSelectedRow:
+            self.view.expand_row(path, self.expandSelectedAll)
+
+        self.selection.select_path(path)
+        self.view.set_cursor(path, None, False)
+
+    def enable_sorting(self, enable):
+        """Разрешение/запрет сортировки treestore."""
+
+        self.store.set_sort_column_id(
+            self.sortColumn if (enable and self.sortColumn >= 0) else Gtk.TREE_SORTABLE_UNSORTED_SORT_COLUMN_ID,
+            self.sortOrder)
+
+    def refresh_begin(self):
+        """Подготовка экземпляра TreeModel к заполнению данными:
+        очистка, временный запрет сортировки.
+        Вызывать перед полным обновлением."""
+
+        self.view.set_model(None)
+        self.enable_sorting(False)
+        self.store.clear()
+
+    def refresh_end(self):
+        """Завершение заполнения данными."""
+
+        self.enable_sorting(True)
+        self.view.set_model(self.store)
 
 
 def __test_rl():
