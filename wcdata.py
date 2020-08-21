@@ -28,6 +28,8 @@ import os.path
 from wcconfig import JSON_ENCODING
 from wccommon import *
 
+import csv
+
 
 MAX_ITEM_LEVEL = 3 # максимальный уровень вложенности WishCalc.Item
 # в текущей версии не используется
@@ -160,6 +162,9 @@ class WishCalc():
         INCART = 'incart'
         PAID = 'paid'
         ITEMS = 'items'
+
+        CSV_FIELDS = (NAME, COST, QUANTITY, SUM, INFO, URL, IMPORTANCE,
+            INCART, PAID)
 
         def new_copy(self):
             """Создаёт и возвращает новый экземпляр Item с копией
@@ -323,14 +328,17 @@ class WishCalc():
         filename    - None или имя файла в формате JSON для загрузки/сохранения.
 
         Поля:
-        filename, store - см. параметры;
-        totalCash   - все имеющиеся в наличии средства;
-        refillCash  - планируемая сумма ежемесячных пополнений;
-        totalRemain - расчётный остаток (в файле не хранится);
-        comment     - краткое описание файла для отображения в UI
-                      (в заголовке окна)."""
+        filename, store     - см. параметры;
+        exportFilename      - имя файла для экспорта (в CSV);
+        totalCash           - все имеющиеся в наличии средства;
+        refillCash          - планируемая сумма ежемесячных пополнений;
+        totalRemain         - расчётный остаток (в файле не хранится);
+        comment             - краткое описание файла для отображения в UI
+                              (в заголовке окна)."""
 
         self.filename = filename
+
+        self.exportFilename = 'wishcalc.csv' if not filename else '%s.csv' % os.path.splitext(filename)[0]
 
         """Дабы не дублировать данные и не гонять их туда-сюда лишний раз,
         дерево объектов храним непосредственно в Gtk.TreeStore."""
@@ -567,11 +575,45 @@ class WishCalc():
 
         return json.dumps(tmpd, ensure_ascii=False, indent='  ')
 
+    def save_csv(self):
+        """Сохраняет содержимое дерева элементов TreeStore и прочих полей
+        в файле в формате JSON.
+        Если в дереве есть помеченные элементы - экспортируются только
+        они, иначе - всё содержимое дерева.
+        В случае ошибок генерируются исключения."""
+
+        if not self.exportFilename:
+            raise ValueError('%s.save_csv(): не указано имя файла' % self.__class__.__name__)
+
+        with open(self.exportFilename, 'w+') as f:
+            csvw = csv.writer(f, delimiter=';')
+
+            csvw.writerow(self.Item.CSV_FIELDS)
+
+            def __export_node(fromitr, subsel):
+                itr = self.store.iter_children(fromitr)
+
+                while itr is not None:
+                    item, selected = self.store.get(itr, self.COL_ITEM_OBJ, self.COL_SELECTED)
+
+                    if selected or subsel or self.totalSelectedCount == 0:
+                        d = item.get_fields_dict()
+
+                        csvw.writerow(map(lambda fld: str(d[fld]) if fld in d else '',
+                                          self.Item.CSV_FIELDS))
+
+                    # "дети" есть? а если найду?
+                    if self.store.iter_n_children(itr) > 0:
+                        __export_node(itr, selected or subsel)
+
+                    itr = self.store.iter_next(itr)
+
+            __export_node(None, False)
+
     def save(self):
         """Сохраняет содержимое списка элементов TreeStore и прочих полей
         в файле в формате JSON.
         В случае ошибок генерируются исключения."""
-
 
         if not self.filename:
             raise ValueError('%s.save(): не указано имя файла' % self.__class__.__name__)
@@ -791,17 +833,7 @@ class WishCalc():
         self.store.remove(itr)
 
 
-if __name__ == '__main__':
-    print('[debugging %s]' % __file__)
-
-    wishcalc = WishCalc(DEFAULT_FILENAME)
-    wishcalc.load()
-
-    #wishcalc.load_str('{}')
-
-    #print(wishcalc.save_str())
-    #exit(0)
-
+def __debug_dump(wishcalc):
     wishcalc.select_items(True)
 
     wishcalc.recalculate()
@@ -834,4 +866,18 @@ if __name__ == '__main__':
         (wishcalc.totalCash, wishcalc.totalRemain, wishcalc.refillCash,
         wishcalc.totalInCartCount, wishcalc.totalInCartSum))
 
+
+def __debug_export_csv(wishcalc):
+    wishcalc.save_csv()
+
+
+if __name__ == '__main__':
+    print('[debugging %s]' % __file__)
+
+    wishcalc = WishCalc(DEFAULT_FILENAME)
+    wishcalc.load()
+
     #wishcalc.save()
+
+    #__debug_dump(wishcalc)
+    __debug_export_csv(wishcalc)

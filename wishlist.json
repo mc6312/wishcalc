@@ -39,7 +39,9 @@
           "name": "Ненужная фигня номер 2",
           "cost": 33,
           "quantity": 1,
-          "importance": 1
+          "importance": 1,
+          "incart": true,
+          "paid": true
         }
       ]
     },

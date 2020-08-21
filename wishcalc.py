@@ -31,6 +31,8 @@ import sys
 
 from random import choice as random_choice
 
+from enum import IntEnum
+
 from warnings import warn
 
 from wcdata import *
@@ -261,7 +263,13 @@ class MainWnd():
         #
         # диалог сохранения файла
         #
-        self.dlgFileSaveAs = uibldr.get_object('dlgFileSaveAs')
+        self.dlgFileSaveAs, self.filefilterJSON, self.filefilterCSV = get_ui_widgets(uibldr,
+            ('dlgFileSaveAs', 'filefilterJSON', 'filefilterCSV'))
+
+        # (dialog, title, isjson)
+        self.fileChooserParams = {self.FileChooserMode.OPEN:(self.dlgFileOpen, 'Открыть', True),
+            self.FileChooserMode.SAVE_AS:(self.dlgFileSaveAs, 'Сохранить как...', True),
+            self.FileChooserMode.EXPORT:(self.dlgFileSaveAs, 'Экспорт в CSV', False)}
 
         #
         # !!!
@@ -403,17 +411,52 @@ class MainWnd():
         else:
             self.file_save_as(mnu)
 
-    def __run_filename_dialog(self, dlg):
-        dlg.select_filename(self.wishCalc.filename if self.wishCalc.filename else DEFAULT_FILENAME)
+    class FileChooserMode(IntEnum):
+        OPEN, SAVE_AS, EXPORT = range(3)
+
+    def __run_filename_dialog(self, mode):
+        dlg, title, isjson = self.fileChooserParams[mode]
+
+        dlg.set_title(title)
+
+        #TODO костыль с именем файла переделать?
+        if isjson:
+            ftfilter = self.filefilterJSON
+            fname = self.wishCalc.filename if self.wishCalc.filename else DEFAULT_FILENAME
+        else:
+            ftfilter = self.filefilterCSV
+            fname = self.wishCalc.exportFilename
+
+        dlg.set_filter(ftfilter)
+
+        if mode == self.FileChooserMode.OPEN:
+            dlg.select_filename(fname)
+        else:
+            dlg.set_current_name(fname)
+
         r = dlg.run()
         dlg.hide()
 
         return r
 
+    def file_export_csv(self, mnu):
+        """Экспорт в файла формата CSV с выбором имени,
+        всех или выбранных товаров."""
+
+        r = self.__run_filename_dialog(self.FileChooserMode.EXPORT)
+
+        if r == Gtk.ResponseType.OK:
+            self.wishCalc.exportFilename = self.dlgFileSaveAs.get_filename()
+
+            try:
+                self.wishCalc.save_csv()
+            except Exception as ex:
+                msg_dialog(self.window, TITLE, 'Ошибка экспорта в файл "%s":\n%s' % (self.wishCalc.exportFilename, str(ex)))
+
     def file_save_as(self, mnu):
         """Сохранение файла с выбором имени"""
 
-        r = self.__run_filename_dialog(self.dlgFileSaveAs)
+        r = self.__run_filename_dialog(self.FileChooserMode.SAVE_AS)
 
         if r == Gtk.ResponseType.OK:
             self.wishCalc.filename = self.dlgFileSaveAs.get_filename()
@@ -421,7 +464,7 @@ class MainWnd():
                 self.refresh_window_title()
 
     def file_open(self, mnu):
-        r = self.__run_filename_dialog(self.dlgFileOpen)
+        r = self.__run_filename_dialog(self.FileChooserMode.OPEN)
 
         if r == Gtk.ResponseType.OK:
             fname = self.dlgFileOpen.get_filename()
