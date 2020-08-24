@@ -25,6 +25,8 @@ import os.path
 #from gi.repository import Gtk, GObject
 #from gi.repository.GdkPixbuf import Pixbuf
 
+from collections import namedtuple
+
 from wcconfig import JSON_ENCODING
 from wccommon import *
 
@@ -126,6 +128,13 @@ def get_dict_item(fromdict, vname, vtype, rangecheck=None, fallback=None, failif
     return v
 
 
+def importance_to_disp_str(imp):
+    return IMPORTANCE_LEVELS[imp]
+
+def bool_to_disp_str(b):
+    return 'да' if b else 'нет'
+
+
 class WishCalc():
     """Обёртка для Gtk.TreeStore, хранящего ссылки на экземпляры Item
     и данные для отображения в Gtk.TreeView.
@@ -163,8 +172,18 @@ class WishCalc():
         PAID = 'paid'
         ITEMS = 'items'
 
-        CSV_FIELDS = (NAME, COST, QUANTITY, SUM, INFO, URL, IMPORTANCE,
-            INCART, PAID)
+        __expar = namedtuple('__expar', 'name dispname tostr')
+
+        CSV_FIELDS = (__expar(NAME, 'Название', str),
+            __expar(COST, 'Цена', str),
+            __expar(QUANTITY, 'Количество', str),
+            __expar(SUM, 'Сумма', str),
+            __expar(INFO, 'Описание', str),
+            __expar(URL, 'URL', str),
+            __expar(IMPORTANCE, 'Важность', importance_to_disp_str),
+            __expar(INCART, 'Заказано', bool_to_disp_str),
+            __expar(PAID, 'Оплачено', bool_to_disp_str),
+            )
 
         def new_copy(self):
             """Создаёт и возвращает новый экземпляр Item с копией
@@ -330,6 +349,10 @@ class WishCalc():
         Поля:
         filename, store     - см. параметры;
         exportFilename      - имя файла для экспорта (в CSV);
+        exportHRHeaders     - булевское: True - человекочитаемые
+                              заголовки таблицы;
+        exportHRValues      - булевское: True - человекочитаемые значения
+                              в ячейках таблицы;
         totalCash           - все имеющиеся в наличии средства;
         refillCash          - планируемая сумма ежемесячных пополнений;
         totalRemain         - расчётный остаток (в файле не хранится);
@@ -338,7 +361,12 @@ class WishCalc():
 
         self.filename = filename
 
+        #
         self.exportFilename = 'wishcalc.csv' if not filename else '%s.csv' % os.path.splitext(filename)[0]
+
+        #
+        self.exportHRHeaders = False
+        self.exportHRValues = False
 
         """Дабы не дублировать данные и не гонять их туда-сюда лишний раз,
         дерево объектов храним непосредственно в Gtk.TreeStore."""
@@ -588,7 +616,8 @@ class WishCalc():
         with open(self.exportFilename, 'w+') as f:
             csvw = csv.writer(f, delimiter=';')
 
-            csvw.writerow(self.Item.CSV_FIELDS)
+            csvw.writerow(map(lambda ep: ep.dispname if self.exportHRHeaders else ep.name,
+                self.Item.CSV_FIELDS))
 
             def __export_node(fromitr, subsel):
                 itr = self.store.iter_children(fromitr)
@@ -597,10 +626,20 @@ class WishCalc():
                     item, selected = self.store.get(itr, self.COL_ITEM_OBJ, self.COL_SELECTED)
 
                     if selected or subsel or self.totalSelectedCount == 0:
-                        d = item.get_fields_dict()
+                        rd = item.get_fields_dict()
+                        erow = []
 
-                        csvw.writerow(map(lambda fld: str(d[fld]) if fld in d else '',
-                                          self.Item.CSV_FIELDS))
+                        for ep in self.Item.CSV_FIELDS:
+                            if ep.name not in rd:
+                                es = ''
+                            elif self.exportHRValues:
+                                es = ep.tostr(rd[ep.name])
+                            else:
+                                es = str(rd[ep.name])
+
+                            erow.append(es)
+
+                        csvw.writerow(erow)
 
                     # "дети" есть? а если найду?
                     if self.store.iter_n_children(itr) > 0:
@@ -868,6 +907,8 @@ def __debug_dump(wishcalc):
 
 
 def __debug_export_csv(wishcalc):
+    wishcalc.exportHRHeaders = True
+    wishcalc.exportHRValues = True
     wishcalc.save_csv()
 
 
