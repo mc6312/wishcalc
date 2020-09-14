@@ -22,7 +22,7 @@
 TITLE = 'WishCalc'
 SUB_TITLE = 'Калькулятор загребущего нищеброда'
 
-VERSION = '2.5.18.2'
+VERSION = '2.6.0'
 
 TITLE_VERSION = '%s v%s' % (TITLE, VERSION)
 COPYRIGHT = '(c) 2017-2020 MC-6312'
@@ -60,7 +60,3 @@ def show_entry_error(entry, msg=None):
 
 if __name__ == '__main__':
     print('[debugging %s]' % __file__)
-
-    labels = ImportanceIcons(Gtk.IconSize.MENU)
-    for pbs in labels.icons:
-        print(pbs)

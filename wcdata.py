@@ -25,8 +25,12 @@ import os.path
 #from gi.repository import Gtk, GObject
 #from gi.repository.GdkPixbuf import Pixbuf
 
+from collections import namedtuple
+
 from wcconfig import JSON_ENCODING
 from wccommon import *
+
+import csv
 
 
 MAX_ITEM_LEVEL = 3 # максимальный уровень вложенности WishCalc.Item
@@ -124,6 +128,13 @@ def get_dict_item(fromdict, vname, vtype, rangecheck=None, fallback=None, failif
     return v
 
 
+def importance_to_disp_str(imp):
+    return IMPORTANCE_LEVELS[imp]
+
+def bool_to_disp_str(b):
+    return 'да' if b else 'нет'
+
+
 class WishCalc():
     """Обёртка для Gtk.TreeStore, хранящего ссылки на экземпляры Item
     и данные для отображения в Gtk.TreeView.
@@ -160,6 +171,19 @@ class WishCalc():
         INCART = 'incart'
         PAID = 'paid'
         ITEMS = 'items'
+
+        __expar = namedtuple('__expar', 'name dispname tostr')
+
+        CSV_FIELDS = (__expar(NAME, 'Название', str),
+            __expar(COST, 'Цена', str),
+            __expar(QUANTITY, 'Количество', str),
+            __expar(SUM, 'Сумма', str),
+            __expar(INFO, 'Описание', str),
+            __expar(URL, 'URL', str),
+            __expar(IMPORTANCE, 'Важность', importance_to_disp_str),
+            __expar(INCART, 'Заказано', bool_to_disp_str),
+            __expar(PAID, 'Оплачено', bool_to_disp_str),
+            )
 
         def new_copy(self):
             """Создаёт и возвращает новый экземпляр Item с копией
@@ -303,8 +327,7 @@ class WishCalc():
             self.clear()
 
             self.name = get_dict_item(srcdict, self.NAME, str, lambda s: s != '')
-            self.cost = get_dict_item(srcdict, self.COST, int, None)
-            #self.cost = get_dict_item(srcdict, self.COST, int, lambda c: c >= -1)
+            self.cost = get_dict_item(srcdict, self.COST, int, None) #lambda c: c >= -1)
             self.quantity = get_dict_item(srcdict, self.QUANTITY, int, lambda c: c >= 0, 1, False)
             self.calculate_sum()
 
@@ -326,14 +349,26 @@ class WishCalc():
         filename    - None или имя файла в формате JSON для загрузки/сохранения.
 
         Поля:
-        filename, store - см. параметры;
-        totalCash   - все имеющиеся в наличии средства;
-        refillCash  - планируемая сумма ежемесячных пополнений;
-        totalRemain - расчётный остаток (в файле не хранится);
-        comment     - краткое описание файла для отображения в UI
-                      (в заголовке окна)."""
+        filename, store     - см. параметры;
+        exportFilename      - имя файла для экспорта (в CSV);
+        exportHRHeaders     - булевское: True - человекочитаемые
+                              заголовки таблицы;
+        exportHRValues      - булевское: True - человекочитаемые значения
+                              в ячейках таблицы;
+        totalCash           - все имеющиеся в наличии средства;
+        refillCash          - планируемая сумма ежемесячных пополнений;
+        totalRemain         - расчётный остаток (в файле не хранится);
+        comment             - краткое описание файла для отображения в UI
+                              (в заголовке окна)."""
 
         self.filename = filename
+
+        #
+        self.exportFilename = 'wishcalc.csv' if not filename else '%s.csv' % os.path.splitext(filename)[0]
+
+        #
+        self.exportHRHeaders = False
+        self.exportHRValues = False
 
         """Дабы не дублировать данные и не гонять их туда-сюда лишний раз,
         дерево объектов храним непосредственно в Gtk.TreeStore."""
@@ -570,11 +605,56 @@ class WishCalc():
 
         return json.dumps(tmpd, ensure_ascii=False, indent='  ')
 
+    def save_csv(self):
+        """Сохраняет содержимое дерева элементов TreeStore и прочих полей
+        в файле в формате JSON.
+        Если в дереве есть помеченные элементы - экспортируются только
+        они, иначе - всё содержимое дерева.
+        В случае ошибок генерируются исключения."""
+
+        if not self.exportFilename:
+            raise ValueError('%s.save_csv(): не указано имя файла' % self.__class__.__name__)
+
+        with open(self.exportFilename, 'w+') as f:
+            csvw = csv.writer(f, delimiter=';')
+
+            csvw.writerow(map(lambda ep: ep.dispname if self.exportHRHeaders else ep.name,
+                self.Item.CSV_FIELDS))
+
+            def __export_node(fromitr, subsel):
+                itr = self.store.iter_children(fromitr)
+
+                while itr is not None:
+                    item, selected = self.store.get(itr, self.COL_ITEM_OBJ, self.COL_SELECTED)
+
+                    if selected or subsel or self.totalSelectedCount == 0:
+                        rd = item.get_fields_dict()
+                        erow = []
+
+                        for ep in self.Item.CSV_FIELDS:
+                            if ep.name not in rd:
+                                es = ''
+                            elif self.exportHRValues:
+                                es = ep.tostr(rd[ep.name])
+                            else:
+                                es = str(rd[ep.name])
+
+                            erow.append(es)
+
+                        csvw.writerow(erow)
+
+                    # "дети" есть? а если найду?
+                    if self.store.iter_n_children(itr) > 0:
+                        __export_node(itr, selected or subsel)
+
+                    itr = self.store.iter_next(itr)
+
+            __export_node(None, False)
+
     def save(self):
         """Сохраняет содержимое списка элементов TreeStore и прочих полей
         в файле в формате JSON.
         В случае ошибок генерируются исключения."""
-
 
         if not self.filename:
             raise ValueError('%s.save(): не указано имя файла' % self.__class__.__name__)
@@ -794,17 +874,7 @@ class WishCalc():
         self.store.remove(itr)
 
 
-if __name__ == '__main__':
-    print('[debugging %s]' % __file__)
-
-    wishcalc = WishCalc(DEFAULT_FILENAME)
-    wishcalc.load()
-
-    #wishcalc.load_str('{}')
-
-    #print(wishcalc.save_str())
-    #exit(0)
-
+def __debug_dump(wishcalc):
     wishcalc.select_items(True)
 
     wishcalc.recalculate()
@@ -837,4 +907,20 @@ if __name__ == '__main__':
         (wishcalc.totalCash, wishcalc.totalRemain, wishcalc.refillCash,
         wishcalc.totalInCartCount, wishcalc.totalInCartSum))
 
+
+def __debug_export_csv(wishcalc):
+    wishcalc.exportHRHeaders = True
+    wishcalc.exportHRValues = True
+    wishcalc.save_csv()
+
+
+if __name__ == '__main__':
+    print('[debugging %s]' % __file__)
+
+    wishcalc = WishCalc(DEFAULT_FILENAME)
+    wishcalc.load()
+
     #wishcalc.save()
+
+    #__debug_dump(wishcalc)
+    __debug_export_csv(wishcalc)

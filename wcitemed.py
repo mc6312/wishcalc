@@ -147,7 +147,8 @@ class ItemEditorDlg():
 
     def itemcostentry_changed(self, entry):
         self.tempItem.cost = str_to_int_range(entry.get_text(), None)
-        # минимальное значение не проверяем - цена может быть отрицательной для "скидок"
+        # минимальное значение не проверяем -
+        # цена может быть отрицательной для "скидок"
 
         self.ied_show_entry_error(entry,
             None if self.tempItem.cost is not None else self.E_BADVAL)

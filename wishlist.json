@@ -19,7 +19,7 @@
     },
     {
       "name": "Какая-то ненужная ерунда",
-      "cost": 646,
+      "cost": 647,
       "quantity": 1,
       "importance": 1,
       "items": [
@@ -39,11 +39,13 @@
           "name": "Ненужная фигня номер 2",
           "cost": 33,
           "quantity": 1,
-          "importance": 1
+          "importance": 1,
+          "incart": true,
+          "paid": true
         },
         {
-          "name": "скидка на фигню",
-          "cost": -101,
+          "name": "Скидка на фигню",
+          "cost": -100,
           "quantity": 1
         }
       ]
