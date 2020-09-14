@@ -233,11 +233,13 @@ class WishCalc():
             self.childInCart = False
 
         def calculate_sum(self):
-            if self.cost > 0:
+            self.sum = self.cost * self.quantity
+
+            """if self.cost > 0:
                 self.sum = self.cost * self.quantity
             else:
                 # т.к. cost м.б. -1
-                self.sum = 0
+                self.sum = 0"""
 
         def get_data_from(self, other):
             self.name = other.name
@@ -301,7 +303,8 @@ class WishCalc():
             self.clear()
 
             self.name = get_dict_item(srcdict, self.NAME, str, lambda s: s != '')
-            self.cost = get_dict_item(srcdict, self.COST, int, lambda c: c >= -1)
+            self.cost = get_dict_item(srcdict, self.COST, int, None)
+            #self.cost = get_dict_item(srcdict, self.COST, int, lambda c: c >= -1)
             self.quantity = get_dict_item(srcdict, self.QUANTITY, int, lambda c: c >= 0, 1, False)
             self.calculate_sum()
 

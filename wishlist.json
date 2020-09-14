@@ -19,7 +19,7 @@
     },
     {
       "name": "Какая-то ненужная ерунда",
-      "cost": 747,
+      "cost": 646,
       "quantity": 1,
       "importance": 1,
       "items": [
@@ -40,6 +40,11 @@
           "cost": 33,
           "quantity": 1,
           "importance": 1
+        },
+        {
+          "name": "скидка на фигню",
+          "cost": -101,
+          "quantity": 1
         }
       ]
     },

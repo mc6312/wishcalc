@@ -599,8 +599,13 @@ class MainWnd():
                         needs = 'хватает'
                         needsicon = self.iconNMok
                     elif item.needCash is None:
-                        needs = '?'
-                        needsicon = self.iconNMunk
+                        if item.sum <= 0:
+                            # сумма <0 для "скидок"
+                            needs = '-'
+                            needsicon = self.iconNMempty
+                        else:
+                            needs = '?'
+                            needsicon = self.iconNMunk
                     else:
                         if item.availCash > 0:
                             needs = str(item.needCash)
