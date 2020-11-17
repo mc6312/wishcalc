@@ -99,7 +99,7 @@ class MainWnd():
         #
         # главное меню
         #
-        #mnuRootImage = uibldr.get_object('mnuRootImage')
+        self.mnuFileOpenRecent = uibldr.get_object('mnuFileOpenRecent')
 
         #
         # список желаемого
@@ -288,9 +288,9 @@ class MainWnd():
         self.load_window_state()
         self.itemEditor.load_window_state()
         #print('load_window_state called:', self.cfg.mainWindow)
+        self.update_recent_files_menu()
 
         self.clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
-
 
         uibldr.connect_signals(self)
 
@@ -306,6 +306,48 @@ class MainWnd():
         self.wishlist_is_loaded()
 
         self.setup_widgets_sensitive()
+
+    def update_recent_files_menu(self):
+        if not self.cfg.recentFiles:
+            self.mnuFileOpenRecent.set_submenu()
+        else:
+            mnu = Gtk.Menu.new()
+            mnu.set_reserve_toggle_size(False)
+
+            for ix, rfn in enumerate(self.cfg.recentFiles):
+                # сокращаем отображаемое имя файла, длину пока приколотим гвоздями
+                #TODO когда-нибудь сделать сокращение отображаемого в меню имени файла по человечески
+                lrfn = len(rfn)
+                if lrfn > 40:
+                    disprfn = '%s...%s' % (rfn[:3], rfn[lrfn - 34:])
+                else:
+                    disprfn = rfn
+
+                mi = Gtk.MenuItem.new_with_label(disprfn)
+                mi.connect('activate', self.file_open_recent, ix)
+                mnu.append(mi)
+
+            mnu.show_all()
+
+            self.mnuFileOpenRecent.set_submenu(mnu)
+
+    def file_open_recent(self, wgt, ix):
+        fname = self.cfg.recentFiles[ix]
+
+        # проверяем наличие файла обязательно, т.к. в списке недавних
+        # могут быть уже удалённые файлы или лежащие на внешних
+        # неподключённых носителях
+        # при этом метод file_open_filename() проверку производить
+        # не должен, т.к. в первую очередь расчитан на вызов после
+        # диалога выбора файла, который несуществующего файла не вернёт.
+        # кроме того, сообщение об недоступном файле _здесь_ должно
+        # отличаться от просто "нету файла"
+
+        if not os.path.exists(fname):
+            msg_dialog(self.window, TITLE,
+                'Файл "%s" отсутствует или недоступен' % fname)
+        else:
+            self.file_open_filename(fname)
 
     def about_program(self, widget):
         self.dlgAbout.show()
@@ -474,18 +516,22 @@ class MainWnd():
             if self.wishlist_save():
                 self.refresh_window_title()
 
+    def file_open_filename(self, fname):
+        if self.wishCalc.filename and os.path.samefile(fname, self.wishCalc.filename):
+            return
+
+        self.wishlist_save()
+
+        if self.wishlist_load(fname):
+            self.cfg.add_recent_file(fname)
+            self.update_recent_files_menu()
+            self.wishlist_is_loaded()
+
     def file_open(self, mnu):
         dlg, r = self.__run_filename_dialog(self.FileChooserMode.OPEN)
 
         if r == Gtk.ResponseType.OK:
-            fname = dlg.get_filename()
-            if self.wishCalc.filename and os.path.samefile(fname, self.wishCalc.filename):
-                return
-
-            self.wishlist_save()
-
-            if self.wishlist_load(fname):
-                self.wishlist_is_loaded()
+            self.file_open_filename(dlg.get_filename())
 
     def file_edit_comment(self, mnu):
         self.filecommententry.set_text(self.wishCalc.comment)
@@ -1137,6 +1183,7 @@ class MainWnd():
                     webbrowser.open_new_tab(item.url[0][0])
                 else:
                     mnu = Gtk.Menu.new()
+                    mnu.set_reserve_toggle_size(False)
 
                     for url, urlname in item.url:
                         mi = Gtk.MenuItem.new_with_label(urlname if urlname else url)

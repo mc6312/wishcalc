@@ -36,7 +36,7 @@ from sys import stderr, argv
 import os.path
 
 
-REVISION = 20201117
+REVISION = 2020111701
 
 
 def get_widget_base_units():

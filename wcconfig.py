@@ -154,12 +154,26 @@ class WindowState():
 class Config():
     MAINWINDOW = 'mainwindow'
     ITEMEDITORWINDOW = 'itemeditorwindow'
+    RECENTFILES = 'recentfiles'
+
     CFGFN = 'settings.json'
     CFGAPP = 'wishcalc'
 
+    MAX_RECENT_FILES = 16 # ибо нефиг
+
     def __init__(self):
+        #
+        # положение и состояние окон
+        #
         self.mainWindow = WindowState()
         self.itemEditorWindow = WindowState()
+
+        #
+        # общие настройки
+        #
+
+        # ранее открывавшиеся файлы (список строк)
+        self.recentFiles = []
 
         # определяем каталог для настроек
         # или принудительно создаём, если его ещё нет
@@ -173,19 +187,54 @@ class Config():
         # вот сейчас самого файла может ещё не быть!
 
     def load(self):
+        E_SETTINGS = 'Ошибка в файле настроек "%s": %%s' % self.configPath
+
         if os.path.exists(self.configPath):
             with open(self.configPath, 'r', encoding=JSON_ENCODING) as f:
                 d = json.load(f)
 
+                #
                 if self.MAINWINDOW in d:
                     self.mainWindow.fromdict(d[self.MAINWINDOW])
 
                 if self.ITEMEDITORWINDOW in d:
                     self.itemEditorWindow.fromdict(d[self.ITEMEDITORWINDOW])
 
+                #
+                # список открывавшихся файлов
+                #
+                rfl = d.get(self.RECENTFILES, [])
+                if not isinstance(rfl, list):
+                    raise ValueError(E_SETTINGS % ('недопустимый тип элемента "%s"' % self.RECENTFILES))
+
+                self.recentFiles.clear()
+
+                for ix, rfn in enumerate(rfl, 1):
+                    if not isinstance(rfn, str):
+                        raise TypeError(E_SETTINGS % ('недопустимый тип элемента #%d списка "%s"' % (ix, self.RECENTFILES)))
+
+                    rfn = rfn.strip()
+                    if not rfn:
+                        continue
+
+                    # проверку на наличие файлов - пока нафиг: а вдруг оне на флэшке невоткнутой?
+                    #if not os.path.exists(rfn):
+                    #    continue
+
+                    self.add_recent_file(rfn)
+
+    def add_recent_file(self, fname):
+        self.recentFiles.append(fname)
+
+        if len(self.recentFiles) > self.MAX_RECENT_FILES:
+            del self.recentFiles[0]
+
     def save(self):
         tmpd = {self.MAINWINDOW:self.mainWindow.todict(),
             self.ITEMEDITORWINDOW:self.itemEditorWindow.todict()}
+
+        if self.recentFiles:
+            tmpd[self.RECENTFILES] = self.recentFiles
 
         with open(self.configPath, 'w+', encoding=JSON_ENCODING) as f:
             json.dump(tmpd, f, ensure_ascii=False, indent='  ')
@@ -193,8 +242,9 @@ class Config():
     def __repr__(self):
         # для отладки
 
-        return '%s(configDir="%s", configPath="%s", mainWindow=%s, itemEditorWindow=%s)' % (self.__class__.__name__,
-            self.configDir, self.configPath, self.mainWindow, self.itemEditorWindow)
+        return '%s(configDir="%s", configPath="%s", mainWindow=%s, itemEditorWindow=%s, recentFiles=%s)' % (self.__class__.__name__,
+            self.configDir, self.configPath, self.mainWindow,
+            self.itemEditorWindow, repr(self.recentFiles))
 
 
 if __name__ == '__main__':
