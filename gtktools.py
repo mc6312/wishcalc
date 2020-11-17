@@ -107,6 +107,7 @@ def get_ui_widgets(builder, *names):
                 __parse_params(param)
             elif isinstance(param, str):
                 param = param.split(None)
+
                 if len(param) > 1:
                     __parse_params(param)
                 else:
@@ -123,9 +124,36 @@ def get_ui_widgets(builder, *names):
     return widgets
 
 
+class WidgetList(list):
+    """Список экземпляров Gtk.Widget, позволяющий вытворять с собой всякое."""
+
+    @classmethod
+    def new_from_builder(cls, builder, *names):
+        return cls(get_ui_widgets(builder, names))
+
+    def set_sensitive(self, bsensitive):
+        for widget in self:
+            widget.set_sensitive(bsensitive)
+
+    def set_visible(self, bvisible):
+        for widget in self:
+            widget.set_visible(bvisible)
+
+    def set_style(self, css):
+        """Задание стиля для виджетов widgets в формате CSS"""
+
+        dbsp = Gtk.CssProvider()
+        dbsp.load_from_data(css) # убейте гномосексуалистов кто-нибудь!
+
+        for widget in self:
+            dbsc = widget.get_style_context()
+            dbsc.add_provider(dbsp, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+
+
 def set_widgets_sensitive(widgets, bsensitive):
     """Устанавливает значения свойства "sensitive" равным значению
-    bsensitive для виджетов из списка widgets."""
+    bsensitive для виджетов из списка widgets.
+    Оставлено для совместимости, далее лучше использовать WidgetList."""
 
     for widget in widgets:
         widget.set_sensitive(bsensitive)
@@ -133,7 +161,8 @@ def set_widgets_sensitive(widgets, bsensitive):
 
 def set_widgets_visible(widgets, bvisible):
     """Устанавливает значения свойства "visible" равным значению
-    bvisible для виджетов из списка widgets."""
+    bvisible для виджетов из списка widgets.
+    Оставлено для совместимости, далее лучше использовать WidgetList."""
 
     for widget in widgets:
         widget.set_visible(bvisible)
@@ -178,7 +207,11 @@ def create_aligned_label(title, halign=0.0, valign=0.0):
 
 
 def set_widget_style(css, *widgets):
-    """Задание стиля для виджетов widgets в формате CSS"""
+    """Задание стиля для виджетов widgets в формате CSS.
+    Оставлено для совместимости и для издевательств над
+    отдельными виджетами.
+    Для групп виджетов стоит использовать одноимённый
+    метод класса WidgetList."""
 
     dbsp = Gtk.CssProvider()
     dbsp.load_from_data(css) # убейте гномосексуалистов кто-нибудь!
@@ -254,7 +287,7 @@ def create_file_filter(name, patterns):
                несколько масок, разделённых запятыми)."""
 
     ffl = Gtk.FileFilter()
-    ffl.set_name('Изображения')
+    ffl.set_name(name)
 
     def add_pattern_str(s):
         for pat in map(lambda v: v.strip(), s.split(',')):
@@ -394,7 +427,7 @@ class FileResourceLoader():
 
 class ZipFileResourceLoader(FileResourceLoader):
     """Загрузчик файлов ресурсов из архива ZIP.
-    Архив - сам файл flibrowser2 в случае, когда он
+    Архив - сам файл приложения в случае, когда он
     представляет собой python zip application."""
 
     def load(self, filename):
@@ -505,14 +538,6 @@ class TreeViewShell():
         self.view.set_model(self.store)
 
 
-def __test_rl():
-    rl = get_resource_loader()
-
-    b = rl.load('btfm-ui.xml')
-    s = str(b, 'utf-8')
-    print(s)
-
-
 def __test_msgdlg():
     print(msg_dialog(None, 'Message dialog test', 'Delete anything?', buttons=Gtk.ButtonsType.YES_NO,
         destructive_response=Gtk.ResponseType.YES,
@@ -520,8 +545,7 @@ def __test_msgdlg():
 
 
 if __name__ == '__main__':
-    print('[test of %s]' % __file__)
+    print('[testing of %s]' % __file__)
 
-    #__test_rl()
     __test_msgdlg()
 

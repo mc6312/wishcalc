@@ -100,8 +100,9 @@ class ItemEditorDlg():
         self.iteminfoentrybuf = self.iteminfoentry.get_buffer()
 
         self.itemurls = TreeViewShell.new_from_uibuilder(uibldr, 'tvURLs')
-        self.colURL, self.tbtnUrlGoTo, self.tbtnUrlRemove = get_ui_widgets(uibldr,
-            'colURL', 'tbtnUrlGoTo', 'tbtnUrlRemove')
+        self.colURL = uibldr.get_object('colURL')
+        self.tbwidgets = WidgetList(get_ui_widgets(uibldr,
+            'tbtnUrlGoTo', 'tbtnUrlRemove'))
 
         self.itrUrlSelected = None
 
@@ -175,19 +176,13 @@ class ItemEditorDlg():
     def selURLs_changed(self, sel):
         self.itrUrlSelected = self.itemurls.get_selected_iter()
 
-        set_widgets_sensitive((self.tbtnUrlGoTo, self.tbtnUrlRemove),
-            self.itrUrlSelected is not None)
+        self.tbwidgets.set_sensitive(self.itrUrlSelected is not None)
 
     def tbtnUrlAdd_clicked(self, btn):
         # добавляем в список URL элемент с пустыми полями,
         # но сначала проверим, не пустой ли последний из уже имеющихся
 
-        def __get_last_iter():
-            n = self.itemurls.store.iter_n_children(None)
-            if n > 0:
-                return self.itemurls.store.get_iter(Gtk.TreePath.new_from_indices([n - 1]))
-
-        itr = __get_last_iter()
+        itr = self.itemurls.get_iter_last()
         if itr is not None:
             urlv = self.itemurls.store.get_value(itr, self.URLCOL_URL)
             if not urlv:
@@ -196,7 +191,8 @@ class ItemEditorDlg():
         self.itemurls.store.append(['', ''])
 
         # идём на новый элемент списка
-        self.itemurls.select_iter(__get_last_iter(), self.colURL, True)
+        # и включаем ему режим редактирования
+        self.itemurls.select_iter(self.itemurls.get_iter_last(), self.colURL, True)
 
     def tbtnUrlRemove_clicked(self, btn):
         if self.itrUrlSelected is not None:

@@ -204,31 +204,32 @@ class MainWnd():
         #
         # вот это вот (и соотв. setup_widgets_sensitive()) возможно
         # придётся переделывать через actions
-        self.widgetsItemEditing = get_ui_widgets(uibldr,
-            ('mnuItemEdit', 'btnItemEdit', 'mnuItemPurchased', 'btnItemPurchased',
-             'mnuItemAddSubItem', 'btnItemAddSubItem',
-             'mnuItemToggleInCart', 'mnuItemTogglePaid', 'mnuItemImportance',
-             'mnuItemOpenURL', 'btnItemOpenURL', 'mnuItemRemove', 'btnItemRemove'))
-        self.widgetsItemMoveUp = get_ui_widgets(uibldr,
-            ('mnuItemMoveUp', 'btnItemMoveUp',
-             'mnuItemMoveToTop', 'btnItemMoveToTop'))
-        self.widgetsItemMoveDown = get_ui_widgets(uibldr,
-            ('mnuItemMoveDown', 'btnItemMoveDown',
-             'mnuItemMoveToBottom', 'btnItemMoveToBottom'))
-        self.widgetsItemURL = get_ui_widgets(uibldr,
-            ('mnuItemOpenURL', 'btnItemOpenURL', 'mnuItemCopyURL'))
-        self.widgetsItemCopyPaste = get_ui_widgets(uibldr,
-            ('mnuItemCopy', 'btnItemCopy', 'mnuItemPasteInto', 'btnItemPasteInto'))
+
+        self.widgetsItemEditing = WidgetList.new_from_builder(uibldr,
+            'mnuItemEdit', 'btnItemEdit', 'mnuItemPurchased', 'btnItemPurchased',
+            'mnuItemAddSubItem', 'btnItemAddSubItem',
+            'mnuItemToggleInCart', 'mnuItemTogglePaid', 'mnuItemImportance',
+            'mnuItemOpenURL', 'btnItemOpenURL', 'mnuItemRemove', 'btnItemRemove')
+        self.widgetsItemMoveUp = WidgetList.new_from_builder(uibldr,
+            'mnuItemMoveUp', 'btnItemMoveUp',
+            'mnuItemMoveToTop', 'btnItemMoveToTop')
+        self.widgetsItemMoveDown = WidgetList.new_from_builder(uibldr,
+            'mnuItemMoveDown', 'btnItemMoveDown',
+            'mnuItemMoveToBottom', 'btnItemMoveToBottom')
+        self.widgetsItemURL = WidgetList.new_from_builder(uibldr,
+            'mnuItemOpenURL', 'btnItemOpenURL', 'mnuItemCopyURL')
+        self.widgetsItemCopyPaste = WidgetList.new_from_builder(uibldr,
+            'mnuItemCopy', 'btnItemCopy', 'mnuItemPasteInto', 'btnItemPasteInto')
             # эти - всегда будут доступны, т.к. возможна вставка при невыбранном элементе
             #, 'mnuItemPaste', 'btnItemPaste'))
 
         # а вот оно будет рулиться НЕ из setup_widgets_sensitive()!
-        self.widgetsRefillCash = get_ui_widgets(uibldr,
-            ('mnuRefillCash', 'btnRefillCash'))
+        self.widgetsRefillCash = WidgetList.new_from_builder(uibldr,
+            'mnuRefillCash', 'btnRefillCash')
 
         # выделение галками
-        self.widgetsSelectAll = get_ui_widgets(uibldr, ('cbSelectAll', 'mnuItemSelectAll'))
-        self.widgetsSelectNone = get_ui_widgets(uibldr, ('mnuItemUnselectAll',))
+        self.widgetsSelectAll = WidgetList.new_from_builder(uibldr, 'cbSelectAll', 'mnuItemSelectAll')
+        self.widgetsSelectNone = WidgetList.new_from_builder(uibldr, 'mnuItemUnselectAll')
         self.cbSelectAll = uibldr.get_object('cbSelectAll')
 
         #
@@ -523,14 +524,14 @@ class MainWnd():
             bcanselect = True
             bcanunselect = self.wishCalc.totalSelectedCount > 0
 
-        set_widgets_sensitive(self.widgetsItemCopyPaste, bsens)
-        set_widgets_sensitive(self.widgetsItemEditing, bsens)
-        set_widgets_sensitive(self.widgetsItemMoveUp, bsens & bcanmoveup)
-        set_widgets_sensitive(self.widgetsItemMoveDown, bsens & bcanmovedown)
-        set_widgets_sensitive(self.widgetsItemURL, bsens & bcanopenurl)
+        self.widgetsItemCopyPaste.set_sensitive(bsens)
+        self.widgetsItemEditing.set_sensitive(bsens)
+        self.widgetsItemMoveUp.set_sensitive(bsens & bcanmoveup)
+        self.widgetsItemMoveDown.set_sensitive(bsens & bcanmovedown)
+        self.widgetsItemURL.set_sensitive(bsens & bcanopenurl)
 
-        set_widgets_sensitive(self.widgetsSelectAll, bcanselect)
-        set_widgets_sensitive(self.widgetsSelectNone, bcanselect & bcanunselect)
+        self.widgetsSelectAll.set_sensitive(bcanselect)
+        self.widgetsSelectNone.set_sensitive(bcanselect & bcanunselect)
 
     def wishlistviewsel_changed(self, selection):
         self.setup_widgets_sensitive()
@@ -1259,7 +1260,7 @@ class MainWnd():
         else:
             bsens = False
 
-        set_widgets_sensitive(self.widgetsRefillCash, bsens)
+        self.widgetsRefillCash.set_sensitive(bsens)
 
     def do_refill_cash(self, btn):
         if self.wishCalc.refillCash > 0:
