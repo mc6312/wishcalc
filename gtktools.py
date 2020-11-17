@@ -36,25 +36,30 @@ from sys import stderr, argv
 import os.path
 
 
-REVISION = 20200801
+REVISION = 20201117
 
 
-def get_widget_base_unit():
-    """Возвращает базовое значение, которое можно использовать для расчета
+def get_widget_base_units():
+    """Получение базовых значений, которые можно использовать для расчета
     отступов между виджетами и т.п., дабы несчастного пользователя
     не вывернуло от пионерского вида гуя.
-    Значение считаем на основе размера шрифта по умолчанию, так как
-    прицепиться больше не к чему."""
+    Значения считаем на основе размера шрифта по умолчанию, так как
+    прицепиться больше не к чему.
+    Возвращает кортеж из двух элементов - средней ширины символа
+    и высоты строки. Оба значения в пикселах."""
 
     pangoContext = Gdk.pango_context_get()
-    return int(pangoContext.get_metrics(pangoContext.get_font_description(),
-        None).get_approximate_char_width() / Pango.SCALE)
+    metrics = pangoContext.get_metrics(pangoContext.get_font_description(),
+        None)
+
+    return (int(metrics.get_approximate_char_width() / Pango.SCALE),
+            int(metrics.get_height() / Pango.SCALE))
 
 
-WIDGET_BASE_UNIT = get_widget_base_unit()
+WIDGET_BASE_WIDTH, WIDGET_BASE_HEIGHT = get_widget_base_units()
 
 # обычный интервал между виджетами (напр. внутри Gtk.Box)
-WIDGET_SPACING = WIDGET_BASE_UNIT // 2
+WIDGET_SPACING = WIDGET_BASE_WIDTH // 2
 # меньше делать будет бессмысленно
 if WIDGET_SPACING < 4:
     WIDGET_SPACING = 4
@@ -85,20 +90,35 @@ def load_system_icon(name, size, pixelsize=False):
 MENU_ICON_SIZE_PIXELS =  Gtk.IconSize.lookup(Gtk.IconSize.MENU)[1]
 
 
-def get_ui_widgets(builder, names):
+def get_ui_widgets(builder, *names):
     """Получение списка указанных виджетов.
     builder     - экземпляр класса Gtk.Builder,
-    names       - список или кортеж имён виджетов.
+    names       - строки с имёнами виджетов,
+                  в виде 'имя', 'имя1', 'имяN'
+                  и/или ('имя', 'имя1', 'имяN')
+                  и/или 'имя имя1 имяN'.
     Возвращает список экземпляров Gtk.Widget и т.п."""
 
     widgets = []
 
-    for wname in names:
-        wgt = builder.get_object(wname)
-        if wgt is None:
-            raise KeyError('get_ui_widgets(): экземпляр Gtk.Builder не содержит виджет с именем "%s"' % wname)
+    def __parse_params(plst):
+        for param in plst:
+            if isinstance(param, list) or isinstance(param, tuple):
+                __parse_params(param)
+            elif isinstance(param, str):
+                param = param.split(None)
+                if len(param) > 1:
+                    __parse_params(param)
+                else:
+                    wgt = builder.get_object(param[0])
+                    if wgt is None:
+                        raise KeyError('get_ui_widgets(): экземпляр Gtk.Builder не содержит виджет с именем "%s"' % param[0])
 
-        widgets.append(wgt)
+                    widgets.append(wgt)
+            else:
+                raise ValueError('get_ui_widgets(): недопустимый тип элемента в списке имён виджетов')
+
+    __parse_params(names)
 
     return widgets
 
@@ -424,6 +444,14 @@ class TreeViewShell():
 
         return cls(builder.get_object(widgetname))
 
+    def get_iter_last(self, itr=None):
+        """Возвращает Gtk.TreeIter последнего элемента на уровне itr,
+        или None, если такового нет."""
+
+        n = self.store.iter_n_children(None)
+        if n > 0:
+            return self.store.get_iter(Gtk.TreePath.new_from_indices([n - 1]))
+
     def get_selected_iter(self):
         """Возвращает Gtk.TreeIter первого выбранного элемента (если
         что-то выбрано) или None."""
@@ -435,10 +463,16 @@ class TreeViewShell():
             if rows:
                 return self.store.get_iter(rows[0])
 
-    def select_iter(self, itr):
-        """Выбирает элемент в дереве, указанный itr (экземпляром
+    def select_iter(self, itr, col=None, edit=False):
+        """Выбирает указанный элемент в дереве, указанный itr (экземпляром
         Gtk.TreeIter), при необходимости заставляет TreeView развернуть
-        соответствующий уровень дерева."""
+        соответствующий уровень дерева.
+
+        itr     - экземпляр Gtk.TreeIter;
+        col     - None или Gtk.TreeViewColumn;
+        edit    - булевское значение; если True, col is not None
+                  и соотв. ячейка редактируемая - включает режим
+                  редактирования ячейки."""
 
         path = self.store.get_path(itr)
 
@@ -446,7 +480,7 @@ class TreeViewShell():
             self.view.expand_row(path, self.expandSelectedAll)
 
         self.selection.select_path(path)
-        self.view.set_cursor(path, None, False)
+        self.view.set_cursor(path, col, edit)
 
     def enable_sorting(self, enable):
         """Разрешение/запрет сортировки treestore."""

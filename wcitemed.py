@@ -99,8 +99,11 @@ class ItemEditorDlg():
         self.iteminfoentry = uibldr.get_object('iteminfoentry')
         self.iteminfoentrybuf = self.iteminfoentry.get_buffer()
 
-        self.itemurlentry = uibldr.get_object('itemurlentry')
-        self.btnEdItemOpenURL = uibldr.get_object('btnEdItemOpenURL')
+        self.itemurls = TreeViewShell.new_from_uibuilder(uibldr, 'tvURLs')
+        self.colURL, self.tbtnUrlGoTo, self.tbtnUrlRemove = get_ui_widgets(uibldr,
+            'colURL', 'tbtnUrlGoTo', 'tbtnUrlRemove')
+
+        self.itrUrlSelected = None
 
         self.btnItemSave = uibldr.get_object('btnItemSave')
 
@@ -126,6 +129,8 @@ class ItemEditorDlg():
 
     E_NOVAL = 'Не указано значение'
     E_BADVAL = 'Неправильное значение'
+
+    URLCOL_URL, URLCOL_NAME = range(2)
 
     def block_save_button(self, widget, isblocks):
         if isblocks:
@@ -159,12 +164,51 @@ class ItemEditorDlg():
     def itemimportancecbox_changed(self, cbox):
         self.tempItem.importance = cbox.get_active()
 
-    def itemurlentry_changed(self, entry):
-        self.tempItem.url = normalize_str(entry.get_text())
+    def crURL_edited(self, crt, path, txt):
+        txt = normalize_str(txt)
+        if txt:
+            self.itemurls.store.set_value(self.itrUrlSelected, self.URLCOL_URL, txt)
 
-        # проверяем только на непустое значение ради сраной кнопки
-        # проверку правильности формата URL оставим браузеру, и ниибёт
-        self.btnEdItemOpenURL.set_sensitive(self.tempItem.url != '')
+    def crURLname_edited(self, crt, path, txt):
+        self.itemurls.store.set_value(self.itrUrlSelected, self.URLCOL_NAME, normalize_str(txt))
+
+    def selURLs_changed(self, sel):
+        self.itrUrlSelected = self.itemurls.get_selected_iter()
+
+        set_widgets_sensitive((self.tbtnUrlGoTo, self.tbtnUrlRemove),
+            self.itrUrlSelected is not None)
+
+    def tbtnUrlAdd_clicked(self, btn):
+        # добавляем в список URL элемент с пустыми полями,
+        # но сначала проверим, не пустой ли последний из уже имеющихся
+
+        def __get_last_iter():
+            n = self.itemurls.store.iter_n_children(None)
+            if n > 0:
+                return self.itemurls.store.get_iter(Gtk.TreePath.new_from_indices([n - 1]))
+
+        itr = __get_last_iter()
+        if itr is not None:
+            urlv = self.itemurls.store.get_value(itr, self.URLCOL_URL)
+            if not urlv:
+                return
+
+        self.itemurls.store.append(['', ''])
+
+        # идём на новый элемент списка
+        self.itemurls.select_iter(__get_last_iter(), self.colURL, True)
+
+    def tbtnUrlRemove_clicked(self, btn):
+        if self.itrUrlSelected is not None:
+            self.itemurls.store.remove(self.itrUrlSelected)
+            # self.itrUrlSelected изменится само,
+            # т.к. при удалении из store автоматом будет вызван метод selURLs_changed
+
+    def tbtnUrlGoTo_clicked(self, btn):
+        if self.itrUrlSelected is not None:
+            url = self.itemurls.store.get_value(self.itrUrlSelected, self.URLCOL_URL)
+            if url:
+                webbrowser.open_new_tab(url)
 
     def set_paid_chk_sensitive(self):
         self.itempaidchk.set_sensitive(self.tempItem.incart)
@@ -180,9 +224,6 @@ class ItemEditorDlg():
 
     def itempaidchk_toggled(self, chkbox):
         self.tempItem.paid = chkbox.get_active()
-
-    def on_btnEdItemOpenURL_clicked(self, btn):
-        webbrowser.open_new_tab(self.tempItem.url)
 
     def edit(self, item, hasChildren):
         """Редактирование товара.
@@ -231,11 +272,17 @@ class ItemEditorDlg():
         #self.costbox.set_sensitive(not hasChildren)
 
         self.iteminfoentrybuf.set_text(self.tempItem.info)
-        self.itemurlentry.set_text(self.tempItem.url)
+
+        self.itemurls.refresh_begin()
+
+        for row in self.tempItem.url:
+            self.itemurls.store.append(row)
+
+        self.itemurls.refresh_end()
 
         self.blocksSave.clear()
         # пинаем обработчики, чтоб при пустых полях иконки высветились и т.п.
-        for entry in (self.itemnameentry, self.itemcostentry, self.itemurlentry):
+        for entry in (self.itemnameentry, self.itemcostentry):
             entry.emit('changed')
 
         self.itemnameentry.grab_focus()
@@ -275,9 +322,16 @@ class ItemEditorDlg():
                 self.tempItem.info = normalize_text(self.iteminfoentrybuf.get_text(self.iteminfoentrybuf.get_start_iter(),
                     self.iteminfoentrybuf.get_end_iter(), False))
 
-                # itemurlentry_changed() проверяет только на непустое значение,
-                # чтоб кнопку перехода на сайт (раз)блокировать,
-                # соответственно, поле item.url тут не проверяем и не трогаем
+                # в поле tempItem.url засасываем значения из itemurls.store
+                self.tempItem.url.clear()
+
+                def __urls_fe_func(lstore, path, itr, data=None):
+                    url, urlname = lstore.get(itr, self.URLCOL_URL, self.URLCOL_NAME)
+                    if url:
+                        # пустые URL НЕ сохраняем!
+                        self.tempItem.url.append([url, urlname])
+
+                self.itemurls.store.foreach(__urls_fe_func)
 
                 self.tempItem.calculate_sum()
                 return WishCalc.Item.new_copy(self.tempItem)
@@ -297,9 +351,20 @@ if __name__ == '__main__':
 
     importanceIcons = ImportanceIcons(resldr)
 
+    wishcalc = WishCalc(DEFAULT_FILENAME)
+    wishcalc.load()
+
     itemEditor = ItemEditorDlg(None,
         resldr,
         cfg.itemEditorWindow,
         importanceIcons)
-    itemEditor.edit(None, False)
+
+    itr = wishcalc.store.get_iter_first()
+    if itr is not None:
+        item = wishcalc.get_item(itr)
+    else:
+        item = None
+
+    itemEditor.edit(item, False)
+
     print(itemEditor.tempItem)

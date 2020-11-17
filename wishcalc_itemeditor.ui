@@ -7,11 +7,6 @@
     <property name="step_increment">1</property>
     <property name="page_increment">10</property>
   </object>
-  <object class="GtkImage" id="imageOpenURL">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="icon_name">applications-internet</property>
-  </object>
   <object class="GtkListStore" id="itemimportancelstore">
     <columns>
       <!-- column-name icon -->
@@ -20,9 +15,17 @@
       <column type="gchararray"/>
     </columns>
   </object>
+  <object class="GtkListStore" id="lstoreURLs">
+    <columns>
+      <!-- column-name url -->
+      <column type="gchararray"/>
+      <!-- column-name name -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
   <object class="GtkDialog" id="dlgItemEditor">
     <property name="width_request">640</property>
-    <property name="height_request">256</property>
+    <property name="height_request">384</property>
     <property name="can_focus">False</property>
     <property name="border_width">4</property>
     <property name="title" translatable="yes">...</property>
@@ -304,6 +307,7 @@
                 <property name="can_focus">False</property>
                 <property name="label" translatable="yes">URL:</property>
                 <property name="xalign">0</property>
+                <property name="yalign">0</property>
               </object>
               <packing>
                 <property name="left_attach">0</property>
@@ -314,14 +318,61 @@
               <object class="GtkBox">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="hexpand">True</property>
+                <property name="spacing">4</property>
                 <child>
-                  <object class="GtkEntry" id="itemurlentry">
+                  <object class="GtkScrolledWindow" id="swURLs">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
-                    <property name="activates_default">True</property>
-                    <property name="input_purpose">url</property>
-                    <signal name="changed" handler="itemurlentry_changed" swapped="no"/>
+                    <property name="hscrollbar_policy">never</property>
+                    <property name="shadow_type">in</property>
+                    <child>
+                      <object class="GtkTreeView" id="tvURLs">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="model">lstoreURLs</property>
+                        <property name="show_expanders">False</property>
+                        <property name="enable_grid_lines">both</property>
+                        <child internal-child="selection">
+                          <object class="GtkTreeSelection" id="selURLs">
+                            <signal name="changed" handler="selURLs_changed" swapped="no"/>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkTreeViewColumn" id="colURL">
+                            <property name="sizing">autosize</property>
+                            <property name="title" translatable="yes">URL</property>
+                            <property name="expand">True</property>
+                            <child>
+                              <object class="GtkCellRendererText" id="crURL">
+                                <property name="editable">True</property>
+                                <property name="ellipsize">middle</property>
+                                <signal name="edited" handler="crURL_edited" swapped="no"/>
+                              </object>
+                              <attributes>
+                                <attribute name="text">0</attribute>
+                              </attributes>
+                            </child>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="GtkTreeViewColumn" id="colURLname">
+                            <property name="sizing">autosize</property>
+                            <property name="title" translatable="yes">Название</property>
+                            <property name="expand">True</property>
+                            <child>
+                              <object class="GtkCellRendererText" id="crURLname">
+                                <property name="editable">True</property>
+                                <property name="ellipsize">end</property>
+                                <signal name="edited" handler="crURLname_edited" swapped="no"/>
+                              </object>
+                              <attributes>
+                                <attribute name="text">1</attribute>
+                              </attributes>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                    </child>
                   </object>
                   <packing>
                     <property name="expand">True</property>
@@ -330,12 +381,55 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkButton" id="btnEdItemOpenURL">
+                  <object class="GtkToolbar">
                     <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="receives_default">True</property>
-                    <property name="image">imageOpenURL</property>
-                    <signal name="clicked" handler="on_btnEdItemOpenURL_clicked" swapped="no"/>
+                    <property name="can_focus">False</property>
+                    <property name="orientation">vertical</property>
+                    <property name="toolbar_style">icons</property>
+                    <property name="show_arrow">False</property>
+                    <property name="icon_size">1</property>
+                    <child>
+                      <object class="GtkToolButton" id="tbtnUrlAdd">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="tooltip_text" translatable="yes">Добавить URL</property>
+                        <property name="use_underline">True</property>
+                        <property name="icon_name">list-add</property>
+                        <signal name="clicked" handler="tbtnUrlAdd_clicked" swapped="no"/>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="homogeneous">True</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkToolButton" id="tbtnUrlRemove">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="tooltip_text" translatable="yes">Убрать URL</property>
+                        <property name="use_underline">True</property>
+                        <property name="icon_name">list-remove</property>
+                        <signal name="clicked" handler="tbtnUrlRemove_clicked" swapped="no"/>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="homogeneous">True</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkToolButton" id="tbtnUrlGoTo">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="tooltip_text" translatable="yes">Открыть URL в браузере</property>
+                        <property name="use_underline">True</property>
+                        <property name="icon_name">applications-internet</property>
+                        <signal name="clicked" handler="tbtnUrlGoTo_clicked" swapped="no"/>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="homogeneous">True</property>
+                      </packing>
+                    </child>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -343,9 +437,6 @@
                     <property name="position">1</property>
                   </packing>
                 </child>
-                <style>
-                  <class name="linked"/>
-                </style>
               </object>
               <packing>
                 <property name="left_attach">1</property>

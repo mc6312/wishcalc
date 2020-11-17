@@ -328,7 +328,7 @@ class MainWnd():
         # см. документацию по обработке Gtk.Menu.popup()
 
         if event is None:
-            etime = Gtk.get_current_event_time ()
+            etime = Gtk.get_current_event_time()
         else:
             etime = event.time
 
@@ -518,7 +518,7 @@ class MainWnd():
                 bcanmoveup = ix > 0
                 bcanmovedown = ix < lastix
 
-                bcanopenurl = self.wishCalc.get_item(itr).url != ''
+                bcanopenurl = len(self.wishCalc.get_item(itr).url) != 0
 
             bcanselect = True
             bcanunselect = self.wishCalc.totalSelectedCount > 0
@@ -1132,7 +1132,22 @@ class MainWnd():
         if itr:
             item = self.wishCalc.get_item(itr)
             if item.url:
-                webbrowser.open_new_tab(item.url)
+                if len(item.url) == 1:
+                    webbrowser.open_new_tab(item.url[0][0])
+                else:
+                    mnu = Gtk.Menu.new()
+
+                    for url, urlname in item.url:
+                        mi = Gtk.MenuItem.new_with_label(urlname if urlname else url)
+                        mi.connect('activate', self.item_open_url_from_menu, url)
+                        mnu.append(mi)
+
+                    mnu.show_all()
+
+                    self.wishlist_pop_up_menu(None, mnu)
+
+    def item_open_url_from_menu(self, mi, url):
+        webbrowser.open_new_tab(url)
 
     def item_copy_url(self, btn):
         itr = self.get_selected_item_iter()

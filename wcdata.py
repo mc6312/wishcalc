@@ -95,11 +95,14 @@ def normalize_str(s):
     return ' '.join(s.split(None))
 
 
-def get_dict_item(fromdict, vname, vtype, rangecheck=None, fallback=None, failifnokey=True):
-    """Берёт из словаря fromdict значение поля vname, проверяет тип
-    и правильность значения.
+def get_dict_item(fromdict, vname, *vtype, rangecheck=None, fallback=None, failifnokey=True):
+    """Берёт из словаря  значение поля, проверяет тип и правильность значения.
+
     В случае успеха возвращает полученное значение, иначе генерирует исключение.
 
+    fromdict    - словарь, из которого брать значение;
+    vname       - строка, ключ словаря;
+    vtype       - допустимые типы значения;
     rangecheck  - None или функция проверки диапазона значений;
                   должна возвращать булевское значение;
     fallback    - значение, которое следует возвращать при отсутствии
@@ -118,7 +121,14 @@ def get_dict_item(fromdict, vname, vtype, rangecheck=None, fallback=None, failif
         raise KeyError('отсутствует поле "%s"' % vname)
 
     v = fromdict[vname]
-    if not isinstance(v, vtype):
+
+    typeok = False
+    for vt in vtype:
+        if isinstance(v, vt):
+            typeok = True
+            break
+
+    if not typeok:
         raise TypeError('неправильный тип поля "%s"' % vname)
 
     if callable(rangecheck):
@@ -200,7 +210,7 @@ class WishCalc():
             self.cost = 0
             self.quantity = 1
             self.info = ''
-            self.url = ''
+            self.url = []
             self.incart = False
             self.paid = False
 
@@ -247,7 +257,7 @@ class WishCalc():
             self.quantity = 1 # внимание! значение 0 - тоже верное!
             self.sum = 0
             self.info = ''
-            self.url = ''
+            self.url.clear()
             self.importance = 0
             self.incart = False
             self.paid = False
@@ -272,7 +282,9 @@ class WishCalc():
             self.sum = other.sum
 
             self.info = other.info
-            self.url = other.url
+
+            # патамушто список!
+            self.url = other.url.copy()
 
             self.incart = other.incart
             self.paid = other.paid
@@ -281,10 +293,10 @@ class WishCalc():
 
         def __repr__(self):
             # для отладки
-            return '%s(name="%s", cost=%d, quantity=%d, sum=%d, info="%s", url="%s", importance=%d, incart=%s, paid=%s, needCash=%s, needTotal=%s, availCash=%s, needMonths=%s)' %\
+            return '%s(name="%s", cost=%d, quantity=%d, sum=%d, info="%s", url=%s, importance=%d, incart=%s, paid=%s, needCash=%s, needTotal=%s, availCash=%s, needMonths=%s)' %\
                 (self.__class__.__name__,
                  self.name, self.cost, self.quantity, self.sum,
-                 self.info, self.url,
+                 self.info, repr(self.url),
                  self.importance, self.incart, self.paid,
                  self.needCash, self.needTotal, self.availCash, self.needMonths)
 
@@ -326,13 +338,36 @@ class WishCalc():
 
             self.clear()
 
-            self.name = get_dict_item(srcdict, self.NAME, str, lambda s: s != '')
-            self.cost = get_dict_item(srcdict, self.COST, int, None) #lambda c: c >= -1)
-            self.quantity = get_dict_item(srcdict, self.QUANTITY, int, lambda c: c >= 0, 1, False)
+            self.name = get_dict_item(srcdict, self.NAME, str, rangecheck=lambda s: s != '')
+            self.cost = get_dict_item(srcdict, self.COST, int) #lambda c: c >= -1)
+            self.quantity = get_dict_item(srcdict, self.QUANTITY, int,
+                rangecheck=lambda c: c >= 0, fallback=1, failifnokey=False)
             self.calculate_sum()
 
             self.info = get_dict_item(srcdict, self.INFO, str, fallback='')
-            self.url = get_dict_item(srcdict, self.URL, str, fallback='')
+
+            self.url.clear()
+            _url = get_dict_item(srcdict, self.URL, str, list, fallback=[])
+
+            # загрузка данных версии < 2.7.0
+            if isinstance(_url, str):
+                # начиная с версии 2.7.0 можно хранить несколько URL
+                # в списке по ДВА элемента - URL и отображаемое имя (м.б. пустое)
+                if _url:
+                    self.url.append([self.url, ''])
+            elif isinstance(_url, list):
+                for surl in _url:
+                    if len(surl) != 2:
+                        raise ValueError('неправильное количество полей элемента url')
+
+                    for suf in surl:
+                        if not isinstance(suf, str):
+                            raise TypeError('неправильный тип поля элемента url')
+
+                    if surl[0]:
+                        self.url.append(surl)
+            else:
+                raise TypeError('неправильный тип элемента url')
 
             self.importance = get_dict_item(srcdict, self.IMPORTANCE, int, fallback=0)
             # принудительно вгоним в рамки
@@ -479,10 +514,12 @@ class WishCalc():
         # далее считаем, что нам подсунули таки б/м правильный WishCalc'овский JSON
         #
 
-        self.comment = normalize_str(get_dict_item(srcdict, self.VAR_COMMENT, str, None, ''))
+        self.comment = normalize_str(get_dict_item(srcdict, self.VAR_COMMENT, str, fallback=''))
 
-        self.totalCash = get_dict_item(srcdict, self.VAR_AVAIL, int, lambda i: i >= 0, 0)
-        self.refillCash = get_dict_item(srcdict, self.VAR_REFILL, int, lambda i: i >= 0, 0)
+        self.totalCash = get_dict_item(srcdict, self.VAR_AVAIL, int,
+            rangecheck=lambda i: i >= 0, fallback=0)
+        self.refillCash = get_dict_item(srcdict, self.VAR_REFILL, int,
+            rangecheck=lambda i: i >= 0, fallback=0)
 
         self.totalRemain = self.totalCash # потом должно быть пересчитано!
 

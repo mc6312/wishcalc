@@ -8,13 +8,27 @@
       "cost": 6500,
       "quantity": 1,
       "info": "Неимоверно дерьмовое изделие из сплава фольги, картона и пластилина",
-      "url": "http://shitty.cn"
+      "url": [
+        [
+          "http://shitty.cn",
+          ""
+        ],
+        [
+          "http://google.com",
+          "Goolag"
+        ]
+      ]
     },
     {
       "name": "Бесполезный мусор",
       "cost": 666,
       "quantity": 3,
-      "url": "http://google.com",
+      "url": [
+        [
+          "http://google.com",
+          ""
+        ]
+      ],
       "importance": 3
     },
     {
