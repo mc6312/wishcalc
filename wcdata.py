@@ -144,6 +144,19 @@ def importance_to_disp_str(imp):
 def bool_to_disp_str(b):
     return 'да' if b else 'нет'
 
+def url_to_csv_str(url):
+    tmp = []
+
+    for url, urlname in url:
+        turl = url
+
+        if urlname:
+            turl = '%s (%s)' % (turl, urlname)
+
+        tmp.append(turl)
+
+    return ','.join(tmp)
+
 
 class WishCalc():
     """Обёртка для Gtk.TreeStore, хранящего ссылки на экземпляры Item
@@ -189,7 +202,7 @@ class WishCalc():
             __expar(QUANTITY, 'Количество', str),
             __expar(SUM, 'Сумма', str),
             __expar(INFO, 'Описание', str),
-            __expar(URL, 'URL', str),
+            __expar(URL, 'URL', url_to_csv_str),
             __expar(IMPORTANCE, 'Важность', importance_to_disp_str),
             __expar(INCART, 'Заказано', bool_to_disp_str),
             __expar(PAID, 'Оплачено', bool_to_disp_str),
@@ -354,7 +367,7 @@ class WishCalc():
                 # начиная с версии 2.7.0 можно хранить несколько URL
                 # в списке по ДВА элемента - URL и отображаемое имя (м.б. пустое)
                 if _url:
-                    self.url.append([self.url, ''])
+                    self.url.append([_url, ''])
             elif isinstance(_url, list):
                 for surl in _url:
                     if len(surl) != 2:
@@ -653,7 +666,7 @@ class WishCalc():
             raise ValueError('%s.save_csv(): не указано имя файла' % self.__class__.__name__)
 
         with open(self.exportFilename, 'w+') as f:
-            csvw = csv.writer(f, delimiter=';')
+            csvw = csv.writer(f, delimiter=';', quoting=csv.QUOTE_MINIMAL)
 
             csvw.writerow(map(lambda ep: ep.dispname if self.exportHRHeaders else ep.name,
                 self.Item.CSV_FIELDS))
