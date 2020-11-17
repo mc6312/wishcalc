@@ -1,7 +1,7 @@
 packer = 7z
 pack = $(packer) a -mx=9
 arcx = .7z
-docs = COPYING Changelog README.md wishlist.json
+docs = COPYING Changelog README.md wishlist.json TODO
 basename = wishcalc
 srcversion = wccommon
 version = $(shell python3 -c 'from $(srcversion) import VERSION; print(VERSION)')
@@ -22,6 +22,7 @@ app:
 	chmod 755 $(basename)
 
 archive:
+	make todo
 	$(pack) $(srcarcname) *.py *. Makefile *.geany *.ui *.svg images/* $(docs)
 distrib:
 	make app
@@ -34,6 +35,7 @@ backup:
 update:
 	$(packer) x -y $(backupdir)$(srcarcname)
 commit:
+	make todo
 	git commit -a -uno -m "$(version)"
 docview:
 	$(eval docname = README.htm)
