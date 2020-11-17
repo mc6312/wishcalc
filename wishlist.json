@@ -1,763 +1,130 @@
 {
   "available": 0,
-  "refill": 5000,
-  "comment": "Всякая хрень",
+  "refill": 1000,
+  "comment": "Список совершенно ненужного хлама",
   "wishlist": [
     {
-      "name": "Закупка в ситилинке (времянка на потом)",
-      "cost": 25980,
+      "name": "Некая китайская поделка с алиэкспресса",
+      "cost": 6500,
       "quantity": 1,
-      "info": "Свалка всего \"из ситилинка\" для раскидывания по отдельным заказам, когда деньги будут",
-      "items": [
-        {
-          "name": "Сканер",
-          "cost": 5100,
-          "quantity": 1,
-          "info": "или https://www.citilink.ru/catalog/computers_and_notebooks/monitors_and_office/scaners/1086704/",
-          "url": [
-            [
-              "https://www.citilink.ru/catalog/computers_and_notebooks/monitors_and_office/scaners/1086702/",
-              ""
-            ]
-          ]
-        },
-        {
-          "name": "SSD для винды",
-          "cost": 10250,
-          "quantity": 1,
-          "items": [
-            {
-              "name": "SSD 1TB под винду с игрухами",
-              "cost": 10000,
-              "quantity": 1,
-              "info": "SSD накопитель WD Blue WDS100T2B0A 1ТБ, 2.5\", SATA III",
-              "url": [
-                [
-                  "https://www.citilink.ru/catalog/computers_and_notebooks/hdd/ssd_in/1015913/",
-                  ""
-                ]
-              ],
-              "importance": 2
-            },
-            {
-              "name": "Салазки для 3.5\" отсека KINGSTON SNA-BR2/35, для 2.5\" дисков",
-              "cost": 250,
-              "quantity": 1,
-              "url": [
-                [
-                  "https://www.citilink.ru/catalog/computers_and_notebooks/hdd/hdd_aks/795426/",
-                  ""
-                ]
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Вентилятор DEEPCOOL UF140, 140мм, Ret",
-          "cost": 1080,
-          "quantity": 1,
-          "url": [
-            [
-              "https://www.citilink.ru/catalog/computers_and_notebooks/parts/coolers/668281/",
-              ""
-            ]
-          ]
-        },
-        {
-          "name": "Флешка USB TRANSCEND Jetflash 780 64ГБ, USB3.0",
-          "cost": 2900,
-          "quantity": 1,
-          "url": [
-            [
-              "https://www.citilink.ru/catalog/computers_and_notebooks/media/flashdisks/759412/",
-              ""
-            ]
-          ]
-        },
-        {
-          "name": "Внешний винт 2Tb на замену libbackup",
-          "cost": 5700,
-          "quantity": 1,
-          "info": "Внешний жесткий диск WD My Passport WDBYVG0020BBK-WESN, 2Тб, черный",
-          "url": [
-            [
-              "https://www.citilink.ru/catalog/computers_and_notebooks/media/hdd_out/1196760/",
-              ""
-            ]
-          ]
-        },
-        {
-          "name": "Напольные весы TEFAL PP1131V0",
-          "cost": 950,
-          "quantity": 1,
-          "url": [
-            [
-              "https://www.citilink.ru/catalog/beauty_and_health/scales/1150829/",
-              ""
-            ]
-          ]
-        }
+      "info": "Неимоверно дерьмовое изделие из сплава фольги, картона и пластилина",
+      "url": [
+        [
+          "http://shitty.cn",
+          ""
+        ],
+        [
+          "http://google.com",
+          "Goolag"
+        ]
       ]
     },
     {
-      "name": "Штатив для вспышки и переходники",
-      "cost": 1260,
-      "quantity": 1,
-      "items": [
-        {
-          "name": "Переходник резьбы 1/4\" на 1/4\" (гайки)",
-          "cost": 100,
-          "quantity": 2,
-          "url": [
-            [
-              "https://ru.aliexpress.com/item/32843122555.html",
-              ""
-            ]
-          ]
-        },
-        {
-          "name": "Штатив GorillaPod 24 см",
-          "cost": 1060,
-          "quantity": 1,
-          "url": [
-            [
-              "https://ru.aliexpress.com/item/32976152448.html",
-              ""
-            ]
-          ]
-        }
-      ]
+      "name": "Бесполезный мусор",
+      "cost": 666,
+      "quantity": 3,
+      "url": [
+        [
+          "http://google.com",
+          ""
+        ]
+      ],
+      "importance": 3
     },
     {
-      "name": "Ручки, чернила и т.п. когда-нибудь потом",
-      "cost": 51226,
+      "name": "Какая-то ненужная ерунда",
+      "cost": 647,
       "quantity": 1,
+      "importance": 1,
       "items": [
         {
-          "name": "Ручка Pilot VP (Capless) Decimo",
-          "cost": 13000,
-          "quantity": 1
-        },
-        {
-          "name": "Ручка TWSBI Diamond Mini Classic",
-          "cost": 5000,
-          "quantity": 1,
-          "url": [
-            [
-              "https://www.twsbi.com/collections/fountain-pens/products/twsbi-mini-classic-fountain-pen",
-              ""
-            ]
-          ]
-        },
-        {
-          "name": "Перо PILOT Medium для Capless с конвертером",
-          "cost": 6295,
-          "quantity": 1,
-          "url": [
-            [
-              "https://pilotrus.ru/pero-pilot-medium-dlya-capless-s-konverterom/",
-              ""
-            ]
-          ]
-        },
-        {
-          "name": "Перо Leonardt Ballpoint Nib",
-          "cost": 97,
-          "quantity": 1,
-          "url": [
-            [
-              "http://getpen.ru/leonardt-300/i/4018",
-              ""
-            ]
-          ]
-        },
-        {
-          "name": "Перо Leonardt School Nib 63 1/2",
-          "cost": 103,
-          "quantity": 1,
-          "url": [
-            [
-              "http://getpen.ru/leonardt-6312/i/4035",
-              ""
-            ]
-          ]
-        },
-        {
-          "name": "Чернила про запас",
-          "cost": 13177,
-          "quantity": 1,
-          "info": "список чернил, которые, возможно, когда-нибудь купятся",
+          "name": "Ненужная фигня номер 1",
+          "cost": 238,
+          "quantity": 3,
           "items": [
             {
-              "name": "Rohrer&Klingner",
-              "cost": 610,
-              "quantity": 1,
-              "items": [
-                {
-                  "name": "Rohrer&Klingner Shreibtinte Eis-Gall-Salix 50 мл",
-                  "cost": 610,
-                  "quantity": 1,
-                  "url": [
-                    [
-                      "http://getpen.ru/rohrer-klingner-salix/i/4157",
-                      ""
-                    ]
-                  ]
-                }
-              ]
-            },
-            {
-              "name": "Platinum",
-              "cost": 2600,
-              "quantity": 1,
-              "items": [
-                {
-                  "name": "Чернила Platinum 60 мл (черные)",
-                  "cost": 1300,
-                  "quantity": 1,
-                  "url": [
-                    [
-                      "http://getpen.ru/platinum-black-60/i/3728",
-                      ""
-                    ]
-                  ]
-                },
-                {
-                  "name": "Чернила Platinum 60 мл (сине-черные)",
-                  "cost": 1300,
-                  "quantity": 1,
-                  "url": [
-                    [
-                      "http://getpen.ru/platinum-blueblack-60/i/3729",
-                      ""
-                    ]
-                  ],
-                  "importance": 1
-                }
-              ]
-            },
-            {
-              "name": "Pelikan",
-              "cost": 1380,
+              "name": "Вложенная в фигню номер 1 подфигня",
+              "cost": 238,
               "quantity": 1
-            },
-            {
-              "name": "Pilot",
-              "cost": 5536,
-              "quantity": 1,
-              "items": [
-                {
-                  "name": "Pilot 30 мл (сине-черные)",
-                  "cost": 368,
-                  "quantity": 1,
-                  "url": [
-                    [
-                      "http://getpen.ru/pilot-30-blueblack/i/6565",
-                      ""
-                    ]
-                  ]
-                },
-                {
-                  "name": "Pilot 30 мл (черные)",
-                  "cost": 368,
-                  "quantity": 1,
-                  "url": [
-                    [
-                      "http://getpen.ru/pilot-ink30-black/i/965",
-                      ""
-                    ]
-                  ]
-                },
-                {
-                  "name": "Pilot Iroshizuku Kon-peki, 50ml",
-                  "cost": 2400,
-                  "quantity": 1,
-                  "url": [
-                    [
-                      "http://getpen.ru/pilot-iroshizuku-kon-peki/i/2341",
-                      ""
-                    ]
-                  ]
-                },
-                {
-                  "name": "Pilot Iroshizuku Shin-kai, 50ml",
-                  "cost": 2400,
-                  "quantity": 1,
-                  "url": [
-                    [
-                      "http://getpen.ru/pilot-iroshizuku-shin-kai/i/2348",
-                      ""
-                    ]
-                  ],
-                  "importance": 1
-                }
-              ]
-            },
-            {
-              "name": "Sailor",
-              "cost": 3051,
-              "quantity": 1,
-              "items": [
-                {
-                  "name": "Чернила Sailor Black 50 мл",
-                  "cost": 1017,
-                  "quantity": 1,
-                  "url": [
-                    [
-                      "http://getpen.ru/sailor-ink-black/i/9126",
-                      ""
-                    ]
-                  ],
-                  "importance": 2
-                },
-                {
-                  "name": "Чернила Sailor Blue 50 мл",
-                  "cost": 1017,
-                  "quantity": 1,
-                  "url": [
-                    [
-                      "http://getpen.ru/sailor-ink-blue/i/9127",
-                      ""
-                    ]
-                  ],
-                  "importance": 2
-                },
-                {
-                  "name": "Чернила Sailor Blue/Black 50 мл",
-                  "cost": 1017,
-                  "quantity": 1,
-                  "url": [
-                    [
-                      "http://getpen.ru/sailor-ink-blueblack/i/9128",
-                      ""
-                    ]
-                  ],
-                  "importance": 2
-                }
-              ]
             }
           ]
         },
         {
-          "name": "Чернила неиспытанные",
-          "cost": 12454,
+          "name": "Ненужная фигня номер 2",
+          "cost": 33,
           "quantity": 1,
-          "items": [
-            {
-              "name": "De Atramentis",
-              "cost": 1160,
-              "quantity": 1,
-              "items": [
-                {
-                  "name": "Чернила De Atramentis Deepwater Obsession Black-Red",
-                  "cost": 1160,
-                  "quantity": 1,
-                  "url": [
-                    [
-                      "http://getpen.ru/de-atramentis-deepwater-obsession-blackred/i/2867",
-                      ""
-                    ]
-                  ]
-                }
-              ]
-            },
-            {
-              "name": "Diamine",
-              "cost": 3550,
-              "quantity": 1,
-              "items": [
-                {
-                  "name": "Чернила Diamine 150th Anniversary Blue Velvet 40 мл",
-                  "cost": 750,
-                  "quantity": 1,
-                  "url": [
-                    [
-                      "http://getpen.ru/diamine-bluevelvet-150/i/3183",
-                      ""
-                    ]
-                  ]
-                },
-                {
-                  "name": "Чернила Diamine Inkvent Seasons Greetings 50 мл",
-                  "cost": 870,
-                  "quantity": 1,
-                  "url": [
-                    [
-                      "http://getpen.ru/diamine-inkvent-season-greetings/i/9292",
-                      ""
-                    ]
-                  ]
-                },
-                {
-                  "name": "Чернила Diamine Inkvent Noel 50 мл",
-                  "cost": 870,
-                  "quantity": 1,
-                  "url": [
-                    [
-                      "http://getpen.ru/diamine-inkvent-noel/i/9290",
-                      ""
-                    ]
-                  ]
-                },
-                {
-                  "name": "Чернила Diamine Inkvent Jack Frost 50 мл",
-                  "cost": 1060,
-                  "quantity": 1,
-                  "url": [
-                    [
-                      "http://getpen.ru/diamine-inkvent-jack-frost/i/9297",
-                      ""
-                    ]
-                  ]
-                }
-              ]
-            },
-            {
-              "name": "Pelikan",
-              "cost": 1380,
-              "quantity": 1,
-              "items": [
-                {
-                  "name": "Чернила Pelikan Edelstein Topaz 50мл",
-                  "cost": 1380,
-                  "quantity": 1,
-                  "url": [
-                    [
-                      "https://www.citilink.ru/catalog/furniture/business_gifts/rashodnye_materialy_premium/483365/",
-                      "в ситилинке; ежели в гетпене нет"
-                    ],
-                    [
-                      "http://getpen.ru/pelikan-edelstein-topaz/i/2245",
-                      "в getpen"
-                    ]
-                  ]
-                }
-              ]
-            },
-            {
-              "name": "Waterman",
-              "cost": 690,
-              "quantity": 1
-            },
-            {
-              "name": "Pilot",
-              "cost": 800,
-              "quantity": 1
-            },
-            {
-              "name": "Rohrer&Klingner",
-              "cost": 610,
-              "quantity": 1,
-              "items": [
-                {
-                  "name": "Чернила Rohrer&Klingner Shreibtinte Eis-Gall-Scabiosa 50 мл",
-                  "cost": 610,
-                  "quantity": 1,
-                  "url": [
-                    [
-                      "http://getpen.ru/rohrer-klingner-scabiosa/i/4156",
-                      ""
-                    ]
-                  ]
-                }
-              ]
-            },
-            {
-              "name": "Sailor",
-              "cost": 2034,
-              "quantity": 1,
-              "items": [
-                {
-                  "name": "Чернила Sailor Shikiori Souten 20 мл",
-                  "cost": 1017,
-                  "quantity": 1,
-                  "url": [
-                    [
-                      "http://getpen.ru/sailor-ink-shikiori-souten-20/i/9133",
-                      ""
-                    ]
-                  ]
-                },
-                {
-                  "name": "Чернила Sailor Shikiori Yamadori 20 мл",
-                  "cost": 1017,
-                  "quantity": 1,
-                  "url": [
-                    [
-                      "http://getpen.ru/sailor-ink-shikiori-yamadori-20/i/9135",
-                      ""
-                    ]
-                  ]
-                }
-              ]
-            },
-            {
-              "name": "Graf von Faber-Castell",
-              "cost": 2230,
-              "quantity": 1,
-              "items": [
-                {
-                  "name": "Флакон с чернилами Graf von Faber-Castell Midnight Blue 75 мл",
-                  "cost": 2230,
-                  "quantity": 1,
-                  "url": [
-                    [
-                      "https://penelite.ru/shop/categories/refills/graf-von-faber-castell/flakon-s-chernilami-graf-von-faber-castell-midnight-blue-75-ml/",
-                      ""
-                    ]
-                  ]
-                }
-              ]
-            }
-          ]
+          "importance": 1,
+          "incart": true,
+          "paid": true
         },
         {
-          "name": "Канцтовары про запас",
-          "cost": 1100,
-          "quantity": 1,
-          "items": [
-            {
-              "name": "Indinotes",
-              "cost": 1100,
-              "quantity": 1,
-              "items": [
-                {
-                  "name": "Clairefontaine Age Bag Notebook (A5)",
-                  "cost": 550,
-                  "quantity": 2,
-                  "url": [
-                    [
-                      "https://indinotes.com/product/clairefontaine-age-bag-notebook-a5",
-                      ""
-                    ]
-                  ]
-                }
-              ]
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "Фотохрень",
-      "cost": 10500,
-      "quantity": 1,
-      "items": [
-        {
-          "name": "Фильтр поляризационный B+W F-Pro HTC Kasemann MRC 52мм Pol-Circ",
-          "cost": 10500,
-          "quantity": 1,
-          "url": [
-            [
-              "https://fotonn.ru/Shop/19811-Filtr-polyarizatsionnyiy-B+W-F-Pro-HTC-Kasemann-MRC-52mm-Pol-Circ/index.php",
-              ""
-            ]
-          ]
-        }
-      ]
-    },
-    {
-      "name": "Прочее",
-      "cost": 1820,
-      "quantity": 1,
-      "items": [
-        {
-          "name": "LED фонари цветные",
-          "cost": 250,
-          "quantity": 6,
-          "info": "R+G+B по два штука",
-          "url": [
-            [
-              "https://www.aliexpress.com/item/32953200923.html",
-              ""
-            ]
-          ]
-        },
-        {
-          "name": "УФ-фонарь 365нм",
-          "cost": 220,
-          "quantity": 1,
-          "url": [
-            [
-              "https://www.aliexpress.com/item/4001076291183.html",
-              ""
-            ]
-          ]
-        },
-        {
-          "name": "УФ-фильтр 365нм для фонарей",
-          "cost": 100,
-          "quantity": 1,
-          "url": [
-            [
-              "https://www.aliexpress.com/item/32945505048.html",
-              ""
-            ]
-          ]
-        }
-      ]
-    },
-    {
-      "name": "Форточка на балкон и крепёж (Leroy Merlin)",
-      "cost": 2196,
-      "quantity": 1,
-      "items": [
-        {
-          "name": "Окно деревянное 46х47x4.5 см, однокамерный стеклопакет",
-          "cost": 2041,
-          "quantity": 1,
-          "url": [
-            [
-              "https://nizhniy-novgorod.leroymerlin.ru/product/okno-derevyannoe-46h47-sm-16610399/",
-              ""
-            ]
-          ]
-        },
-        {
-          "name": "Ручка оконная для ПВХ 125 мм пластик/сталь цвет белый",
-          "cost": 61,
-          "quantity": 1,
-          "url": [
-            [
-              "https://nizhniy-novgorod.leroymerlin.ru/product/ruchka-okonnaya-dlya-pvh-125-mm-plastik-stal-cvet-belyy-14072953/#nav-description",
-              ""
-            ]
-          ]
-        },
-        {
-          "name": "Ограничитель оконный для ПВХ окна 105 мм ABC/сталь цвет белый",
-          "cost": 38,
-          "quantity": 1,
-          "url": [
-            [
-              "https://nizhniy-novgorod.leroymerlin.ru/product/ogranichitel-okonnyy-dlya-pvh-okna-105-mm-abc-stal-cvet-belyy-13180696/",
-              ""
-            ]
-          ]
-        },
-        {
-          "name": "Уголок мебельный 75x75x12 мм",
-          "cost": 14,
-          "quantity": 4,
-          "url": [
-            [
-              "https://nizhniy-novgorod.leroymerlin.ru/product/ugolok-mebelnyy-75x75x12-mm-16965747/",
-              ""
-            ]
-          ]
-        }
-      ]
-    },
-    {
-      "name": "Мелкий неттоп на замену мантупера",
-      "cost": 15000,
-      "quantity": 1,
-      "items": [
-        {
-          "name": "Неттоп MSI Cubi N 8GL-019XRU",
-          "cost": 15000,
-          "quantity": 1,
-          "url": [
-            [
-              "https://www.citilink.ru/catalog/computers_and_notebooks/computers/1063505/",
-              ""
-            ]
-          ]
-        }
-      ]
-    },
-    {
-      "name": "Хрень из IKEA",
-      "cost": 6773,
-      "quantity": 1,
-      "items": [
-        {
-          "name": "LUSTIGT / ЛУСТИГТ Полка навесная 37x37 см",
-          "cost": 499,
-          "quantity": 1,
-          "url": [
-            [
-              "https://www.ikea.com/ru/ru/p/lustigt-polka-navesnaya-90381854/",
-              ""
-            ]
-          ]
-        },
-        {
-          "name": "СИГФИН Подставка д/мобильного телефона, бамбуковый шпон",
-          "cost": 299,
-          "quantity": 1,
-          "url": [
-            [
-              "https://www.ikea.com/ru/ru/p/sigfin-podstavka-d-mobilnogo-telefona-bambukovyy-shpon-00429836/",
-              ""
-            ]
-          ]
-        },
-        {
-          "name": "БУРГУЛЬТ / СИББГУЛЬТ Полка навесная, белый, 59x20 см",
-          "cost": 279,
-          "quantity": 1,
-          "info": "артикул 393.259.65",
-          "url": [
-            [
-              "https://www.ikea.com/ru/ru/p/burgult-sibbgult-polka-navesnaya-belyy-belyy-s39325965/",
-              ""
-            ]
-          ]
-        },
-        {
-          "name": "ИВАР Полка, сосна 83x30 см",
-          "cost": 400,
-          "quantity": 1,
-          "info": "артикул 003.933.33",
-          "url": [
-            [
-              "https://www.ikea.com/ru/ru/p/ivar-polka-sosna-00393333/",
-              ""
-            ]
-          ]
-        },
-        {
-          "name": "СКВАЛЛЬРА Подкладка на стол, белый, прозрачный 60x80 см",
-          "cost": 399,
-          "quantity": 2,
-          "info": "артикул 804.518.90",
-          "url": [
-            [
-              "https://www.ikea.com/ru/ru/p/skvallra-podkladka-na-stol-belyy-prozrachnyy-80451890/",
-              ""
-            ]
-          ]
-        },
-        {
-          "name": "ГЛАТТИС Поднос, желтая медь 38 см",
-          "cost": 999,
-          "quantity": 1,
-          "url": [
-            [
-              "https://www.ikea.com/ru/ru/p/glattis-podnos-zheltaya-med-20350115/",
-              ""
-            ]
-          ]
-        },
-        {
-          "name": "НОЛЬМИРА Кресло, березовый шпон, серый",
-          "cost": 2999,
-          "quantity": 1,
-          "info": "артикул 303.841.86",
-          "url": [
-            [
-              "https://www.ikea.com/ru/ru/p/nolmira-kreslo-berezovyy-shpon-seryy-30384186/",
-              ""
-            ]
-          ]
-        },
-        {
-          "name": "доставка",
-          "cost": 500,
+          "name": "Скидка на фигню",
+          "cost": -100,
           "quantity": 1
         }
       ]
+    },
+    {
+      "name": "Какая-то дорогая фигня",
+      "cost": 23800,
+      "quantity": 1,
+      "importance": 2
+    },
+    {
+      "name": "Нечто",
+      "cost": 2300,
+      "quantity": 1,
+      "importance": 4
+    },
+    {
+      "name": "Бессмысленно дорогой хлам",
+      "cost": 99800,
+      "quantity": 1,
+      "info": "Такой бесполезный хлам, который покупается лишь для того, чтоб его тут же выбросить на помойку.\nА потом еще ту помойку обоссать."
+    },
+    {
+      "name": "Какая-то ерунда",
+      "cost": 997,
+      "quantity": 2,
+      "importance": 3,
+      "items": [
+        {
+          "name": "Вложенная ерунда",
+          "cost": 133,
+          "quantity": 1,
+          "importance": 1
+        },
+        {
+          "name": "Тоже ерунда",
+          "cost": 0,
+          "quantity": 1
+        },
+        {
+          "name": "Другая ерунда",
+          "cost": 666,
+          "quantity": 1,
+          "importance": 3,
+          "items": [
+            {
+              "name": "Более глубоко засунутая ерунда",
+              "cost": 666,
+              "quantity": 1,
+              "importance": 3
+            }
+          ]
+        },
+        {
+          "name": "Ещё одна ерунда",
+          "cost": 66,
+          "quantity": 3,
+          "importance": 4
+        }
+      ]
+    },
+    {
+      "name": "Последняя ерунда",
+      "cost": 99,
+      "quantity": 1
     }
   ]
 }
