@@ -378,6 +378,7 @@ class WishCalc():
                             raise TypeError('неправильный тип поля элемента url')
 
                     if surl[0]:
+                        #TODO а не надо ли ограничить максимальное кол-во URL?
                         self.url.append(surl)
             else:
                 raise TypeError('неправильный тип элемента url')

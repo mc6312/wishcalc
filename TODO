@@ -5,3 +5,7 @@ wishcalc.py
   MainWnd.__run_filename_dialog()
     471: костыль с именем файла переделать?
 
+wcdata.py
+  WishCalc.Item.set_fields_dict()
+    381: а не надо ли ограничить максимальное кол-во URL?
+
