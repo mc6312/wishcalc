@@ -31,14 +31,27 @@ class Calculator():
     ERROR_ICON_NAME = 'dialog-error'
 
     def __init__(self, resldr, entry, primaryicon):
-        uibldr = resldr.load_gtk_builder('wishcalc_calculator.ui')
+        self.popover = Gtk.Popover.new(entry)
 
-        self.popover = uibldr.get_object('popoverCalculator')
+        box = Gtk.Box.new(Gtk.Orientation.HORIZONTAL, 0)
+        box.set_border_width(WIDGET_SPACING)
+        box.get_style_context().add_class('linked')
+        self.popover.add(box)
 
-        self.calcentry = uibldr.get_object('calcentry')
+        self.calcentry = Gtk.Entry()
+        box.pack_start(self.calcentry, True, True, 0)
+
+        self.calcentry.set_width_chars(32)
+        self.calcentry.set_can_default(True)
         self.calcentry.connect('key-release-event', self.calcentry_key_release_event)
-
         self.popover.set_default_widget(self.calcentry)
+
+        self.computebtn = Gtk.Button()
+        img = Gtk.Image.new_from_icon_name(self.CALC_ICON_NAME, Gtk.IconSize.MENU)
+        self.computebtn.add(img)
+        box.pack_end(self.computebtn, False, False, 0)
+
+        self.computebtn.connect('clicked', self.computebtn_clicked)
 
         self.entry = entry
         self.entryiconpos = Gtk.EntryIconPosition.PRIMARY if primaryicon else Gtk.EntryIconPosition.SECONDARY
@@ -48,8 +61,6 @@ class Calculator():
 
         self.entry.connect('icon-release', self.entry_icon_release)
         self.entry.connect('key-release-event', self.entry_key_release_event)
-
-        uibldr.connect_signals(self)
 
     def __check_expression(self, expr):
         # кривой костыль для борьбы с дырами безопасности в eval()
@@ -106,7 +117,7 @@ class Calculator():
         self.show_error(False)
 
         self.popover.set_relative_to(self.entry)
-        self.popover.show()
+        self.popover.show_all()
         self.calcentry.grab_focus()
 
 
