@@ -1054,35 +1054,12 @@ class MainWnd():
         if alliters:
             self.item_select_by_iter(random_choice(alliters), True)
 
-    def item_copy(self, btn):
-        """кладём выбранный элемент с подэлементами в clipboard в виде JSON
-        пока вот так, ручками и костыльно"""
+    def __get_item_names(self, itr):
+        """Получает и возвращает список строк с именами элемента дерева,
+        на который указывает itr (экземпляр Gtk.TreeIter), и всех
+        вложенных элементов."""
 
-        itrsel = self.get_selected_item_iter()
-
-        if itrsel is None:
-            return
-
-        itemdict = self.wishCalc.get_item(itrsel).get_fields_dict()
-
-        subitems = self.wishCalc.items_to_list(itrsel)
-        if subitems:
-            itemdict[WishCalc.Item.ITEMS] = subitems
-
-        self.clipboard.set_text(json.dumps({self.CLIPBOARD_DATA:itemdict},
-            ensure_ascii=False, indent='  '),
-            -1)
-
-    def item_copy_as_text(self, wgt):
-        """Копируем имена выбранного товара и вложенных в него,
-        в clipboard в виде текста, разделённого переносами строк."""
-
-        itrsel = self.get_selected_item_iter()
-
-        if itrsel is None:
-            return
-
-        item = self.wishCalc.get_item(itrsel)
+        item = self.wishCalc.get_item(itr)
         names = [item.name]
 
         def __gather_subitem_names(fromitr):
@@ -1095,9 +1072,101 @@ class MainWnd():
 
                 itr = self.wishCalc.store.iter_next(itr)
 
-        __gather_subitem_names(itrsel)
+        __gather_subitem_names(itr)
 
-        self.clipboard.set_text('\n'.join(names), -1)
+        return names
+
+    def __get_selected_items(self, copydata):
+        """Получение списка выбранных элементов дерева.
+
+        copydata    - режим копирования;
+                      False - в список помещаются только строки
+                              с названиями товаров;
+                      True  - в список помещаются словари с полными
+                              данными товаров.
+
+        Если есть помеченные (чекбоксами) элементы - берём их все,
+        иначе - только тот, на котором курсор.
+        В выхлоп попадают все подэлементы выбранных элементов.
+        Возвращает, соответственно, список, если было что возвращать,
+        иначе - пустой список."""
+
+        retl = []
+
+        def __get_itemdict(itr):
+            itemdict = self.wishCalc.get_item(itr).get_fields_dict()
+
+            subitems = self.wishCalc.items_to_list(itr)
+            if subitems:
+                itemdict[WishCalc.Item.ITEMS] = subitems
+
+            return itemdict
+
+        def __gather_checked_items(fromitr):
+            # проверяем сам элемент
+
+            lret = []
+
+            if fromitr is not None:
+                if self.wishCalc.get_item_checked(fromitr):
+                    if copydata:
+                        lret.append(__get_itemdict(fromitr))
+                    else:
+                        lret += self.__get_item_names(fromitr)
+
+            itr = self.wishCalc.store.iter_children(fromitr)
+
+            while itr is not None:
+                lret += __gather_checked_items(itr)
+                itr = self.wishCalc.store.iter_next(itr)
+
+            return lret
+
+        if self.wishCalc.totalSelectedCount:
+            # есть помеченные
+
+            retl += __gather_checked_items(None)
+        else:
+            # только выделенный элемент TreeView
+            itrsel = self.get_selected_item_iter()
+
+            if itrsel is None:
+                return
+
+            if copydata:
+                retl.append(__get_itemdict(itrsel))
+            else:
+                retl += self.__get_item_names(itrsel)
+
+        return retl
+
+    def item_copy(self, btn):
+        """Кладём выбранные элементы с подэлементами в clipboard
+        в виде JSON.
+        Если есть помеченные (чекбоксами) элементы - кладём их все,
+        иначе - только тот, на котором курсор.
+        А нету курсора - ничего и не делаем."""
+
+        copylst = self.__get_selected_items(True)
+
+        if len(copylst):
+            self.clipboard.set_text(json.dumps({self.CLIPBOARD_DATA:copylst},
+                ensure_ascii=False,
+                # отступы - на случай вставки в текстовый редактор,
+                # а не в WishCalc
+                indent='  '),
+                -1)
+
+    def item_copy_as_text(self, wgt):
+        """Действует аналогично item_copy(), но в clipboard помещается
+        текст, разделенный переносами строк, содержащий только названия
+        выбранных товаров."""
+
+        copylst = self.__get_selected_items(False)
+
+        if len(copylst):
+            copylst.append('') # дабы join'ом добавился последний перевод строки
+            self.clipboard.set_text('\n'.join(copylst), -1)
 
     def __item_paste(self, intoselected):
         """Вставка товара из буфера обмена.
@@ -1130,39 +1199,56 @@ class MainWnd():
             return
             #return 'буфер обмена не содержит данных, поддерживаемых %s' % TITLE
 
-        itemdict = tmpd[self.CLIPBOARD_DATA]
+        E_PASTE = 'Вставка из буфера обмена'
 
-        # таки пытаемся уже чего-то вставить
-        item = WishCalc.Item()
-        try:
-            item.set_fields_dict(itemdict)
+        itrsel = self.get_selected_item_iter()
+        if itrsel is None:
+            # ничего не выбрано - вставляем элемент в конец списка
+            parentitr = None
+        elif intoselected:
+            parentitr = itrsel
+            itrsel = None
+        else:
+            # иначе - после выбранного элемента на его уровне
+            parentitr = self.wishCalc.store.iter_parent(itrsel)
 
-            itrsel = self.get_selected_item_iter()
-            if itrsel is None:
-                # ничего не выбрано - вставляем элемент в конец списка
-                parentitr = None
-            elif intoselected:
-                parentitr = itrsel
-                itrsel = None
-            else:
-                # иначе - после выбранного элемента на его уровне
-                parentitr = self.wishCalc.store.iter_parent(itrsel)
+        def __do_paste_itemdict(itemdict):
+            # таки пытаемся уже чего-то вставить
+            item = WishCalc.Item()
+            try:
+                item.set_fields_dict(itemdict)
 
-            inserteditr = self.wishCalc.store.insert_after(parentitr, itrsel,
-                self.wishCalc.make_store_row(item))
+                inserteditr = self.wishCalc.store.insert_after(parentitr, itrsel,
+                    self.wishCalc.make_store_row(item))
 
-            # рекурсивно добавляем подэлементы, если они есть
-            if WishCalc.Item.ITEMS in itemdict:
-                self.wishCalc.load_subitems(inserteditr,
-                    itemdict[WishCalc.Item.ITEMS], [])
+                # рекурсивно добавляем подэлементы, если они есть
+                if WishCalc.Item.ITEMS in itemdict:
+                    self.wishCalc.load_subitems(inserteditr,
+                        itemdict[WishCalc.Item.ITEMS], [])
 
-        except Exception as ex:
-            # пока - так
-            msg_dialog(self.window, 'Вставка из буфера обмена',
-                'Ошибка: %s' % str(ex))
+                return (item, inserteditr)
+
+            except Exception as ex:
+                # пока - так
+                msg_dialog(self.window, E_PASTE,
+                    'Ошибка: %s' % str(ex))
+                return
+
+        items = tmpd[self.CLIPBOARD_DATA]
+
+        # на случай, ежели копипастить будут из предыдущей версии,
+        # проверяем, что нам приехало
+        if isinstance(items, list):
+            for itemdict in items:
+                selitem, itrsel =  __do_paste_itemdict(itemdict)
+        elif isinstance(items, dict):
+            selitem, itrsel = __do_paste_itemdict(items)
+        else:
+            msg_dialog(self.window, E_PASTE,
+                'В буфере обмена находятся данные от несовместимой версии программы')
             return
 
-        self.refresh_wishlistview(item)
+        self.refresh_wishlistview(selitem)
 
     def item_paste(self, btn):
         """Вставка товара из буфера обмена."""

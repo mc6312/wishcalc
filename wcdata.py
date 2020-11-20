@@ -563,6 +563,12 @@ class WishCalc():
 
         return self.store.get_value(itr, WishCalc.COL_ITEM_OBJ)
 
+    def get_item_checked(self, itr):
+        """Проверяет значение столбца COL_SELECTED элемента дерева,
+        на который указывает itr, и возвращает булевское значение."""
+
+        return self.store.get_value(itr, WishCalc.COL_SELECTED)
+
     def replace_item(self, itr, item):
         """Замена элемента в TreeStore.
 
