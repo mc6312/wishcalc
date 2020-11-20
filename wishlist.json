@@ -71,12 +71,6 @@
       "importance": 2
     },
     {
-      "name": "Нечто",
-      "cost": 2300,
-      "quantity": 1,
-      "importance": 4
-    },
-    {
       "name": "Бессмысленно дорогой хлам",
       "cost": 99800,
       "quantity": 1,
@@ -125,6 +119,12 @@
       "name": "Последняя ерунда",
       "cost": 2300,
       "quantity": 1
+    },
+    {
+      "name": "Нечто",
+      "cost": 2300,
+      "quantity": 1,
+      "importance": 4
     }
   ]
 }

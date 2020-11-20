@@ -569,6 +569,26 @@ class WishCalc():
 
         return self.store.get_value(itr, WishCalc.COL_SELECTED)
 
+    def get_checked_items(self):
+        """Проверяет значение столбцов COL_SELECTED элементов дерева,
+        и возвращает список экземпляров Gtk.TreeIter."""
+
+        def __get_checked_from(itr):
+            if (itr is not None) and (self.store.get_value(itr, self.COL_SELECTED)):
+                return [itr]
+
+            lret = []
+
+            itr = self.store.iter_children(itr)
+            while itr is not None:
+                lret += __get_checked_from(itr)
+
+                itr = self.store.iter_next(itr)
+
+            return lret
+
+        return __get_checked_from(None)
+
     def replace_item(self, itr, item):
         """Замена элемента в TreeStore.
 

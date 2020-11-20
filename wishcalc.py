@@ -1054,10 +1054,10 @@ class MainWnd():
         if alliters:
             self.item_select_by_iter(random_choice(alliters), True)
 
-    def __get_item_names(self, itr):
+    def __get_item_names(self, itr, children=True):
         """Получает и возвращает список строк с именами элемента дерева,
         на который указывает itr (экземпляр Gtk.TreeIter), и всех
-        вложенных элементов."""
+        вложенных элементов, если children==True."""
 
         item = self.wishCalc.get_item(itr)
         names = [item.name]
@@ -1072,7 +1072,8 @@ class MainWnd():
 
                 itr = self.wishCalc.store.iter_next(itr)
 
-        __gather_subitem_names(itr)
+        if children:
+            __gather_subitem_names(itr)
 
         return names
 
@@ -1290,40 +1291,56 @@ class MainWnd():
             if item.url:
                 self.clipboard.set_text(item.url, -1)
 
-    def __delete_item(self, ispurchased):
+    def __do_delete_item(self, ispurchased):
         """Удаление товара из списка.
         Если ispurchased == True, товар считается купленным, и его цена
         вычитается из суммы доступных наличных."""
 
-        itr = self.get_selected_item_iter()
-        if not itr:
-            return
+        if self.wishCalc.totalSelectedCount:
+            # удаление помеченных
 
-        nchildren = self.wishCalc.store.iter_n_children(itr)
+            delitrs = self.wishCalc.get_checked_items()
+        else:
+            # удаление выделенного курсорома
+            itr = self.get_selected_item_iter()
+            if not itr:
+                return
 
-        sitem = ('группу товаров (из %d)' % nchildren) if nchildren else 'товар'
+            delitrs = [itr]
 
-        spchsd = '' if not ispurchased\
-            else ' купленный' if nchildren == 0\
-                else ' купленную'
+        ndel = len(delitrs)
 
-        item = self.wishCalc.get_item(itr)
+        if ndel > 1:
+            sitems = 'выбранные товары (всего - %d)' % ndel
+            onlyone = False
+        else:
+            sitems = 'товар "%s"' % self.wishCalc.get_item(delitrs[0]).name
+            onlyone = True
 
-        msgwhat = 'Удалить%s %s "%s"?' % (spchsd, sitem, item.name)
+        if not ispurchased:
+            what = 'Удалить'
+            details = ''
+        else:
+            what = 'Убрать из списка'
+            details = ' купленный' if onlyone else ' купленные и'
+
+        msgwhat = '%s%s %s?' % (what, details, sitems)
 
         if msg_dialog(self.window, 'Удаление',
-            msgwhat,
-            buttons=Gtk.ButtonsType.YES_NO,
-            destructive_response=Gtk.ResponseType.YES) == Gtk.ResponseType.YES:
+                msgwhat,
+                buttons=Gtk.ButtonsType.YES_NO,
+                destructive_response=Gtk.ResponseType.YES) == Gtk.ResponseType.YES:
 
-            self.wishCalc.item_delete(itr, ispurchased)
+            for itr in delitrs:
+                self.wishCalc.item_delete(itr, ispurchased)
+
             self.refresh_wishlistview()
 
     def item_purchased(self, btn):
-        self.__delete_item(True)
+        self.__do_delete_item(True)
 
     def item_delete(self, btn):
-        self.__delete_item(False)
+        self.__do_delete_item(False)
 
     def __move_selected_item(self, down, onepos):
         """Перемещение выбранного элемента списка товаров.
