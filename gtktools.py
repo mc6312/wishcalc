@@ -36,7 +36,7 @@ from sys import stderr, argv
 import os.path
 
 
-REVISION = 2020111701
+REVISION = 2020112600
 
 
 def get_widget_base_units():
@@ -69,19 +69,38 @@ if WIDGET_SPACING < 4:
 WIDE_WIDGET_SPACING = WIDGET_SPACING * 3
 
 
-def load_system_icon(name, size, pixelsize=False):
+def load_system_icon(name, size, pixelsize=False, fallback=None, symbolic=False):
     """Возвращает Pixbuf для "системной" (из установленной темы)
     иконки с именем name и размером size.
 
-    size    - стандартный размер Gtk.IconSize.* если pixelsize==False,
-              иначе считаем, что size - размер в пикселях."""
+    name        - стока с именем иконки в системной теме;
+    size        - размер иконки (Gtk.IconSize.* или целое);
+    pixelsize   - булевское значение;
+                  если True - size д.б. целым числом, размером в пикселях;
+    fallback    - None или строка с именем иконки на случай отсутствия
+                  в системной теме иконки с именем name;
+    symbolic    - искать "плоскую" иконку.
+
+    Возвращает экземпляр Gtk.Pixbuf
+    (или None, если подходящей иконки нет)."""
 
     if not pixelsize:
         size = Gtk.IconSize.lookup(size)[1]
 
-    return Gtk.IconTheme.get_default().load_icon(name,
-        size,
-        Gtk.IconLookupFlags.FORCE_SIZE)
+    theme = Gtk.IconTheme.get_default()
+
+    flags = Gtk.IconLookupFlags.FORCE_SIZE
+
+    if symbolic:
+        flags |= Gtk.IconLookupFlags.FORCE_SYMBOLIC
+
+    icon = theme.lookup_icon(name, size, flags)
+
+    if icon is None:
+        if fallback:
+            icon = theme.lookup_icon(fallback, size, flags)
+
+    return icon.load_icon() if icon is not None else None
 
 
 #
@@ -538,14 +557,23 @@ class TreeViewShell():
         self.view.set_model(self.store)
 
 
-def __test_msgdlg():
+def __debug_msgdlg():
     print(msg_dialog(None, 'Message dialog test', 'Delete anything?', buttons=Gtk.ButtonsType.YES_NO,
         destructive_response=Gtk.ResponseType.YES,
         suggested_response=Gtk.ResponseType.NO))
 
 
-if __name__ == '__main__':
-    print('[testing of %s]' % __file__)
+def __debug_load_icon():
+    pbuf = load_system_icon('applications-internet',
+        Gtk.IconSize.MENU,
+        symbolic=True)
 
-    __test_msgdlg()
+    print(pbuf)
+
+
+if __name__ == '__main__':
+    print('[debugging %s]' % __file__)
+
+    #__debug_msgdlg()
+    __debug_load_icon()
 

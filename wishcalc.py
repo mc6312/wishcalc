@@ -124,6 +124,15 @@ class MainWnd():
 
         self.iconPercent = list(map(lambda i: resldr.load_pixbuf('images/nmicon_p%d.svg' % i, nmiconsize, nmiconsize), range(self.PERCENT_RANGE)))
 
+        #
+        # иконки для кнопки "открыть URL"
+
+        self.iconOpenURL = load_system_icon('applications-internet', nmiconsizeix, symbolic=True)
+        self.iconOpenURLs = create_doubled_pixbuf(self.iconOpenURL)
+
+        #
+        # иконки "важности" товара
+
         self.importanceIcons = ImportanceIcons(resldr)
 
         # TreeStore используется как хранилище данных во время работы
@@ -202,7 +211,7 @@ class MainWnd():
         #
         # виджеты, свойство "sensitive" которых зависит от состояния списка
         #
-        # вот это вот (и соотв. setup_widgets_sensitive()) возможно
+        # вот это вот (и соотв. update_sensitive_widgets_state()) возможно
         # придётся переделывать через actions
 
         self.widgetsItemEditing = WidgetList.new_from_builder(uibldr,
@@ -216,14 +225,18 @@ class MainWnd():
         self.widgetsItemMoveDown = WidgetList.new_from_builder(uibldr,
             'mnuItemMoveDown', 'btnItemMoveDown',
             'mnuItemMoveToBottom', 'btnItemMoveToBottom')
+
+        # эти - могут требовать дополнительных приседаний с бубном
         self.widgetsItemURL = WidgetList.new_from_builder(uibldr,
             'mnuItemOpenURL', 'btnItemOpenURL', 'mnuItemCopyURL')
+        self.imgItemOpenURL = uibldr.get_object('imgItemOpenURL')
+
         self.widgetsItemCopyPaste = WidgetList.new_from_builder(uibldr,
             'mnuItemCopy', 'btnItemCopy', 'mnuItemPasteInto', 'btnItemPasteInto')
             # эти - всегда будут доступны, т.к. возможна вставка при невыбранном элементе
             #, 'mnuItemPaste', 'btnItemPaste'))
 
-        # а вот оно будет рулиться НЕ из setup_widgets_sensitive()!
+        # а вот оно будет рулиться НЕ из update_sensitive_widgets_state()!
         self.widgetsRefillCash = WidgetList.new_from_builder(uibldr,
             'mnuRefillCash', 'btnRefillCash')
 
@@ -305,7 +318,7 @@ class MainWnd():
 
         self.wishlist_is_loaded()
 
-        self.setup_widgets_sensitive()
+        self.update_sensitive_widgets_state()
 
     def update_recent_files_menu(self):
         if not self.cfg.recentFiles:
@@ -544,7 +557,10 @@ class MainWnd():
         self.refresh_window_title()
         self.popoverFileCommentEditor.hide()
 
-    def setup_widgets_sensitive(self):
+    def update_sensitive_widgets_state(self):
+        """Обновление параметров виджетов, состояние которых
+        должно зависеть от состояния выбора в дереве товаров."""
+
         itr = self.get_selected_item_iter()
         hasitems = self.wishCalc.store.iter_n_children(None) > 0
 
@@ -554,6 +570,7 @@ class MainWnd():
         bcanopenurl = False
         bcanselect = False
         bcanunselect = False
+        urlicon = self.iconOpenURL
 
         if hasitems:
             if itr is not None:
@@ -565,7 +582,10 @@ class MainWnd():
                 bcanmoveup = ix > 0
                 bcanmovedown = ix < lastix
 
-                bcanopenurl = len(self.wishCalc.get_item(itr).url) != 0
+                nurl = len(self.wishCalc.get_item(itr).url)
+                bcanopenurl = nurl > 0
+                if nurl > 1:
+                    urlicon = self.iconOpenURLs
 
             bcanselect = True
             bcanunselect = self.wishCalc.totalSelectedCount > 0
@@ -576,11 +596,13 @@ class MainWnd():
         self.widgetsItemMoveDown.set_sensitive(bsens & bcanmovedown)
         self.widgetsItemURL.set_sensitive(bsens & bcanopenurl)
 
+        self.imgItemOpenURL.set_from_pixbuf(urlicon)
+
         self.widgetsSelectAll.set_sensitive(bcanselect)
         self.widgetsSelectNone.set_sensitive(bcanselect & bcanunselect)
 
     def wishlistviewsel_changed(self, selection):
-        self.setup_widgets_sensitive()
+        self.update_sensitive_widgets_state()
 
     def refresh_totalcash_view(self):
         self.cashentry.set_text(str(self.wishCalc.totalCash))
@@ -795,7 +817,7 @@ class MainWnd():
         if itersel is not None:
             self.item_select_by_iter(itersel)
 
-        self.setup_widgets_sensitive()
+        self.update_sensitive_widgets_state()
 
         self.refresh_incart_view()
 
@@ -965,7 +987,7 @@ class MainWnd():
 
         self.needsumbox.set_visible(sumboxvisible & needsumboxvisible)
 
-        #self.setup_widgets_sensitive() #!!!
+        #self.update_sensitive_widgets_state() #!!!
 
     def get_selected_item_iter(self):
         """Возвращает Gtk.TreeIter если в TreeView выбрана строка,
@@ -1289,7 +1311,17 @@ class MainWnd():
         if itr:
             item = self.wishCalc.get_item(itr)
             if item.url:
-                self.clipboard.set_text(item.url, -1)
+                tmp = []
+
+                for url, desc in item.url:
+                    turl = url
+
+                    if desc:
+                        turl = '%s (%s)' % (turl, desc)
+
+                    tmp.append(turl)
+
+                self.clipboard.set_text('\n'.join(tmp), -1)
 
     def __do_delete_item(self, ispurchased):
         """Удаление товара из списка.
